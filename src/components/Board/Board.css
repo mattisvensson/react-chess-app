@@ -1,0 +1,13 @@
+#Board {
+    width: 800px;
+    height: 800px;
+    background: #222222;
+    display: grid;
+    grid-template-columns: repeat(8, 100px);
+    grid-template-rows: repeat(8, 100px);
+}
+
+/*
+Grün: #769656
+Hell: #eeeed2
+*/

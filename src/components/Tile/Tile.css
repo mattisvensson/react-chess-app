@@ -1,0 +1,25 @@
+#Board .tile {
+    width: 100px;
+    height: 100px;
+    display: grid;
+    place-content: center;
+}
+
+#Board .tile.light {
+    background: #eeeee2;
+}
+
+#Board .tile.dark {
+    background: #769656;
+}
+
+#Board .tile > div {
+    width: 80px;
+    height: 80px;
+    background-size: cover;
+    cursor: grab;
+}
+
+#Board .tile > div:active {
+    cursor: grabbing;
+}
