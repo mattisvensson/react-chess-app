@@ -1,12 +1,28 @@
 import React, {useRef, useState} from 'react';
 import './Board.css';
 import Tile from '../Tile/Tile';
+import Rules from '../Rules/Rules'
 
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
 function Board() {
 
+    const rules = new Rules();
+
+    // Pieces:
+    // 1 = Pawn (white)
+    // 2 = Knight (white)
+    // 3 = Bishop (white)
+    // 4 = Rook (white)
+    // 5 = Queen (white)
+    // 6 = King (white)
+    // 11 = Pawn (black)
+    // 12 = Knight (black)
+    // 13 = Bishop (black)
+    // 14 = Rook (black)
+    // 15 = Queen (black)
+    // 16 = King (black)
     const [position, setPosition] = useState([
         [14,12,13,15,16,13,12,14],
         [11,11,11,11,11,11,11,11],
@@ -17,26 +33,23 @@ function Board() {
         [1,1,1,1,1,1,1,1],
         [4,2,3,5,6,3,2,4],
     ])
-    // let copy = [...position];
-    // copy[1][1] = 1;
-    // setPosition(copy);
-
 
     const BoardRef = useRef(null);
 
-    // const [activePiece, setActivePiece] = useState(null);
     const [activePiece, setActivePiece] = useState({
         isActive: false,
-        pice: 0,
+        piece: 0,
         positionX: null,
         positionY: null
     });
 
-    // console.log(activePiece.isActive)
+    // true = white's turn
+    // false = black's turn
+    const [playerTurn, setPlayerTurn] = useState(true);
+
 
     function grabPiece (e) {
         if (e.target.classList.contains("piece")) {
-            console.log(e.target)
 
             const mouseX = e.clientX - 40;
             const mouseY = e.clientY - 40;
@@ -45,43 +58,17 @@ function Board() {
             e.target.style.left = mouseX + "px";
             e.target.style.top = mouseY + "px";
 
+            const currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
+            const currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
-            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
-            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
-            console.log(x, y)
-
-            console.log(position[y][x]);
-
-            // setActivePiece(e.target)
-
-
-            //1. Versuch
-            // setActivePiece({ ... activePiece,
-                // isActive: e.target,
-                // piece: position[y][x],
-                // positionX: x,
-                // positionY: y
-            // });
-
-            //2. Versuch
-            // const updatePiece = {
-            //     ... activePiece,
-            //     isActive: "e.target"
-            // }
-            // setActivePiece(updatePiece)
-
-            //3. Versuch
-            // let newArr = {... activePiece}
-            // newArr.isActive = e.target
-            // setActivePiece(newArr)
-
-            //4. Versuch
-            // setActivePiece(prevState => ({
-            //     ...prevState,
-            //     isActive: 'your updated value here'
-            //  }));
-
-            console.log(activePiece.isActive)
+            const updatePiece = {
+                ... activePiece,
+                isActive: e.target,
+                piece: position[currentY][currentX],
+                positionX: currentX,
+                positionY: currentY
+            }
+            setActivePiece(updatePiece)
         }
     }
 
@@ -89,24 +76,22 @@ function Board() {
 
         const mouseX = e.clientX - 40;
         const mouseY = e.clientY - 40;
-        
+
         const minX = BoardRef.current.offsetLeft;
         const maxX = BoardRef.current.offsetLeft + 800;
         const minY = BoardRef.current.offsetTop;
         const maxY = BoardRef.current.offsetTop + 800;
 
-        console.log(activePiece.isActive)
         if (activePiece.isActive) {
-            console.log(e.target)
 
-            activePiece.style.position = "absolute";
-            activePiece.style.left = mouseX + "px";
-            activePiece.style.top = mouseY + "px";
+            activePiece.isActive.style.position = "absolute";
+            activePiece.isActive.style.left = mouseX + "px";
+            activePiece.isActive.style.top = mouseY + "px";
 
-            if (mouseX < minX) {activePiece.style.left = minX - 20 + "px";}
-            if (mouseX + 60 > maxX) {activePiece.style.left = maxX - 70 + "px";}
-            if (mouseY < minY) {activePiece.style.top = minY - 10 + "px";}
-            if (mouseY + 70 > maxY) {activePiece.style.top = maxY - 70 + "px";}
+            if (mouseX < minX) {activePiece.isActive.style.left = minX - 20 + "px";}
+            if (mouseX + 60 > maxX) {activePiece.isActive.style.left = maxX - 70 + "px";}
+            if (mouseY < minY) {activePiece.isActive.style.top = minY - 10 + "px";}
+            if (mouseY + 70 > maxY) {activePiece.isActive.style.top = maxY - 70 + "px";}
         }
 
     }
@@ -116,29 +101,53 @@ function Board() {
 
             const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
-            console.log(x, y)
 
+            const validMove = rules.checkMove(activePiece.positionX, activePiece.positionY, x, y, activePiece.piece, playerTurn, position);
 
-            let copy = [...position];
-            copy[y][x] = 6;
-            setPosition(copy);
+            if (validMove) {
+                const newPosition = [...position];
+                newPosition[activePiece.positionY][activePiece.positionX] = 0;
+                newPosition[y][x] = activePiece.piece;
+                setPosition(newPosition);
+    
+                const updatePiece = {
+                    ... activePiece,
+                    isActive: null,
+                    piece: 0,
+                    positionX: null,
+                    positionY: null
+                }
+                setActivePiece(updatePiece)
+                setPlayerTurn(prev => !prev)
+            } else {    
+                activePiece.isActive.style.position = "static";
+                activePiece.isActive.style.left = "unset";
+                activePiece.isActive.style.top = "unset";
 
+                const newPosition = [...position];
+                setPosition(newPosition);
 
-            setActivePiece(null);
+                const updatePiece = {
+                    ... activePiece,
+                    isActive: null,
+                    piece: 0,
+                    positionX: null,
+                    positionY: null
+                }
+                setActivePiece(updatePiece)
+            }
         }
     }
-
 
 
     let board = [];
 
     for (let j = 0 ; j < verticalAxis.length; j++) {
         for (let i = 0; i < horizontalAxis.length; i++){
-            const number = j + i + 2;
-            let currentPosition = position[j][i];
+            const checkColor = j + i + 2;
             let image = undefined;
 
-            switch (currentPosition) {
+            switch (position[j][i]) {
                 case 1: image = "p_w"; break;
                 case 11: image = "p_b"; break;
                 case 2: image = "n_w"; break;
@@ -153,11 +162,11 @@ function Board() {
                 case 16: image = "k_b"; break;
             }
 
-            board.push(<Tile key={`${j}, ${i}`} image={`../../assets/images/${image}.png`} number={number}/>)
+            board.push(<Tile key={`${j}, ${i}`} image={`../../assets/images/${image}.png`} checkColor={checkColor}/>)
         }
     }
 
-    return ( 
+    return (
         <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)}>{board}</div>
     );
 }
