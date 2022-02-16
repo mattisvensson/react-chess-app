@@ -62,7 +62,7 @@ function Board() {
             const currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
             const updatePiece = {
-                ... activePiece,
+                ...activePiece,
                 isActive: e.target,
                 piece: position[currentY][currentX],
                 positionX: currentX,
@@ -102,6 +102,7 @@ function Board() {
             const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
+            // const validMove = true;
             const validMove = rules.checkMove(activePiece.positionX, activePiece.positionY, x, y, activePiece.piece, playerTurn, position);
 
             if (validMove) {
@@ -111,7 +112,7 @@ function Board() {
                 setPosition(newPosition);
     
                 const updatePiece = {
-                    ... activePiece,
+                    ...activePiece,
                     isActive: null,
                     piece: 0,
                     positionX: null,
@@ -128,7 +129,7 @@ function Board() {
                 setPosition(newPosition);
 
                 const updatePiece = {
-                    ... activePiece,
+                    ...activePiece,
                     isActive: null,
                     piece: 0,
                     positionX: null,
@@ -141,7 +142,7 @@ function Board() {
 
 
     let board = [];
-
+    
     for (let j = 0 ; j < verticalAxis.length; j++) {
         for (let i = 0; i < horizontalAxis.length; i++){
             const checkColor = j + i + 2;
@@ -160,11 +161,13 @@ function Board() {
                 case 15: image = "q_b"; break;
                 case 6: image = "k_w"; break;
                 case 16: image = "k_b"; break;
+                default: image = undefined; break;
             }
 
             board.push(<Tile key={`${j}, ${i}`} image={`../../assets/images/${image}.png`} checkColor={checkColor}/>)
         }
     }
+
 
     return (
         <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)}>{board}</div>
