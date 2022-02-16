@@ -5,7 +5,6 @@ import Tile from '../Tile/Tile';
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
-
 function Board() {
 
     const [position, setPosition] = useState([
@@ -25,21 +24,64 @@ function Board() {
 
     const BoardRef = useRef(null);
 
+    // const [activePiece, setActivePiece] = useState(null);
+    const [activePiece, setActivePiece] = useState({
+        isActive: false,
+        pice: 0,
+        positionX: null,
+        positionY: null
+    });
 
-    let activePiece = null;
+    // console.log(activePiece.isActive)
 
     function grabPiece (e) {
         if (e.target.classList.contains("piece")) {
             console.log(e.target)
 
-            const x = e.clientX - 40;
-            const y = e.clientY - 40;
+            const mouseX = e.clientX - 40;
+            const mouseY = e.clientY - 40;
 
             e.target.style.position = "absolute";
-            e.target.style.left = x + "px";
-            e.target.style.top = y + "px";
+            e.target.style.left = mouseX + "px";
+            e.target.style.top = mouseY + "px";
 
-            activePiece = e.target;
+
+            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
+            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
+            console.log(x, y)
+
+            console.log(position[y][x]);
+
+            // setActivePiece(e.target)
+
+
+            //1. Versuch
+            // setActivePiece({ ... activePiece,
+                // isActive: e.target,
+                // piece: position[y][x],
+                // positionX: x,
+                // positionY: y
+            // });
+
+            //2. Versuch
+            // const updatePiece = {
+            //     ... activePiece,
+            //     isActive: "e.target"
+            // }
+            // setActivePiece(updatePiece)
+
+            //3. Versuch
+            // let newArr = {... activePiece}
+            // newArr.isActive = e.target
+            // setActivePiece(newArr)
+
+            //4. Versuch
+            // setActivePiece(prevState => ({
+            //     ...prevState,
+            //     isActive: 'your updated value here'
+            //  }));
+
+            console.log(activePiece.isActive)
         }
     }
 
@@ -49,11 +91,12 @@ function Board() {
         const mouseY = e.clientY - 40;
         
         const minX = BoardRef.current.offsetLeft;
-        const maxX = BoardRef.current.offsetLeft + 740;
+        const maxX = BoardRef.current.offsetLeft + 800;
         const minY = BoardRef.current.offsetTop;
-        const maxY = BoardRef.current.offsetTop + 730;
+        const maxY = BoardRef.current.offsetTop + 800;
 
-        if (activePiece) {
+        console.log(activePiece.isActive)
+        if (activePiece.isActive) {
             console.log(e.target)
 
             activePiece.style.position = "absolute";
@@ -61,16 +104,27 @@ function Board() {
             activePiece.style.top = mouseY + "px";
 
             if (mouseX < minX) {activePiece.style.left = minX - 20 + "px";}
-            if (mouseX > maxX) {activePiece.style.left = maxX + "px";}
+            if (mouseX + 60 > maxX) {activePiece.style.left = maxX - 70 + "px";}
             if (mouseY < minY) {activePiece.style.top = minY - 10 + "px";}
-            if (mouseY > maxY) {activePiece.style.top = maxY + "px";}
+            if (mouseY + 70 > maxY) {activePiece.style.top = maxY - 70 + "px";}
         }
 
     }
 
     function dropPiece (e) {
-        if (activePiece) {
-            activePiece = null;
+        if (activePiece.isActive && BoardRef) {
+
+            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
+            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
+            console.log(x, y)
+
+
+            let copy = [...position];
+            copy[y][x] = 6;
+            setPosition(copy);
+
+
+            setActivePiece(null);
         }
     }
 
