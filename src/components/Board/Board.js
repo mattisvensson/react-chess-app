@@ -102,7 +102,7 @@ function Board() {
             const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
-            const validMove = rules.checkMove(activePiece.positionX, activePiece.positionY, x, y, activePiece.piece, playerTurn);
+            const validMove = rules.checkMove(activePiece.positionX, activePiece.positionY, x, y, activePiece.piece, playerTurn, position);
 
             if (validMove) {
                 const newPosition = [...position];
@@ -118,6 +118,7 @@ function Board() {
                     positionY: null
                 }
                 setActivePiece(updatePiece)
+                setPlayerTurn(prev => !prev)
             } else {    
                 activePiece.isActive.style.position = "static";
                 activePiece.isActive.style.left = "unset";
