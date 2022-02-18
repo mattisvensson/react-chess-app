@@ -3,6 +3,22 @@ import './Board.css';
 import Tile from '../Tile/Tile';
 import Rules from '../Rules/Rules'
 
+
+// TODO
+// complete movement of all pieces
+// check for valid moves
+//  -> tile is occupied
+//  -> passed tile is occupied
+//  -> en passant
+// prevent king from moving into checks
+// check for pins
+// checkmate
+// stalemate
+// Pawn promotion
+// Add castling
+// add check 
+
+
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
