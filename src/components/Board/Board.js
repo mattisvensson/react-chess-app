@@ -20,6 +20,8 @@ import Rules from '../Rules/Rules'
 // add check
 // add board description
 // check if king can capture unprotected piece
+// tile highlighting
+// sound
 
 
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];

@@ -37,6 +37,7 @@ export default class Rules {
         // console.log(position)
 
         switch (piece) {
+            // Pawn (white)
             case 1:
                 if(playerTurn) {
                     if (this.checkTile(prevX, prevY, newX, newY, piece, position)) {
@@ -58,6 +59,27 @@ export default class Rules {
                     return false;
                 }
                 break;
+            // Pawn (black)
+            case 11: 
+                if(!playerTurn) {
+                    if (this.checkTile(prevX, prevY, newX, newY, piece, position)) {
+                        if(prevY === 1) {
+                            if (newY === 2 || newY === 3) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        } else if (prevY - newY === -1) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                } else {
+                    return false;
+                }
+                break;
+            // Knight
             case 2: 
             case 12:
                 if ((playerTurn && piece === 2) || (!playerTurn && piece === 12)) {
@@ -82,6 +104,7 @@ export default class Rules {
                     return false;
                 }
                 break;
+            // Bishop
             case 3: 
             case 13:
                 if ((playerTurn && piece === 3) || (!playerTurn && piece === 13)) {
@@ -106,9 +129,10 @@ export default class Rules {
                     return false;
                 }
                 break;
+            // Rook
             case 4: 
             case 14:
-                if ((playerTurn && piece === 4) || (!playerTurn && piece === 14)) {
+                if ((playerTurn && piece === 4) || (!playerTurn && piece === 14)) {                
                     if (this.checkTile(prevX, prevY, newX, newY, piece, position)) {
                         if ((prevX !== newX && prevY === newY) || (prevY !== newY && prevX === newX)) {
                             return true;
@@ -120,6 +144,7 @@ export default class Rules {
                     return false;
                 }
                 break;
+            // Queen
             case 5:
             case 15: 
                 if ((playerTurn && piece === 5) || (!playerTurn && piece === 15)) {
@@ -150,30 +175,12 @@ export default class Rules {
                     return false;
                 }
                 break;
+            // King
             case 6: 
             case 16:
                 if ((playerTurn && piece === 6) || (!playerTurn && piece === 16)) {
                     if (this.checkTile(prevX, prevY, newX, newY, piece, position)) {
                         if ((newX === prevX - 1 || newX === prevX + 1 || newX === prevX) && (newY === prevY - 1 || newY === prevY + 1 || newY === prevY)) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    }
-                } else {
-                    return false;
-                }
-                break;
-            case 11: 
-                if(!playerTurn) {
-                    if (this.checkTile(prevX, prevY, newX, newY, piece, position)) {
-                        if(prevY === 1) {
-                            if (newY === 2 || newY === 3) {
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        } else if (prevY - newY === -1) {
                             return true;
                         } else {
                             return false;
