@@ -5,18 +5,21 @@ import Rules from '../Rules/Rules'
 
 
 // TODO
-// complete movement of all pieces
+// complete movement of all pieces - done
+// capturing pieces - done
 // check for valid moves
-//  -> tile is occupied
-//  -> passed tile is occupied
+//  -> tile is occupied - done
+//  -> passed tiles are occupied
 //  -> en passant
-// prevent king from moving into checks
-// check for pins
+//  -> prevent king from moving into checks
+//  -> check for pins
 // checkmate
 // stalemate
 // Pawn promotion
 // Add castling
-// add check 
+// add check
+// add board description
+// check if king can capture unprotected piece
 
 
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
