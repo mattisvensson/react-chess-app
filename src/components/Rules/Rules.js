@@ -28,6 +28,28 @@ export default class Rules {
         }
     }
 
+    checkPassedTile(lowest, newX, newY, position, axis) {
+        console.log("Piece: " + position[lowest][newX])
+        if (axis === "x") {
+            if (position[newY][lowest] === 0) {
+                console.log("true")
+                return true;
+            } else {
+                console.log("false")
+                return false;
+            }
+        } else {
+            if (position[lowest][newX] === 0) {
+                console.log("true")
+                return true;
+            } else {
+                console.log("false")
+                return false;
+            }
+        }
+
+    }
+
     checkMove(prevX, prevY, newX, newY, piece, playerTurn, position) {
 
         // console.log(position[1][1])
@@ -132,12 +154,41 @@ export default class Rules {
             // Rook
             case 4: 
             case 14:
-                if ((playerTurn && piece === 4) || (!playerTurn && piece === 14)) {                
-                    if (this.checkTile(prevX, prevY, newX, newY, piece, position)) {
+                if ((playerTurn && piece === 4) || (!playerTurn && piece === 14)) { 
+
+                    let lowest;
+                    let highest;
+                    let axis;
+
+                    if (prevX === newX) {
+                        lowest = Math.min(prevY, newY) + 1
+                        highest = Math.max(prevY, newY) - 1
+                        axis = "y"
+                    } else if (prevY === newY) {
+                        lowest = Math.min(prevX, newX) + 1
+                        highest = Math.max(prevX, newX) - 1
+                        axis = "x"
+                    }
+            
+                    console.log("lowest: " + lowest)
+                    console.log("highest: " + highest)
+
+                    let allClear = [];
+
+                    for (lowest; lowest <= highest; lowest++) {
+                        console.log(lowest)
+
+                        if (this.checkPassedTile(lowest, newX, newY, position, axis)) {
+                            allClear.push(0);
+                        } else {
+                            allClear.push(1);
+                        }
+                    }  
+                    
+                    console.log("ok")
+                    if (!(allClear.includes(1)) && this.checkTile(prevX, prevY, newX, newY, piece, position)) {
                         if ((prevX !== newX && prevY === newY) || (prevY !== newY && prevX === newX)) {
                             return true;
-                        } else {
-                            return false;
                         }
                     }
                 } else {
