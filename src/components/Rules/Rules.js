@@ -29,21 +29,16 @@ export default class Rules {
     }
 
     checkPassedTile(lowest, newX, newY, position, axis) {
-        console.log("Piece: " + position[lowest][newX])
         if (axis === "x") {
             if (position[newY][lowest] === 0) {
-                console.log("true")
                 return true;
             } else {
-                console.log("false")
                 return false;
             }
         } else {
             if (position[lowest][newX] === 0) {
-                console.log("true")
                 return true;
             } else {
-                console.log("false")
                 return false;
             }
         }
