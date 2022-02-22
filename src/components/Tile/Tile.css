@@ -14,6 +14,14 @@
     background: #769656;
 }
 
+#Board .tile.light.highlight {
+    background: #f6f669;
+}
+
+#Board .tile.dark.highlight {
+    background: #baca2b;
+}
+
 #Board .tile > div {
     width: 90px;
     height: 90px;

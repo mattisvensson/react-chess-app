@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import './Board.css';
 import Tile from '../Tile/Tile';
 import Rules from '../Rules/Rules'
@@ -68,6 +68,7 @@ function Board() {
     // false = black's turn
     const [playerTurn, setPlayerTurn] = useState(true);
 
+    const [possibleTiles, setPossibleTiles] = useState([]);
 
     function grabPiece (e) {
         if (e.target.classList.contains("piece")) {
@@ -90,8 +91,23 @@ function Board() {
                 positionY: currentY
             }
             setActivePiece(updatePiece)
+
+            // rules.checkPossibleMoves(activePiece, position);
+
+            if(document.querySelector(".highlight") !== null) {
+                document.querySelector(".highlight").classList.remove("highlight")
+            }
+            e.target.parentElement.classList.add("highlight")
+
         }
     }
+
+    useEffect(() => {
+        if (activePiece.isActive) {
+            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn,setPossibleTiles);
+        }
+    }, [activePiece, position])
+
 
     function movePiece (e) {
 
@@ -120,28 +136,25 @@ function Board() {
     function dropPiece (e) {
         if (activePiece.isActive && BoardRef) {
 
+        console.log(possibleTiles)
+
             const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
-            // const validMove = true;
-            const validMove = rules.checkMove(activePiece.positionX, activePiece.positionY, x, y, activePiece.piece, playerTurn, position);
+            const validMove = true;
+            // const validMove = rules.checkMove(activePiece.positionX, activePiece.positionY, x, y, activePiece.piece, playerTurn, position);
 
             if (validMove) {
+
                 const newPosition = [...position];
                 newPosition[activePiece.positionY][activePiece.positionX] = 0;
                 newPosition[y][x] = activePiece.piece;
                 setPosition(newPosition);
-    
-                const updatePiece = {
-                    ...activePiece,
-                    isActive: null,
-                    piece: 0,
-                    positionX: null,
-                    positionY: null
-                }
-                setActivePiece(updatePiece)
+
                 setPlayerTurn(prev => !prev)
+
             } else {    
+
                 activePiece.isActive.style.position = "static";
                 activePiece.isActive.style.left = "unset";
                 activePiece.isActive.style.top = "unset";
@@ -149,15 +162,16 @@ function Board() {
                 const newPosition = [...position];
                 setPosition(newPosition);
 
-                const updatePiece = {
-                    ...activePiece,
-                    isActive: null,
-                    piece: 0,
-                    positionX: null,
-                    positionY: null
-                }
-                setActivePiece(updatePiece)
             }
+
+            const updatePiece = {
+                ...activePiece,
+                isActive: false,
+            }
+            setActivePiece(updatePiece)
+
+            document.querySelector(".highlight").classList.remove("highlight")
+
         }
     }
 
