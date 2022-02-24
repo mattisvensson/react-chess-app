@@ -22,13 +22,17 @@ import Rules from '../Rules/Rules'
 // check if king can capture unprotected piece
 // tile highlighting
 // sound
-
-
-const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
-const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
+// custom board generator
+// game recording
+//  -> able to click thorugh moves/game
 
 function Board() {
 
+    //Board axis
+    const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
+    const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
+
+    //Get rules
     const rules = new Rules();
 
     // Pieces:
@@ -55,8 +59,10 @@ function Board() {
         [4,2,3,5,6,3,2,4],
     ])
 
+    //Referencing the board
     const BoardRef = useRef(null);
 
+    //Keep track of active piece
     const [activePiece, setActivePiece] = useState({
         isActive: false,
         piece: 0,
@@ -68,6 +74,7 @@ function Board() {
     // false = black's turn
     const [playerTurn, setPlayerTurn] = useState(true);
 
+    //Saves possible Tiles when piece is grabbed
     const [possibleTiles, setPossibleTiles] = useState([]);
 
     function grabPiece (e) {
@@ -92,8 +99,6 @@ function Board() {
             }
             setActivePiece(updatePiece)
 
-            // rules.checkPossibleMoves(activePiece, position);
-
             if(document.querySelector(".highlight") !== null) {
                 document.querySelector(".highlight").classList.remove("highlight")
             }
@@ -102,12 +107,12 @@ function Board() {
         }
     }
 
+    //Check possible moves
     useEffect(() => {
         if (activePiece.isActive) {
-            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn,setPossibleTiles);
+            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles);
         }
     }, [activePiece, position])
-
 
     function movePiece (e) {
 
@@ -134,17 +139,21 @@ function Board() {
     }
 
     function dropPiece (e) {
-        if (activePiece.isActive && BoardRef) {
-
+        
         console.log(possibleTiles)
+
+        if (activePiece.isActive && BoardRef) {
 
             const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
-            const validMove = true;
+            // const validMove = true;
             // const validMove = rules.checkMove(activePiece.positionX, activePiece.positionY, x, y, activePiece.piece, playerTurn, position);
 
-            if (validMove) {
+            const isEquiv = (possibleTiles, arB) => possibleTiles.length===arB.length && possibleTiles.every((el,index) => el === arB[index]);
+            const isMatch = possibleTiles.find(el => isEquiv(el, [y,x]));          
+
+            if (isMatch) {
 
                 const newPosition = [...position];
                 newPosition[activePiece.positionY][activePiece.positionX] = 0;
@@ -170,7 +179,13 @@ function Board() {
             }
             setActivePiece(updatePiece)
 
-            document.querySelector(".highlight").classList.remove("highlight")
+            // if (!activePiece.isActive) {
+            //     document.querySelector(".highlight").classList.remove("highlight")
+            // }
+            
+
+            //Reset possible Tiles
+            setPossibleTiles([]);
 
         }
     }
@@ -178,7 +193,7 @@ function Board() {
 
     let board = [];
     
-    for (let j = 0 ; j < verticalAxis.length; j++) {
+    for (let j = 0; j < verticalAxis.length; j++) {
         for (let i = 0; i < horizontalAxis.length; i++){
             const checkColor = j + i + 2;
             let image = undefined;
@@ -199,7 +214,7 @@ function Board() {
                 default: image = undefined; break;
             }
 
-            board.push(<Tile key={`${j}, ${i}`} image={`../../assets/images/${image}.png`} checkColor={checkColor}/>)
+            board.push(<Tile key={`${j}, ${i}`} posX={verticalAxis[j]} posY={horizontalAxis[i]} image={`../../assets/images/${image}.png`} checkColor={checkColor}/>)
         }
     }
 
