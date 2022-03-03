@@ -111,6 +111,7 @@ function Board() {
     useEffect(() => {
         if (activePiece.isActive) {
             rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles);
+            // rules.isPossibleTileOccupied(activePiece.piece, possibleTiles)
         }
     }, [activePiece, position])
 

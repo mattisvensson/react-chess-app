@@ -48,6 +48,7 @@ export default class Rules {
         console.log("checking possible moves...")
 
         switch (piece) {
+            //Pawn (white)
             case 1:
                 if (playerTurn) {
                     if(posY === 6) {
@@ -74,6 +75,7 @@ export default class Rules {
                 }
                 
                 break;
+            //Pawn (black)
             case 11: 
                 if (!playerTurn) {
                     if(posY === 1) {
@@ -91,102 +93,108 @@ export default class Rules {
                     }
                 }
                 break;
+            //Knight (white)
             case 2:
                 if (playerTurn) {
 
-                    if ((posY + 1 || posX + 2) < 8 && (posY + 1 || posX + 2) >= 0) {
+                    if (posY + 1 < 8 && posX + 2 < 8 && posY + 1 >= 0 && posX + 2 >= 0) {
                         if (position[posY + 1][posX + 2] === 0 || position[posY + 1][posX + 2] > 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 2]]);
                         } 
                     }
-                    if ((posY - 1 || posX + 2) < 8 && (posY - 1 || posX + 2) >= 0) {
+                    if (posY - 1 < 8 && posX + 2 < 8 && posY - 1 >= 0 && posX + 2 >= 0) {
                         if (position[posY - 1][posX + 2] === 0 || position[posY - 1][posX + 2] > 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 2]]);
                         } 
                     }
-                    if ((posY + 1 || posX - 2) < 8 && (posY + 1 || posX - 2) >= 0) {
+                    if (posY + 1 < 8 && posX - 2 < 8 && posY + 1 >= 0 && posX - 2 >= 0) {
                         if (position[posY + 1][posX - 2] === 0 || position[posY + 1][posX - 2] > 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 2]]);
                         } 
                     }
-                    if ((posY - 1 || posX - 2) < 8 && (posY - 1 || posX - 2) >= 0) {
+                    if (posY - 1 < 8 && posX - 2 < 8 && posY - 1 >= 0 && posX - 2 >= 0) {
                         if (position[posY - 1][posX - 2] === 0 || position[posY - 1][posX - 2] > 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 2]]);
                         } 
                     }
 
-                    if ((posY + 2 || posX + 1) < 8 && (posY + 2 || posX + 1) >= 0) {
+                    if (posY + 2 < 8 && posX + 1 < 8 && posY + 2 >= 0 && posX + 1 >= 0) {
                         if (position[posY + 2][posX + 1] === 0 || position[posY + 2][posX + 1] > 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX + 1]]);
                         } 
                     }
-                    if ((posY - 2 || posX + 1) < 8 && (posY - 2 || posX + 1) >= 0) {
+                    if (posY - 2 < 8 && posX + 1 < 8 && posY - 2 >= 0 && posX + 1 >= 0) {
                         if (position[posY - 2][posX + 1] === 0 || position[posY - 2][posX + 1] > 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX + 1]]);
                         } 
                     }
-                    if ((posY + 2 || posX - 1) < 8 && (posY + 2 || posX - 1) >= 0) {
+                    if (posY + 2 < 8 && posX - 1 < 8 && posY + 2 >= 0 && posX - 1 >= 0) {
                         if (position[posY + 2][posX - 1] === 0 || position[posY + 2][posX - 1] > 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX - 1]]);
                         } 
                     }
-                    if ((posY - 2 || posX - 1) < 8 && (posY - 2 || posX - 1) >= 0) {
+                    if (posY - 2 < 8 && posX - 1 < 8 && posY - 2 >= 0 && posX - 1 >= 0) {
                         if (position[posY - 2][posX - 1] === 0 || position[posY - 2][posX - 1] > 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX - 1]]);
                         } 
                     }
                 }
                 break;
+            //Knight (black)
             case 12:
                 if (!playerTurn) {
 
-                    if ((posY + 1 || posX + 2) < 8 && (posY + 1 || posX + 2) >= 0) {
+                    if (posY + 1 < 8 && posX + 2 < 8 && posY + 1 >= 0 && posX + 2 >= 0) {
                         if (position[posY + 1][posX + 2] === 0 || position[posY + 1][posX + 2] < 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 2]]);
                         } 
                     }
-                    if ((posY - 1 || posX + 2) < 8 && (posY - 1 || posX + 2) >= 0) {
+                    if (posY - 1 < 8 && posX + 2 < 8 && posY - 1 >= 0 && posX + 2 >= 0) {
                         if (position[posY - 1][posX + 2] === 0 || position[posY - 1][posX + 2] < 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 2]]);
                         } 
                     }
-                    if ((posY + 1 || posX - 2) < 8 && (posY + 1 || posX - 2) >= 0) {
+                    if (posY + 1 < 8 && posX - 2 < 8 && posY + 1 >= 0 && posX - 2 >= 0) {
                         if (position[posY + 1][posX - 2] === 0 || position[posY + 1][posX - 2] < 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 2]]);
                         } 
                     }
-                    if ((posY - 1 || posX - 2) < 8 && (posY - 1 || posX - 2) >= 0) {
+                    if (posY - 1 < 8 && posX - 2 < 8 && posY - 1 >= 0 && posX - 2 >= 0) {
                         if (position[posY - 1][posX - 2] === 0 || position[posY - 1][posX - 2] < 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 2]]);
                         } 
                     }
 
 
-                    if ((posY + 2 || posX + 1) < 8 && (posY + 2 || posX + 1) >= 0) {
+                    if (posY + 2 < 8 && posX + 1 < 8 && posY + 2 >= 0 && posX + 1 >= 0) {
                         if (position[posY + 2][posX + 1] === 0 || position[posY + 2][posX + 1] < 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX + 1]]);
                         } 
                     }
-                    if ((posY - 2 || posX + 1) < 8 && (posY - 2 || posX + 1) >= 0) {
+                    if (posY - 2 < 8 && posX + 1 < 8 && posY - 2 >= 0 && posX + 1 >= 0) {
                         if (position[posY - 2][posX + 1] === 0 || position[posY - 2][posX + 1] < 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX + 1]]);
                         } 
                     }
-                    if ((posY + 2 || posX - 1) < 8 && (posY + 2 || posX - 1) >= 0) {
+                    if (posY + 2 < 8 && posX - 1 < 8 && posY + 2 >= 0 && posX - 1 >= 0) {
                         if (position[posY + 2][posX - 1] === 0 || position[posY + 2][posX - 1] < 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX - 1]]);
                         } 
                     }
-                    if ((posY - 2 || posX - 1) < 8 && (posY - 2 || posX - 1) >= 0) {
+                    if (posY - 2 < 8 && posX - 1 < 8 && posY - 2 >= 0 && posX - 1 >= 0) {
                         if (position[posY - 2][posX - 1] === 0 || position[posY - 2][posX - 1] < 8) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX - 1]]);
                         } 
                     }
                 }
                 break;
+            //Bishop (white)
             case 3:
+            //Bishop (black)
             case 13: break;
+            //Rook (white)
             case 4:
+            //Rook (black)
             case 14:
                 if ((playerTurn && piece === 4) || (!playerTurn && piece === 14)) {
                     //down
@@ -224,11 +232,40 @@ export default class Rules {
                     }
                 }
                 break;
+            //Queen (white)
             case 5:
+            //Queen (black)
             case 15:break;
+            //King (white)
             case 6:
+            //King (black)
             case 16:
                 if ((playerTurn && piece === 6) || (!playerTurn && piece === 16)) {
+
+                    if (position[posY - 1][posX + 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 1]]);
+                    }
+                    if (position[posY][posX + 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY, posX + 1]]);
+                    }
+                    if (position[posY + 1][posX + 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 1]]);
+                    }
+                    if (position[posY + 1][posX] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX]]);
+                    }
+                    if (position[posY + 1][posX - 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 1]]);
+                    }
+                    if (position[posY][posX - 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY, posX - 1]]);
+                    }
+                    if (position[posY - 1][posX - 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 1]]);
+                    }
+                    if (position[posY - 1][posX] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX]]);
+                    }
 
                     // if (this.checkTile(prevX, prevY, newX, newY, piece, position)) {
                     //     if ((newX === prevX - 1 || newX === prevX + 1 || newX === prevX) && (newY === prevY - 1 || newY === prevY + 1 || newY === prevY)) {
@@ -243,6 +280,17 @@ export default class Rules {
                 break;
             default: break;
         }
+
+        
+
+ 
+
+        
+    }
+
+    isPossibleTileOccupied (piece, possibleTiles) {
+        console.log("drin")
+        console.log(possibleTiles)
     }
 
     // checkMove(prevX, prevY, newX, newY, piece, playerTurn, position) {
