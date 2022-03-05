@@ -7,7 +7,7 @@ function Tile (props) {
     // const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 
     return (
-        <div className={`tile ${props.checkColor % 2 === 0 ? "light" : "dark"}`}>
+        <div className={`tile ${props.checkColor % 2 === 0 ? "light" : "dark"} ${props.isPossibleMove ? "possibleMove" : null}`}>
             {/* <span className='index'>{`${props.posX} ${props.posY}`}</span> */}
             {props.image.indexOf("undefined") > -1 ? "" : <div className="piece" style={{backgroundImage: `url(${props.image})`}}></div> }
         </div>

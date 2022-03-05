@@ -5,10 +5,10 @@ import Rules from '../Rules/Rules'
 
 
 // TODO
-// complete movement of all pieces - done
-// capturing pieces - done
+// complete movement of all pieces
+// capturing pieces
 // check for valid moves
-//  -> tile is occupied - done
+//  -> tile is occupied 
 //  -> passed tiles are occupied
 //  -> en passant
 //  -> prevent king from moving into checks
@@ -25,6 +25,8 @@ import Rules from '../Rules/Rules'
 // custom board generator
 // game recording
 //  -> able to click thorugh moves/game
+// timer
+// conect to chess api
 
 function Board() {
 
@@ -199,6 +201,17 @@ function Board() {
             const checkColor = j + i + 2;
             let image = undefined;
 
+            let isPossibleMove = false;
+
+            console.log("x/j: " + j)
+            console.log("y/i: " + i)
+            console.log(possibleTiles)
+            console.log(possibleTiles.length)
+
+            for (let i = 0; i < possibleTiles.length; i++) {
+                console.log(possibleTiles[i].indexOf[i, j])
+            }
+
             switch (position[j][i]) {
                 case 1: image = "p_w"; break;
                 case 11: image = "p_b"; break;
@@ -215,7 +228,7 @@ function Board() {
                 default: image = undefined; break;
             }
 
-            board.push(<Tile key={`${j}, ${i}`} posX={verticalAxis[j]} posY={horizontalAxis[i]} image={`../../assets/images/${image}.png`} checkColor={checkColor}/>)
+            board.push(<Tile key={`${j}, ${i}`} posX={verticalAxis[j]} posY={horizontalAxis[i]} image={`../../assets/images/${image}.png`} isPossibleMove={isPossibleMove} checkColor={checkColor}/>)
         }
     }
 
