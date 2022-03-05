@@ -40,12 +40,17 @@
     pointer-events: none;
 }  */
 
-#Board .tile.possibleMove::before {
+#Board .tile.possibleMove::after {
     content: "";
     position: absolute;
     width: 50px;
     height: 50px;
     background-color: rgb(160, 160, 160);
     border-radius: 50px;
-    transform: translate(50%, 50%)
+    transform: translate(50%, 50%);
+    pointer-events: none;
+}
+
+#Board .tile.capture > div {
+    border: 5px solid #ff7777;
 }

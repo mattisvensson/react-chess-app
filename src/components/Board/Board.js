@@ -79,8 +79,13 @@ function Board() {
     //Saves possible Tiles when piece is grabbed
     const [possibleTiles, setPossibleTiles] = useState([]);
 
+    const [possibleCaptures, setPossibleCaptures] = useState([])
+
     function grabPiece (e) {
         if (e.target.classList.contains("piece")) {
+
+            //Reset possible Tiles
+            setPossibleTiles([]);
 
             const mouseX = e.clientX - 40;
             const mouseY = e.clientY - 40;
@@ -112,7 +117,7 @@ function Board() {
     //Check possible moves
     useEffect(() => {
         if (activePiece.isActive) {
-            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles);
+            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures);
             // rules.isPossibleTileOccupied(activePiece.piece, possibleTiles)
         }
     }, [activePiece, position])
@@ -150,13 +155,15 @@ function Board() {
             const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
-            // const validMove = true;
-            // const validMove = rules.checkMove(activePiece.positionX, activePiece.positionY, x, y, activePiece.piece, playerTurn, position);
-
-            const isEquiv = (possibleTiles, arB) => possibleTiles.length===arB.length && possibleTiles.every((el,index) => el === arB[index]);
-            const isMatch = possibleTiles.find(el => isEquiv(el, [y,x]));          
-
-            if (isMatch) {
+            let match = false;
+            for (let i = 0; i < possibleTiles.length; i++) {
+                if (JSON.stringify(possibleTiles[i]) === JSON.stringify([y, x])) {
+                    match = true;
+                    break;
+                }
+            }
+            
+            if (match) {
 
                 const newPosition = [...position];
                 newPosition[activePiece.positionY][activePiece.positionX] = 0;
@@ -165,30 +172,20 @@ function Board() {
 
                 setPlayerTurn(prev => !prev)
 
-            } else {    
-
-                activePiece.isActive.style.position = "static";
-                activePiece.isActive.style.left = "unset";
-                activePiece.isActive.style.top = "unset";
-
-                const newPosition = [...position];
-                setPosition(newPosition);
+                //Reset possible Tiles
+                setPossibleTiles([]);
 
             }
+
+            activePiece.isActive.style.position = "static";
+            activePiece.isActive.style.left = "unset";
+            activePiece.isActive.style.top = "unset";
 
             const updatePiece = {
                 ...activePiece,
                 isActive: false,
             }
             setActivePiece(updatePiece)
-
-            // if (!activePiece.isActive) {
-            //     document.querySelector(".highlight").classList.remove("highlight")
-            // }
-            
-
-            //Reset possible Tiles
-            setPossibleTiles([]);
 
         }
     }
@@ -200,16 +197,24 @@ function Board() {
         for (let i = 0; i < horizontalAxis.length; i++){
             const checkColor = j + i + 2;
             let image = undefined;
-
             let isPossibleMove = false;
 
-            console.log("x/j: " + j)
-            console.log("y/i: " + i)
-            console.log(possibleTiles)
-            console.log(possibleTiles.length)
-
-            for (let i = 0; i < possibleTiles.length; i++) {
-                console.log(possibleTiles[i].indexOf[i, j])
+            //highlight possible Tiles
+            for (let x = 0; x < possibleTiles.length; x++) {
+                if (JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) {
+                    
+                    isPossibleMove = true;
+                    
+                    // if(position[j][i] === possibleTiles[j][i]) {
+                    //     console.log("ist nicht null")
+                    // } else {
+                    //     console.log("ist null")
+                    // }
+                    // console.log("x: " + x)
+                    // console.log("j: " + j)
+                    // console.log("i: " + i)
+                    // console.log(position[j][i] === possibleTiles[j][i])
+                }
             }
 
             switch (position[j][i]) {
