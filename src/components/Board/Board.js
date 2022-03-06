@@ -5,28 +5,34 @@ import Rules from '../Rules/Rules'
 
 
 // TODO
-// complete movement of all pieces - done
-// capturing pieces
-// check for valid moves
-//  -> tile is occupied 
-//  -> passed tiles are occupied
-//  -> en passant
-//  -> prevent king from moving into checks
-//  -> check for pins
-// checkmate
-// stalemate
-// Pawn promotion
-// Add castling
-// add check
-// add board description
-// check if king can capture unprotected piece
-// tile highlighting
-// sound
-// custom board generator
-// game recording
-//  -> able to click thorugh moves/game
-// timer
-// conect to chess api
+// X complete movement of all pieces              
+// X capturing pieces                             
+//   check for valid moves
+// X  -> tile is occupied                         
+// X  -> passed tiles are occupied                
+//    -> en passant
+//    -> prevent king from moving into checks
+//    -> check for pins
+//   checkmate
+//   stalemate
+//   Pawn promotion
+//   Add castling
+//   add check
+//   add board description
+//   check if king can capture unprotected piece
+//   tile highlighting
+// X  -> possible Moves                           
+// X  -> capturable pieces                        
+//    -> last move
+//   add sound effects
+//   custom board position generator
+//   game recording
+//    -> able to click thorugh moves/game
+//   timer
+//   conect to chess api
+//    -> play with bots
+//    -> get openings
+//    -> puzzles
 
 function Board() {
 
@@ -220,20 +226,23 @@ function Board() {
             const checkColor = j + i + 2;
             let image = undefined;
             let isPossibleMove = false;
+            let isPossibleCapture = false;
 
             //highlight possible Tiles
             for (let x = 0; x < possibleTiles.length; x++) {
                 if (JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) {
-                    console.log("drin")
                     isPossibleMove = true;
                 }
             }
-            // for (let z = 0; i < possibleCaptures.length; z++) {
-            //     if (JSON.stringify(possibleCaptures[z]) === JSON.stringify([i, j])) {
-            //         console.log("capture")
-            //         // isPossibleMove = true;
-            //     }
-            // }
+
+            //highlight pieces which can be captured
+            for (let z = 0; z < possibleCaptures.length; z++) {
+                if (JSON.stringify(possibleCaptures[z]) === JSON.stringify([j, i])) {
+                    if ((playerTurn && position[j][i] > 8) || (!playerTurn && position[j][i] < 8)) {
+                        isPossibleCapture = true;
+                    }
+                }
+            }
 
             switch (position[j][i]) {
                 case 1: image = "p_w"; break;
@@ -251,7 +260,7 @@ function Board() {
                 default: image = undefined; break;
             }
 
-            board.push(<Tile key={`${j}, ${i}`} posX={verticalAxis[j]} posY={horizontalAxis[i]} image={`../../assets/images/${image}.png`} isPossibleMove={isPossibleMove} checkColor={checkColor}/>)
+            board.push(<Tile key={`${j}, ${i}`} posX={verticalAxis[j]} posY={horizontalAxis[i]} image={`../../assets/images/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} checkColor={checkColor}/>)
         }
     }
 
