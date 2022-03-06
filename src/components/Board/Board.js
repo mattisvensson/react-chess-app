@@ -85,12 +85,15 @@ function Board() {
     //Saves possible Tiles to move to when piece is grabbed
     const [possibleTiles, setPossibleTiles] = useState([]);
 
-    //Saves possibl piece captures when piece is grabbed
+    //Saves possible piece captures when piece is grabbed
     const [possibleCaptures, setPossibleCaptures] = useState([])
+
+    const [pieceIsDagged, setPieceIsDragged] = useState(false);
 
     //grabbing the piece
     function grabPiece (e) {
-        if (e.target.classList.contains("piece")) {
+        console.log(activePiece.isActive)
+        if (e.target.classList.contains("piece") && activePiece.isActive === false) {
 
             //Reset possible Tiles and captures
             setPossibleTiles([]);
@@ -125,6 +128,20 @@ function Board() {
             }
             e.target.parentElement.classList.add("highlight")
 
+            document.body.onmousedown(e => {
+                setPieceIsDragged(true)
+            })
+            document.body.onmouseup(e => {
+                setPieceIsDragged(false)
+            })
+
+        } else {
+            
+            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
+            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
+
+            executeMove(x, y)
+
         }
     }
 
@@ -138,76 +155,79 @@ function Board() {
     //move piece
     function movePiece (e) {
 
-        //get coordinates of mouse
-        const mouseX = e.clientX - 40;
-        const mouseY = e.clientY - 40;
+        if (pieceIsDagged) {
 
-        //get borders of the board
-        const minX = BoardRef.current.offsetLeft;
-        const maxX = BoardRef.current.offsetLeft + 800;
-        const minY = BoardRef.current.offsetTop;
-        const maxY = BoardRef.current.offsetTop + 800;
+            //get coordinates of mouse
+            const mouseX = e.clientX - 40;
+            const mouseY = e.clientY - 40;
 
-        if (activePiece.isActive) {
+            //get borders of the board
+            const minX = BoardRef.current.offsetLeft;
+            const maxX = BoardRef.current.offsetLeft + 800;
+            const minY = BoardRef.current.offsetTop;
+            const maxY = BoardRef.current.offsetTop + 800;
 
-            //set piece position to mouse position
-            activePiece.isActive.style.position = "absolute";
-            activePiece.isActive.style.left = mouseX + "px";
-            activePiece.isActive.style.top = mouseY + "px";
+            if (activePiece.isActive && pieceIsDagged) {
 
-            //stop piece from following the mouse if mouse is outside of the board
-            if (mouseX < minX) {activePiece.isActive.style.left = minX - 20 + "px";}
-            if (mouseX + 60 > maxX) {activePiece.isActive.style.left = maxX - 70 + "px";}
-            if (mouseY < minY) {activePiece.isActive.style.top = minY - 10 + "px";}
-            if (mouseY + 70 > maxY) {activePiece.isActive.style.top = maxY - 70 + "px";}
+                //set piece position to mouse position
+                activePiece.isActive.style.position = "absolute";
+                activePiece.isActive.style.left = mouseX + "px";
+                activePiece.isActive.style.top = mouseY + "px";
+
+                //stop piece from following the mouse if mouse is outside of the board
+                if (mouseX < minX) {activePiece.isActive.style.left = minX - 20 + "px";}
+                if (mouseX + 60 > maxX) {activePiece.isActive.style.left = maxX - 70 + "px";}
+                if (mouseY < minY) {activePiece.isActive.style.top = minY - 10 + "px";}
+                if (mouseY + 70 > maxY) {activePiece.isActive.style.top = maxY - 70 + "px";}
+            }
         }
-
     }
 
     function dropPiece (e) {
         
-        // console.log(possibleTiles)
-        // console.log(possibleCaptures)
+        console.log(possibleTiles)
+        console.log(possibleCaptures)
 
         if (activePiece.isActive && BoardRef) {
 
             const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
-            let match = false;
-            for (let i = 0; i < possibleTiles.length; i++) {
-                if (JSON.stringify(possibleTiles[i]) === JSON.stringify([y, x])) {
+            executeMove(x, y);
+
+        }
+    }
+
+    function executeMove (x, y) {
+        
+        let match = false;
+        for (let i = 0; i < possibleTiles.length; i++) {
+            if (JSON.stringify(possibleTiles[i]) === JSON.stringify([y, x])) {
+                match = true;
+                break;
+            }
+        }
+        for (let i = 0; i < possibleCaptures.length; i++) {
+            if (JSON.stringify(possibleCaptures[i]) === JSON.stringify([y, x])) {
+                if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8)) {
                     match = true;
                     break;
                 }
             }
-            for (let i = 0; i < possibleCaptures.length; i++) {
-                if (JSON.stringify(possibleCaptures[i]) === JSON.stringify([y, x])) {
-                    if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8)) {
-                        match = true;
-                        break;
-                    }
-                }
-            }
+        }
+        
+        if (match) {
             
-            if (match) {
+            const newPosition = [...position];
+            newPosition[activePiece.positionY][activePiece.positionX] = 0;
+            newPosition[y][x] = activePiece.piece;
+            setPosition(newPosition);
 
-                const newPosition = [...position];
-                newPosition[activePiece.positionY][activePiece.positionX] = 0;
-                newPosition[y][x] = activePiece.piece;
-                setPosition(newPosition);
+            setPlayerTurn(prev => !prev)
 
-                setPlayerTurn(prev => !prev)
-
-                //Reset possible Tiles
-                setPossibleTiles([]);
-                setPossibleCaptures([])
-
-            }
-
-            activePiece.isActive.style.position = "static";
-            activePiece.isActive.style.left = "unset";
-            activePiece.isActive.style.top = "unset";
+            //Reset possible Tiles
+            setPossibleTiles([]);
+            setPossibleCaptures([])
 
             const updatePiece = {
                 ...activePiece,
@@ -216,6 +236,12 @@ function Board() {
             setActivePiece(updatePiece)
 
         }
+
+        activePiece.isActive.style.position = "static";
+        activePiece.isActive.style.left = "unset";
+        activePiece.isActive.style.top = "unset";
+
+        console.log(activePiece)
     }
 
 
@@ -263,7 +289,6 @@ function Board() {
             board.push(<Tile key={`${j}, ${i}`} posX={verticalAxis[j]} posY={horizontalAxis[i]} image={`../../assets/images/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} checkColor={checkColor}/>)
         }
     }
-
 
     return (
         <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)}>{board}</div>

@@ -11,14 +11,12 @@ export default class Rules {
                         for (let i = 5; i >= 4; i--) {
                             if (position[i][posX] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
-                            } else {
-                                return false;
                             }
                         }
+                    // } else if (posY === 3) {
+
                     } else if (position[posY - 1][posX] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX]]);
-                    } else {
-                        return false;
                     }
                     //Check if piece can be captured
                     if (position[posY - 1][posX - 1] > 8) {
@@ -37,14 +35,10 @@ export default class Rules {
                         for (let i = 2; i <= 3; i++) {
                             if (position[i][posX] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
-                            } else {
-                                return false;
                             }
                         }
                     } else if (position[posY + 1][posX] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX]]);
-                    } else {
-                        return false;
                     }
                     //Check if piece can be captured
                     if (position[posY + 1][posX - 1] < 8 && position[posY + 1][posX - 1] > 0 ) {
