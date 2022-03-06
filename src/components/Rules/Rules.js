@@ -1,49 +1,5 @@
 export default class Rules {
 
-    // checkTile(prevX, prevY, newX, newY, piece, position) {
-    //     if (piece === 1 || piece === 11) {
-    //         if (prevX === newX) {
-    //             if (position[newY][newX] === 0) {
-    //                 return true;
-    //             } else {
-    //                 return false;
-    //             }
-    //         } else if (prevX !== newX && (newX === prevX + 1 || newX === prevX -1)) {
-    //             if ((piece < 7 && position[newY][newX] > 10) || (piece > 7 && (position[newY][newX] < 10 && position[newY][newX] > 0))) {
-    //                 return true;
-    //             } else {
-    //                 return false;
-    //             }
-    //         } else {
-    //             return false;
-    //         }
-    //     } else {
-    //         if (position[newY][newX] === 0) {
-    //             return true;
-    //         } else if ((piece < 7 && position[newY][newX] > 10) || (piece > 7 && position[newY][newX] < 10 )) {
-    //             return true;
-    //         } else {
-    //             return false;
-    //         }
-    //     }
-    // }
-
-    // checkPassedTile(lowest, newX, newY, position, axis) {
-    //     if (axis === "x") {
-    //         if (position[newY][lowest] === 0) {
-    //             return true;
-    //         } else {
-    //             return false;
-    //         }
-    //     } else {
-    //         if (position[lowest][newX] === 0) {
-    //             return true;
-    //         } else {
-    //             return false;
-    //         }
-    //     }
-    // }
-
     checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures) {
         console.log("checking possible moves...")
 
@@ -94,113 +50,78 @@ export default class Rules {
                     if (position[posY + 1][posX - 1] < 8 && position[posY + 1][posX - 1] > 0 ) {
                         setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX - 1]]);
                     }
-                    if (position[posY + 1][posX + 1] < 8 && position[posY + 1][posX - 1] > 0) {
+                    if (position[posY + 1][posX + 1] < 8 && position[posY + 1][posX + 1] > 0) {
                         setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX + 1]]);
                     }
                 }
                 break;
-            //Knight (white)
+            //Knight (white and black)
             case 2:
-                if (playerTurn) {
+            case 12:
+                if ((playerTurn && piece === 2) || (!playerTurn && piece === 12)) {
 
                     if (posY + 1 < 8 && posX + 2 < 8 && posY + 1 >= 0 && posX + 2 >= 0) {
                         if (position[posY + 1][posX + 2] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 2]]);
-                        } else if ( position[posY + 1][posX + 2] > 8) {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX + 2]]);
+                        } else {
+                            setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX + 2]]);  
                         }
                     }
                     if (posY - 1 < 8 && posX + 2 < 8 && posY - 1 >= 0 && posX + 2 >= 0) {
                         if (position[posY - 1][posX + 2] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 2]]);
-                        } else if ( position[posY - 1][posX + 2] > 8) {
+                        } else {
                             setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX + 2]]);
                         }
                     }
                     if (posY + 1 < 8 && posX - 2 < 8 && posY + 1 >= 0 && posX - 2 >= 0) {
-                        if (position[posY + 1][posX - 2] === 0 || position[posY + 1][posX - 2] > 8) {
+                        if (position[posY + 1][posX - 2] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 2]]);
-                        } 
+                        } else {
+                            setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX - 2]]);
+                        }
                     }
                     if (posY - 1 < 8 && posX - 2 < 8 && posY - 1 >= 0 && posX - 2 >= 0) {
-                        if (position[posY - 1][posX - 2] === 0 || position[posY - 1][posX - 2] > 8) {
+                        if (position[posY - 1][posX - 2] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 2]]);
-                        } 
-                    }
-
-                    if (posY + 2 < 8 && posX + 1 < 8 && posY + 2 >= 0 && posX + 1 >= 0) {
-                        if (position[posY + 2][posX + 1] === 0 || position[posY + 2][posX + 1] > 8) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX + 1]]);
-                        } 
-                    }
-                    if (posY - 2 < 8 && posX + 1 < 8 && posY - 2 >= 0 && posX + 1 >= 0) {
-                        if (position[posY - 2][posX + 1] === 0 || position[posY - 2][posX + 1] > 8) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX + 1]]);
-                        } 
-                    }
-                    if (posY + 2 < 8 && posX - 1 < 8 && posY + 2 >= 0 && posX - 1 >= 0) {
-                        if (position[posY + 2][posX - 1] === 0 || position[posY + 2][posX - 1] > 8) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX - 1]]);
-                        } 
-                    }
-                    if (posY - 2 < 8 && posX - 1 < 8 && posY - 2 >= 0 && posX - 1 >= 0) {
-                        if (position[posY - 2][posX - 1] === 0 || position[posY - 2][posX - 1] > 8) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX - 1]]);
-                        } 
-                    }
-                }
-                break;
-            //Knight (black)
-            case 12:
-                if (!playerTurn) {
-
-                    if (posY + 1 < 8 && posX + 2 < 8 && posY + 1 >= 0 && posX + 2 >= 0) {
-                        if (position[posY + 1][posX + 2] === 0 || position[posY + 1][posX + 2] < 8) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 2]]);
-                        } 
-                    }
-                    if (posY - 1 < 8 && posX + 2 < 8 && posY - 1 >= 0 && posX + 2 >= 0) {
-                        if (position[posY - 1][posX + 2] === 0 || position[posY - 1][posX + 2] < 8) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 2]]);
-                        } 
-                    }
-                    if (posY + 1 < 8 && posX - 2 < 8 && posY + 1 >= 0 && posX - 2 >= 0) {
-                        if (position[posY + 1][posX - 2] === 0 || position[posY + 1][posX - 2] < 8) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 2]]);
-                        } 
-                    }
-                    if (posY - 1 < 8 && posX - 2 < 8 && posY - 1 >= 0 && posX - 2 >= 0) {
-                        if (position[posY - 1][posX - 2] === 0 || position[posY - 1][posX - 2] < 8) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 2]]);
-                        } 
+                        } else {
+                            setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX - 2]]);
+                        }
                     }
 
 
                     if (posY + 2 < 8 && posX + 1 < 8 && posY + 2 >= 0 && posX + 1 >= 0) {
-                        if (position[posY + 2][posX + 1] === 0 || position[posY + 2][posX + 1] < 8) {
+                        if (position[posY + 2][posX + 1] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX + 1]]);
-                        } 
+                        } else {
+                            setPossibleCaptures(oldArray => [...oldArray, [posY + 2, posX + 1]]); 
+                        }
                     }
                     if (posY - 2 < 8 && posX + 1 < 8 && posY - 2 >= 0 && posX + 1 >= 0) {
-                        if (position[posY - 2][posX + 1] === 0 || position[posY - 2][posX + 1] < 8) {
+                        if (position[posY - 2][posX + 1] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX + 1]]);
-                        } 
+                        } else {
+                            setPossibleCaptures(oldArray => [...oldArray, [posY - 2, posX + 1]]);
+                        }
                     }
                     if (posY + 2 < 8 && posX - 1 < 8 && posY + 2 >= 0 && posX - 1 >= 0) {
-                        if (position[posY + 2][posX - 1] === 0 || position[posY + 2][posX - 1] < 8) {
+                        if (position[posY + 2][posX - 1] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX - 1]]);
-                        } 
+                        } else {
+                            setPossibleCaptures(oldArray => [...oldArray, [posY + 2, posX - 1]]);
+                        }
                     }
                     if (posY - 2 < 8 && posX - 1 < 8 && posY - 2 >= 0 && posX - 1 >= 0) {
-                        if (position[posY - 2][posX - 1] === 0 || position[posY - 2][posX - 1] < 8) {
+                        if (position[posY - 2][posX - 1] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX - 1]]);
-                        } 
+                        } else {
+                            setPossibleCaptures(oldArray => [...oldArray, [posY - 2, posX - 1]]);
+                        }
                     }
                 }
                 break;
-            //Bishop (white)
+            //Bishop (white and black)
             case 3:
-            //Bishop (black)
             case 13: 
                 if ((playerTurn && piece === 3) || (!playerTurn && piece === 13)) {
 
@@ -210,7 +131,8 @@ export default class Rules {
                             if (position[posY + i][posX + i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY + i, posX + i]]);
                             } else {
-                                break
+                                setPossibleCaptures(oldArray => [...oldArray, [posY + i, posX + i]]);
+                                break;
                             }
                         }
                     }
@@ -220,7 +142,8 @@ export default class Rules {
                             if (position[posY - i][posX + i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY - i, posX + i]]);
                             } else {
-                                break
+                                setPossibleCaptures(oldArray => [...oldArray, [posY - i, posX + i]]);
+                                break;
                             }
                         }
                     }
@@ -230,7 +153,8 @@ export default class Rules {
                             if (position[posY + i][posX - i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY + i, posX - i]]);
                             } else {
-                                break
+                                setPossibleCaptures(oldArray => [...oldArray, [posY + i, posX - i]]);
+                                break;
                             }
                         }
                     }
@@ -240,15 +164,15 @@ export default class Rules {
                             if (position[posY - i][posX - i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY - i, posX - i]]);
                             } else {
-                                break
+                                setPossibleCaptures(oldArray => [...oldArray, [posY - i, posX - i]]);
+                                break;
                             }
                         }
                     }
                 }              
                 break;
-            //Rook (white)
+            //Rook (white and black)
             case 4:
-            //Rook (black)
             case 14:
                 if ((playerTurn && piece === 4) || (!playerTurn && piece === 14)) {
                     //down
@@ -285,9 +209,8 @@ export default class Rules {
                     }
                 }
                 break;
-            //Queen (white)
+            //Queen (white and black)
             case 5:
-            //Queen (black)
             case 15:
                 if ((playerTurn && piece === 5) || (!playerTurn && piece === 15)) {
                     //down
@@ -365,9 +288,8 @@ export default class Rules {
                 }
                 
             break;
-            //King (white)
+            //King (white and black)
             case 6:
-            //King (black)
             case 16:
                 if ((playerTurn && piece === 6) || (!playerTurn && piece === 16)) {
 
@@ -417,10 +339,5 @@ export default class Rules {
                 break;
             default: break;
         }
-    }
-
-    isPossibleTileOccupied (piece, possibleTiles) {
-        console.log("drin")
-        console.log(possibleTiles)
     }
 }

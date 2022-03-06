@@ -5,7 +5,7 @@ import Rules from '../Rules/Rules'
 
 
 // TODO
-// complete movement of all pieces
+// complete movement of all pieces - done
 // capturing pieces
 // check for valid moves
 //  -> tile is occupied 
@@ -76,27 +76,34 @@ function Board() {
     // false = black's turn
     const [playerTurn, setPlayerTurn] = useState(true);
 
-    //Saves possible Tiles when piece is grabbed
+    //Saves possible Tiles to move to when piece is grabbed
     const [possibleTiles, setPossibleTiles] = useState([]);
 
+    //Saves possibl piece captures when piece is grabbed
     const [possibleCaptures, setPossibleCaptures] = useState([])
 
+    //grabbing the piece
     function grabPiece (e) {
         if (e.target.classList.contains("piece")) {
 
-            //Reset possible Tiles
+            //Reset possible Tiles and captures
             setPossibleTiles([]);
-
+            setPossibleCaptures([])
+        
+            //get coordinates of mouse
             const mouseX = e.clientX - 40;
             const mouseY = e.clientY - 40;
 
+            //set piece position to mouse position
             e.target.style.position = "absolute";
             e.target.style.left = mouseX + "px";
             e.target.style.top = mouseY + "px";
 
+            //get tile on which the piece was standing
             const currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
             const currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
+            //set active piece
             const updatePiece = {
                 ...activePiece,
                 isActive: e.target,
@@ -106,6 +113,7 @@ function Board() {
             }
             setActivePiece(updatePiece)
 
+            //remove last highlighted tile and highlight the tile from the piece
             if(document.querySelector(".highlight") !== null) {
                 document.querySelector(".highlight").classList.remove("highlight")
             }
@@ -118,15 +126,17 @@ function Board() {
     useEffect(() => {
         if (activePiece.isActive) {
             rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures);
-            // rules.isPossibleTileOccupied(activePiece.piece, possibleTiles)
         }
     }, [activePiece, position])
 
+    //move piece
     function movePiece (e) {
 
+        //get coordinates of mouse
         const mouseX = e.clientX - 40;
         const mouseY = e.clientY - 40;
 
+        //get borders of the board
         const minX = BoardRef.current.offsetLeft;
         const maxX = BoardRef.current.offsetLeft + 800;
         const minY = BoardRef.current.offsetTop;
@@ -134,10 +144,12 @@ function Board() {
 
         if (activePiece.isActive) {
 
+            //set piece position to mouse position
             activePiece.isActive.style.position = "absolute";
             activePiece.isActive.style.left = mouseX + "px";
             activePiece.isActive.style.top = mouseY + "px";
 
+            //stop piece from following the mouse if mouse is outside of the board
             if (mouseX < minX) {activePiece.isActive.style.left = minX - 20 + "px";}
             if (mouseX + 60 > maxX) {activePiece.isActive.style.left = maxX - 70 + "px";}
             if (mouseY < minY) {activePiece.isActive.style.top = minY - 10 + "px";}
@@ -148,7 +160,8 @@ function Board() {
 
     function dropPiece (e) {
         
-        console.log(possibleTiles)
+        // console.log(possibleTiles)
+        // console.log(possibleCaptures)
 
         if (activePiece.isActive && BoardRef) {
 
@@ -160,6 +173,14 @@ function Board() {
                 if (JSON.stringify(possibleTiles[i]) === JSON.stringify([y, x])) {
                     match = true;
                     break;
+                }
+            }
+            for (let i = 0; i < possibleCaptures.length; i++) {
+                if (JSON.stringify(possibleCaptures[i]) === JSON.stringify([y, x])) {
+                    if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8)) {
+                        match = true;
+                        break;
+                    }
                 }
             }
             
@@ -174,6 +195,7 @@ function Board() {
 
                 //Reset possible Tiles
                 setPossibleTiles([]);
+                setPossibleCaptures([])
 
             }
 
@@ -202,20 +224,16 @@ function Board() {
             //highlight possible Tiles
             for (let x = 0; x < possibleTiles.length; x++) {
                 if (JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) {
-                    
+                    console.log("drin")
                     isPossibleMove = true;
-                    
-                    // if(position[j][i] === possibleTiles[j][i]) {
-                    //     console.log("ist nicht null")
-                    // } else {
-                    //     console.log("ist null")
-                    // }
-                    // console.log("x: " + x)
-                    // console.log("j: " + j)
-                    // console.log("i: " + i)
-                    // console.log(position[j][i] === possibleTiles[j][i])
                 }
             }
+            // for (let z = 0; i < possibleCaptures.length; z++) {
+            //     if (JSON.stringify(possibleCaptures[z]) === JSON.stringify([i, j])) {
+            //         console.log("capture")
+            //         // isPossibleMove = true;
+            //     }
+            // }
 
             switch (position[j][i]) {
                 case 1: image = "p_w"; break;
