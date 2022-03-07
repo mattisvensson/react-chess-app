@@ -78,6 +78,13 @@ function Board() {
         positionY: null
     });
 
+    const [lastPiece, setLastPiece] = useState({
+        oldPositionX: null,
+        oldPositionY: null,
+        newPositionX: null,
+        newPositionY: null
+    })
+
     // true = white's turn
     // false = black's turn
     const [playerTurn, setPlayerTurn] = useState(true);
@@ -92,8 +99,19 @@ function Board() {
 
     //grabbing the piece
     function grabPiece (e) {
-        console.log(activePiece.isActive)
-        if (e.target.classList.contains("piece") && activePiece.isActive === false) {
+
+        if (e.target === activePiece.isActive) {
+
+            const updatePiece = {
+                ...activePiece,
+                isActive: false,
+            }
+            setActivePiece(updatePiece)
+
+            setPossibleTiles([]);
+            setPossibleCaptures([])
+
+        } else if (e.target.classList.contains("piece")) {
 
             //Reset possible Tiles and captures
             setPossibleTiles([]);
@@ -122,20 +140,9 @@ function Board() {
             }
             setActivePiece(updatePiece)
 
-            //remove last highlighted tile and highlight the tile from the piece
-            if(document.querySelector(".highlight") !== null) {
-                document.querySelector(".highlight").classList.remove("highlight")
-            }
-            e.target.parentElement.classList.add("highlight")
+            setPieceIsDragged(true)
 
-            document.body.onmousedown(e => {
-                setPieceIsDragged(true)
-            })
-            document.body.onmouseup(e => {
-                setPieceIsDragged(false)
-            })
-
-        } else {
+        } else if (activePiece.isActive) {
             
             const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
@@ -144,6 +151,7 @@ function Board() {
 
         }
     }
+    
 
     //Check possible moves
     useEffect(() => {
@@ -229,21 +237,30 @@ function Board() {
             setPossibleTiles([]);
             setPossibleCaptures([])
 
+            const updateLastPiece = {
+                ...lastPiece, 
+                oldPositionX: activePiece.positionX,
+                oldPositionY: activePiece.positionY,
+                newPositionX: x,
+                newPositionY: y
+            }
+            setLastPiece(updateLastPiece)
+
             const updatePiece = {
                 ...activePiece,
                 isActive: false,
             }
             setActivePiece(updatePiece)
 
-        }
+        }      
 
         activePiece.isActive.style.position = "static";
         activePiece.isActive.style.left = "unset";
         activePiece.isActive.style.top = "unset";
 
-        console.log(activePiece)
-    }
+        setPieceIsDragged(false)
 
+    }
 
     let board = [];
     
@@ -253,6 +270,7 @@ function Board() {
             let image = undefined;
             let isPossibleMove = false;
             let isPossibleCapture = false;
+            let isHighlighted = false;
 
             //highlight possible Tiles
             for (let x = 0; x < possibleTiles.length; x++) {
@@ -268,6 +286,10 @@ function Board() {
                         isPossibleCapture = true;
                     }
                 }
+            }
+
+            if ((activePiece.positionX === i && activePiece.positionY === j) || (lastPiece.oldPositionX === i && lastPiece.oldPositionY === j) || (lastPiece.newPositionX === i && lastPiece.newPositionY === j)) {
+                isHighlighted = true;
             }
 
             switch (position[j][i]) {
@@ -286,7 +308,7 @@ function Board() {
                 default: image = undefined; break;
             }
 
-            board.push(<Tile key={`${j}, ${i}`} posX={verticalAxis[j]} posY={horizontalAxis[i]} image={`../../assets/images/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} checkColor={checkColor}/>)
+            board.push(<Tile key={`${j}, ${i}`} posX={verticalAxis[j]} posY={horizontalAxis[i]} image={`../../assets/images/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} isHighlighted={isHighlighted} checkColor={checkColor}/>)
         }
     }
 

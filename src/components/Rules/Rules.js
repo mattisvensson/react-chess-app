@@ -11,6 +11,8 @@ export default class Rules {
                         for (let i = 5; i >= 4; i--) {
                             if (position[i][posX] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
+                            } else {
+                                break;
                             }
                         }
                     // } else if (posY === 3) {
@@ -35,6 +37,8 @@ export default class Rules {
                         for (let i = 2; i <= 3; i++) {
                             if (position[i][posX] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
+                            } else {
+                                break;
                             }
                         }
                     } else if (position[posY + 1][posX] === 0) {
