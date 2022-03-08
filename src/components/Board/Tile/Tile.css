@@ -23,8 +23,8 @@
 }
 
 #Board .tile > div {
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    height: 100px;
     background-size: cover;
     cursor: grab;
 }
@@ -33,24 +33,21 @@
     cursor: grabbing;
 }
 
+#Board .tile.capture > div::before {
+    content: "";
+    position: absolute;
+    border: 7px solid rgba(0, 0, 0, 0.15);
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+}
+
+
+
+
 /* #Board .tile > span {
     position: absolute;
     top: 0;
     left: 0;
     pointer-events: none;
 }  */
-
-#Board .tile.possibleMove::after {
-    content: "";
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    background-color: rgb(160, 160, 160);
-    border-radius: 50px;
-    transform: translate(50%, 50%);
-    pointer-events: none;
-}
-
-#Board .tile.capture > div {
-    border: 5px solid #ff7777;
-}
