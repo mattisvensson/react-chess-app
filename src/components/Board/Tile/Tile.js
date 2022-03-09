@@ -20,6 +20,8 @@ function Tile (props) {
 
     return (
         <div className={`tile ${props.checkColor % 2 === 0 ? "light" : "dark"} ${props.isPossibleCapture ? "capture" : ""} ${props.isHighlighted ? "highlight" : ""}`}>
+            {props.posX ? <span className='index'>{`${props.posX}`}</span> : null}
+            {props.posY ? <span className='index'>{`${props.posY}`}</span> : null}
             {props.image.indexOf("undefined") > -1 ? null : <div className="piece" style={{backgroundImage: `url(${props.image})`}}></div>}
             {props.isPossibleMove ? <div className='possibleTile' style={{backgroundImage: `url(../../assets/images/possibleTile.png)`}}></div> : null}
         </div>
