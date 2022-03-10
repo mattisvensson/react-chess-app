@@ -1,13 +1,24 @@
+import { isLabelWithInternallyDisabledControl } from "@testing-library/user-event/dist/utils";
+
 export default class Rules {
 
-    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures) {
+    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting) {
         console.log("checking possible moves...")
 
         switch (piece) {
             //Pawn (white)
             case 1:
                 if (playerTurn) {
-                    if(posY === 6) {
+                    if (posY - 1 === 0) {
+                        console.log("promotion")
+                        const updatePromotion = {
+                            ...pawnIsPromoting,
+                            isPromoting: true,
+                            color: "white"
+                        }
+                        setPawnIsPromoting(updatePromotion)
+                    }
+                    if (posY === 6) {
                         for (let i = 5; i >= 4; i--) {
                             if (position[i][posX] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [i, posX]]);

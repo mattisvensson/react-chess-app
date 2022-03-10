@@ -1,11 +1,21 @@
 import React, {useEffect, useRef, useState} from 'react';
 import './Board.css';
 import Tile from './Tile/Tile';
+import Promotion from './Promotion/Promotion'
 import Rules from '../Logic/Rules'
 import resetBoard from '../Logic/resetBoard';
 
 
 // TODO
+
+// castle
+// check
+// checkmate
+// en passant
+// pins
+// stalemate
+// pawn promotion
+
 // X complete movement of all pieces              
 // X capturing pieces                             
 //   check for valid moves
@@ -44,6 +54,9 @@ function Board() {
     //Get rules
     const rules = new Rules();
 
+    //creating the board
+    let board = [];
+
     // Pieces:
     // 1 = Pawn (white)
     // 2 = Knight (white)
@@ -59,12 +72,12 @@ function Board() {
     // 16 = King (black)
     const [position, setPosition] = useState([
         [14,12,13,15,16,13,12,14],
-        [11,11,11,11,11,11,11,11],
+        [11,11,11,11,11,11,1,11],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
-        [1,1,1,1,1,1,1,1],
+        [1,11,1,1,1,1,1,1],
         [4,2,3,5,6,3,2,4],
     ])
 
@@ -99,6 +112,12 @@ function Board() {
     const [possibleCaptures, setPossibleCaptures] = useState([])
 
     const [pieceIsDagged, setPieceIsDragged] = useState(false);
+    const [pawnIsPromoting, setPawnIsPromoting] = useState({
+        isPromoting: false,
+        color: null,
+        posX: null,
+        posY: null
+    });
 
 
     const [castle, setCastle] = useState({
@@ -177,7 +196,7 @@ function Board() {
     //Check possible moves
     useEffect(() => {
         if (activePiece.isActive) {
-            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures);
+            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting);
         }
     }, [activePiece, position])
 
@@ -255,6 +274,16 @@ function Board() {
 
     //execute move
     function executeMove (x, y) {
+
+        //set coordinates for pawn promotion
+        if (pawnIsPromoting.isPromoting) {
+            const updatePromotion = {
+                ...pawnIsPromoting,
+                posX: x,
+                posY: y
+            }
+            setPawnIsPromoting(updatePromotion)
+        }
         
         let match = false;
         for (let i = 0; i < possibleTiles.length; i++) {
@@ -350,12 +379,47 @@ function Board() {
     
     }
 
-    
-    console.log(castle)
+    //execute pawn promotion
+    function executePromotion (piece) {
+
+        let pieceId;
+
+        switch (piece) {
+            case "queen": pieceId = 5; break;
+            case "rook": pieceId = 4; break;
+            case "bishop": pieceId = 3; break;
+            case "knight": pieceId = 2; break;
+            case "cancel": pieceId = 99; break;
+            
+        }
+
+        if (pieceId === 99) {
+            console.log("cancel move")
+            const newPosition = [...position];
+            newPosition[lastPiece.oldPositionY][lastPiece.oldPositionX] = 1;
+            newPosition[pawnIsPromoting.posY][pawnIsPromoting.posX] = 0;
+            setPosition(newPosition);
+        } else {
+            const newPosition = [...position];
+            newPosition[pawnIsPromoting.posY][pawnIsPromoting.posX] = pieceId;
+            setPosition(newPosition);
+        }
+        
+        const updatePromotion = {
+            ...pawnIsPromoting,
+            isPromoting: false,
+            color: null,
+            posX: null,
+            posY: null
+        }
+        setPawnIsPromoting(updatePromotion)
+    }
+
+    if(pawnIsPromoting.isPromoting && pawnIsPromoting.posX !== null) {
+        board.push(<Promotion key="promotion" posX={pawnIsPromoting.posX} posY={pawnIsPromoting.posY} executePromotion={executePromotion}/>)
+    }
 
 
-    //creating the board
-    let board = [];
     for (let j = 0; j < verticalAxis.length; j++) {
         for (let i = 0; i < horizontalAxis.length; i++){
             const checkColor = j + i + 2;
@@ -387,16 +451,6 @@ function Board() {
                 isHighlighted = true;
             }
 
-            for (let x = 0; x < 8; x++) {
-                console.log(position[x][0] === position[j][i])
-                if (position[7][x] === position[j][i]) {
-                    posX = horizontalAxis[i];
-                }
-                if (position[x][0] === position[j][i]) {
-                    posY = verticalAxis[j]
-                }
-            }
-
             switch (position[j][i]) {
                 case 1: image = "p_w"; color = "white"; break;
                 case 11: image = "p_b"; color = "black"; break;
@@ -413,14 +467,16 @@ function Board() {
                 default: image = undefined; break;
             }
 
-            board.push(<Tile key={`${j}, ${i}`} posX={posX} posY={posY} image={`../../assets/images/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} isHighlighted={isHighlighted} checkColor={checkColor} color={color}/>)
+  
+
+            board.push(<Tile key={`${j}, ${i}`} posX={posX} posY={posY} image={`../../assets/images/pieces/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} isHighlighted={isHighlighted} checkColor={checkColor} color={color}/>)
         }
     }
 
 
     return (
         <>
-            <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)}>{board}</div>
+            <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(../../assets/images/chessboard_white.svg)`}}>{board}</div>
             <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPossibleCaptures, setPlayerTurn)}>Reset Board</button>
         </>
     );
