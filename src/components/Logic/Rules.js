@@ -385,25 +385,23 @@ export default class Rules {
                             break tile8;
                         }
                     }
-                    if (piece === 6) {
-                            if (castle.white.castleShort && position[7][5] === 0 && position[7][6] === 0 && position[7][7] === 4) {
-                                console.log("castle short is possible")
-                                
-                                setPossibleTiles(oldArray => [...oldArray, [posY, posX + 2]]);
-
-                                
-                            } 
-                        
-                        console.log("läuft nnoch")
-                            if (castle.white.castleLong && position[7][3] === 0 && position[7][2] === 0 && position[7][1] === 0 && position[7][0] === 4) {
-                       
-                                console.log("castle long is possible")
-                                
-                                setPossibleTiles(oldArray => [...oldArray, [posY, posX - 2]]);
-
-                            
-                            } 
-                        
+                    if (piece === 6 && posX === 4 && posY === 7) {
+                        if (castle.white.castleShort && position[7][5] === 0 && position[7][6] === 0 && position[7][7] === 4) {                              
+                            setPossibleTiles(oldArray => [...oldArray, [posY, posX + 2]]);
+                        } 
+                    
+                        if (castle.white.castleLong && position[7][3] === 0 && position[7][2] === 0 && position[7][1] === 0 && position[7][0] === 4) {
+                            setPossibleTiles(oldArray => [...oldArray, [posY, posX - 2]]);                           
+                        } 
+                    }
+                    if (piece === 16 && posX === 4 && posY === 0) {
+                        if (castle.black.castleShort && position[0][5] === 0 && position[0][6] === 0 && position[0][7] === 14) {                              
+                            setPossibleTiles(oldArray => [...oldArray, [posY, posX + 2]]);
+                        } 
+                    
+                        if (castle.black.castleLong && position[0][3] === 0 && position[0][2] === 0 && position[0][1] === 0 && position[0][0] === 14) {
+                            setPossibleTiles(oldArray => [...oldArray, [posY, posX - 2]]);                           
+                        } 
                     }
                 }
                 break;
