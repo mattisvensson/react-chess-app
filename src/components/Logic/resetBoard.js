@@ -1,5 +1,5 @@
 //reset board
-function resetBoard (setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPossibleCaptures, setPlayerTurn) {
+function resetBoard (setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPossibleCaptures, setPlayerTurn, setCastle) {
     setPosition([
         [14,12,13,15,16,13,12,14],
         [11,11,11,11,11,11,11,11],
@@ -28,6 +28,18 @@ function resetBoard (setPosition, activePiece, setActivePiece, lastPiece, setLas
         newPositionY: null
     }
     setLastPiece(updateLastPiece)
+
+    const updateCastle = {
+        white: {
+            castleLong: true,
+            castleShort: true
+        },
+        black: {
+            castleLong: true,
+            castleShort: true
+        }
+    }
+    setCastle(updateCastle)
 
     setPossibleTiles([]);
     setPossibleCaptures([])

@@ -111,6 +111,7 @@ function Board() {
     const [possibleCaptures, setPossibleCaptures] = useState([])
 
     const [pieceIsDagged, setPieceIsDragged] = useState(false);
+
     const [pawnIsPromoting, setPawnIsPromoting] = useState({
         isPromoting: false,
         color: null,
@@ -119,6 +120,11 @@ function Board() {
         capturedPiece: null
     });
 
+    const [pawnCanEnPassant, setPawnCanEnPassant] = useState({
+        isActive: false,
+        posX: null,
+        posY: null
+    })
 
     const [castle, setCastle] = useState({
         white: {
@@ -131,7 +137,6 @@ function Board() {
         }
     })
 
-
     //grabbing the piece
     function grabPiece (e) {
 
@@ -142,13 +147,22 @@ function Board() {
             setPossibleCaptures([])
         
             //get coordinates of mouse
-            const mouseX = e.clientX - 100;
-            const mouseY = e.clientY - 70;
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+
+            //get borders of the board
+            const BoardMinX = BoardRef.current.offsetLeft;
+            const BoardMaxX = BoardRef.current.offsetLeft + 800;
+            const BoardMinY = BoardRef.current.offsetTop;
+            const BoardMaxY = BoardRef.current.offsetTop + 800;
+            const BoardWidth = BoardRef.current.offsetWidth;
+
+            console.log(e.clientX)
 
             //set piece position to mouse position
             e.target.style.position = "absolute";
-            e.target.style.left = mouseX + "px";
-            e.target.style.top = mouseY + "px";
+            e.target.style.left = mouseX - BoardMinX - 50 + "px";
+            e.target.style.top = mouseY - BoardMinY - 50 + "px";
 
             //get tile on which the piece was standing
             const currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
@@ -158,13 +172,14 @@ function Board() {
             let samePiece = false;
             (e.target === activePiece.isActive) ? samePiece = true : samePiece = false;
 
-            if (samePiece) {
+            if (!samePiece) {
                 const updatePiece = {
                     ...activePiece,
                     isActive: e.target,
                     piece: position[currentY][currentX],
                     positionX: currentX,
                     positionY: currentY,
+                    counter: 0
                 }
                 setActivePiece(updatePiece)
             } else {
@@ -174,7 +189,6 @@ function Board() {
                     piece: position[currentY][currentX],
                     positionX: currentX,
                     positionY: currentY,
-                    counter: 0
                 }
                 setActivePiece(updatePiece)
             }
@@ -195,7 +209,7 @@ function Board() {
     //Check possible moves
     useEffect(() => {
         if (activePiece.isActive) {
-            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, setCastle);
+            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant, setPawnCanEnPassant);
         }
     }, [activePiece, position])
 
@@ -206,27 +220,28 @@ function Board() {
         if (pieceIsDagged) {
 
             //get coordinates of mouse
-            const mouseX = e.clientX - 100;
-            const mouseY = e.clientY - 70;
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
 
             //get borders of the board
-            const minX = BoardRef.current.offsetLeft;
-            const maxX = BoardRef.current.offsetLeft + 800;
-            const minY = BoardRef.current.offsetTop;
-            const maxY = BoardRef.current.offsetTop + 800;
+            const BoardMinX = BoardRef.current.offsetLeft;
+            const BoardMaxX = BoardRef.current.offsetLeft + 800;
+            const BoardMinY = BoardRef.current.offsetTop;
+            const BoardMaxY = BoardRef.current.offsetTop + 800;
+            const BoardWidth = BoardRef.current.offsetWidth;
 
             if (activePiece.isActive && pieceIsDagged) {
 
                 //set piece position to mouse position
                 activePiece.isActive.style.position = "absolute";
-                activePiece.isActive.style.left = mouseX + "px";
-                activePiece.isActive.style.top = mouseY + "px";
+                activePiece.isActive.style.left = mouseX - BoardMinX - 50 + "px";
+                activePiece.isActive.style.top = mouseY - BoardMinY - 50 + "px";
 
                 //stop piece from following the mouse if mouse is outside of the board
-                if (mouseX + 75 < minX) {activePiece.isActive.style.left = minX - 75 + "px";}
-                if (mouseX + 125 > maxX) {activePiece.isActive.style.left = maxX - 125 + "px";}
-                if (mouseY + 40 < minY) {activePiece.isActive.style.top = minY - 40 + "px";}
-                if (mouseY + 100 > maxY) {activePiece.isActive.style.top = maxY - 100 + "px";}
+                if (mouseX < BoardMinX) {activePiece.isActive.style.left = -50 + "px";}
+                if (mouseX > BoardMaxX) {activePiece.isActive.style.left = BoardWidth - 50 + "px";}
+                if (mouseY < BoardMinY) {activePiece.isActive.style.top = -50 + "px";}
+                if (mouseY > BoardMaxY) {activePiece.isActive.style.top = BoardWidth - 50 + "px";}
             }
         }
     }
@@ -304,6 +319,10 @@ function Board() {
                 setPawnIsPromoting(updatePromotion)
             }
 
+
+
+            checkEnPassant(x, y, activePiece.positionY)
+
             checkCastleMoves(x, y);
 
             if (activePiece.piece === 6 && castle.white.castleShort && x === 6) {
@@ -374,7 +393,22 @@ function Board() {
                     }
                 }
                 setCastle(updateCastle)
-                        
+        
+            //en passant (with white)
+            } else if (activePiece.piece === 1 && x !== activePiece.positionX) {
+                const updatePosition = [...position];
+                updatePosition[activePiece.positionY][activePiece.positionX] = 0;
+                updatePosition[y + 1][x] = 0;
+                updatePosition[y][x] = 1;
+
+            //en passant (with black)
+            } else if (activePiece.piece === 11 && x !== activePiece.positionX){
+                const updatePosition = [...position];
+                updatePosition[activePiece.positionY][activePiece.positionX] = 0;
+                updatePosition[y - 1][x] = 0;
+                updatePosition[y][x] = 11;
+
+            //normal move
             } else {
                 const newPosition = [...position];
                 newPosition[activePiece.positionY][activePiece.positionX] = 0;
@@ -412,6 +446,30 @@ function Board() {
         setPieceIsDragged(false)
     }
 
+    function checkEnPassant (x, y, lastY) {
+        if (activePiece.piece === 1 || activePiece.piece === 11) {
+            let tileDifference = Math.abs(y - lastY)
+            if (tileDifference === 2) {
+                const updateEnPassant = {
+                    ...pawnCanEnPassant,
+                    isActive: true,
+                    posX: x,
+                    posY: y
+                }
+                setPawnCanEnPassant(updateEnPassant)
+            }
+        } else {
+            const updateEnPassant = {
+                ...pawnCanEnPassant,
+                isActive: false,
+                posX: null,
+                posY: null
+            }
+            setPawnCanEnPassant(updateEnPassant)
+        }
+    }
+
+    console.log(pawnCanEnPassant)
     function checkCastleMoves (x, y) {
         //check for castle moves
         if (position[7][7] === 0) {
@@ -576,17 +634,14 @@ function Board() {
                 default: image = undefined; break;
             }
 
-  
-
             board.push(<Tile key={`${j}, ${i}`} posX={posX} posY={posY} image={`../../assets/images/pieces/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} isHighlighted={isHighlighted} checkColor={checkColor} color={color}/>)
         }
     }
 
-
     return (
         <>
             <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(../../assets/images/chessboard_white.svg)`}}>{board}</div>
-            <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPossibleCaptures, setPlayerTurn)}>Reset Board</button>
+            <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPossibleCaptures, setPlayerTurn, setCastle)}>Reset Board</button>
         </>
     );
 }

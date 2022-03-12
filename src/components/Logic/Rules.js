@@ -1,14 +1,17 @@
 import { isLabelWithInternallyDisabledControl } from "@testing-library/user-event/dist/utils";
 
+document.getElementById("root")
+
 export default class Rules {
 
-    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, setCastle) {
+    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant, setPawnCanEnPassant) {
         console.log("checking possible moves...")
 
         switch (piece) {
             //Pawn (white)
             case 1:
                 if (playerTurn) {
+                    //promotion
                     if (posY - 1 === 0) {
                         const updatePromotion = {
                             ...pawnIsPromoting,
@@ -17,6 +20,15 @@ export default class Rules {
                         }
                         setPawnIsPromoting(updatePromotion)
                     }
+                    //en passant
+                    if (posY === 3 && posY === pawnCanEnPassant.posY) {
+                        if (posX - 1 === pawnCanEnPassant.posX) {
+                            setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 1]]);
+                        } else if (posX + 1 === pawnCanEnPassant.posX) {
+                            setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 1]]);
+                        }  
+                    } 
+                    //standing on starting rank (two steps possible)
                     if (posY === 6) {
                         for (let i = 5; i >= 4; i--) {
                             if (position[i][posX] === 0) {
@@ -41,6 +53,7 @@ export default class Rules {
             //Pawn (black)
             case 11: 
                 if (!playerTurn) {
+                    //promotion
                     if (posY + 1 === 7) {
                         const updatePromotion = {
                             ...pawnIsPromoting,
@@ -49,6 +62,15 @@ export default class Rules {
                         }
                         setPawnIsPromoting(updatePromotion)
                     }
+                    //en passant
+                    if (posY === 4 && posY === pawnCanEnPassant.posY) {
+                        if (posX - 1 === pawnCanEnPassant.posX) {
+                            setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 1]]);
+                        } else if (posX + 1 === pawnCanEnPassant.posX) {
+                            setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 1]]);
+                        }  
+                    } 
+                    //standing on starting rank (two moves possible)
                     if(posY === 1) {
                         for (let i = 2; i <= 3; i++) {
                             if (position[i][posX] === 0) {
