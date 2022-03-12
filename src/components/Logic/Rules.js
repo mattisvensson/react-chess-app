@@ -2,7 +2,7 @@ import { isLabelWithInternallyDisabledControl } from "@testing-library/user-even
 
 export default class Rules {
 
-    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting) {
+    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, setCastle) {
         console.log("checking possible moves...")
 
         switch (piece) {
@@ -10,7 +10,6 @@ export default class Rules {
             case 1:
                 if (playerTurn) {
                     if (posY - 1 === 0) {
-                        console.log("promotion")
                         const updatePromotion = {
                             ...pawnIsPromoting,
                             isPromoting: true,
@@ -26,8 +25,6 @@ export default class Rules {
                                 break;
                             }
                         }
-                    // } else if (posY === 3) {
-
                     } else if (position[posY - 1][posX] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX]]);
                     }
@@ -44,6 +41,14 @@ export default class Rules {
             //Pawn (black)
             case 11: 
                 if (!playerTurn) {
+                    if (posY + 1 === 7) {
+                        const updatePromotion = {
+                            ...pawnIsPromoting,
+                            isPromoting: true,
+                            color: "black"
+                        }
+                        setPawnIsPromoting(updatePromotion)
+                    }
                     if(posY === 1) {
                         for (let i = 2; i <= 3; i++) {
                             if (position[i][posX] === 0) {
@@ -379,6 +384,26 @@ export default class Rules {
                             setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX]]);
                             break tile8;
                         }
+                    }
+                    if (piece === 6) {
+                            if (castle.white.castleShort && position[7][5] === 0 && position[7][6] === 0 && position[7][7] === 4) {
+                                console.log("castle short is possible")
+                                
+                                setPossibleTiles(oldArray => [...oldArray, [posY, posX + 2]]);
+
+                                
+                            } 
+                        
+                        console.log("läuft nnoch")
+                            if (castle.white.castleLong && position[7][3] === 0 && position[7][2] === 0 && position[7][1] === 0 && position[7][0] === 4) {
+                       
+                                console.log("castle long is possible")
+                                
+                                setPossibleTiles(oldArray => [...oldArray, [posY, posX - 2]]);
+
+                            
+                            } 
+                        
                     }
                 }
                 break;

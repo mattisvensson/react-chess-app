@@ -14,7 +14,7 @@ import resetBoard from '../Logic/resetBoard';
 // en passant
 // pins
 // stalemate
-// pawn promotion
+//capture piece by clicking
 
 // X complete movement of all pieces              
 // X capturing pieces                             
@@ -26,7 +26,7 @@ import resetBoard from '../Logic/resetBoard';
 //    -> check for pins
 //   checkmate
 //   stalemate
-//   Pawn promotion
+// X Pawn promotion
 //   Add castling
 //   add check
 //   add board description
@@ -54,7 +54,7 @@ function Board() {
     //Get rules
     const rules = new Rules();
 
-    //creating the board
+    //initialize the board
     let board = [];
 
     // Pieces:
@@ -72,13 +72,13 @@ function Board() {
     // 16 = King (black)
     const [position, setPosition] = useState([
         [14,12,13,15,16,13,12,14],
-        [11,11,11,11,11,11,1,11],
+        [11,11,11,11,11,11,11,11],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
-        [1,11,1,1,1,1,1,1],
-        [4,2,3,5,6,3,2,4],
+        [1,1,1,1,1,1,1,0],
+        [4,0,0,0,6,0,0,4],
     ])
 
     //Referencing the board
@@ -116,7 +116,8 @@ function Board() {
         isPromoting: false,
         color: null,
         posX: null,
-        posY: null
+        posY: null,
+        capturedPiece: null
     });
 
 
@@ -143,8 +144,8 @@ function Board() {
             setPossibleCaptures([])
         
             //get coordinates of mouse
-            const mouseX = e.clientX - 40;
-            const mouseY = e.clientY - 40;
+            const mouseX = e.clientX - 100;
+            const mouseY = e.clientY - 70;
 
             //set piece position to mouse position
             e.target.style.position = "absolute";
@@ -196,19 +197,19 @@ function Board() {
     //Check possible moves
     useEffect(() => {
         if (activePiece.isActive) {
-            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting);
+            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, setCastle);
         }
     }, [activePiece, position])
 
 
     //move piece
     function movePiece (e) {
-        console.log("movePiece: " + pieceIsDagged)
+        // console.log("movePiece: " + pieceIsDagged)
         if (pieceIsDagged) {
 
             //get coordinates of mouse
-            const mouseX = e.clientX - 40;
-            const mouseY = e.clientY - 40;
+            const mouseX = e.clientX - 100;
+            const mouseY = e.clientY - 70;
 
             //get borders of the board
             const minX = BoardRef.current.offsetLeft;
@@ -235,7 +236,8 @@ function Board() {
 
     //drop piece
     function dropPiece (e) {
-        
+
+        // console.log(pawnIsPromoting)        
         // console.log(possibleTiles)
         // console.log(possibleCaptures)
     
@@ -274,16 +276,6 @@ function Board() {
 
     //execute move
     function executeMove (x, y) {
-
-        //set coordinates for pawn promotion
-        if (pawnIsPromoting.isPromoting) {
-            const updatePromotion = {
-                ...pawnIsPromoting,
-                posX: x,
-                posY: y
-            }
-            setPawnIsPromoting(updatePromotion)
-        }
         
         let match = false;
         for (let i = 0; i < possibleTiles.length; i++) {
@@ -302,11 +294,125 @@ function Board() {
         }
         
         if (match) {
+
+            //set coordinates for pawn promotion
+            if (pawnIsPromoting.isPromoting) {
+                const updatePromotion = {
+                    ...pawnIsPromoting,
+                    posX: x,
+                    posY: y,
+                    capturedPiece: position[y][x]
+                }
+                setPawnIsPromoting(updatePromotion)
+            }
+
+            console.log(castle)
+
+            if (position[7][7] === 0) {
+                const updateCastle = {
+                    ...castle,
+                    white: {
+                        ...castle.white,
+                        castleShort: false,
+                    }
+                }
+                setCastle(updateCastle)
+            }
             
-            const newPosition = [...position];
-            newPosition[activePiece.positionY][activePiece.positionX] = 0;
-            newPosition[y][x] = activePiece.piece;
-            setPosition(newPosition);
+            if (position[7][0] === 0) {
+                const updateCastle = {
+                    ...castle,
+                    white: {
+                        ...castle.white,
+                        castleLong: false,
+                    }
+                }
+                setCastle(updateCastle)
+            }
+            if (position[0][0] === 0) {
+                const updateCastle = {
+                    ...castle,
+                    white: {
+                        ...castle.black,
+                        castleLong: false,
+                    }
+                }
+                setCastle(updateCastle)
+            }
+            if (position[0][7] === 0) {
+                const updateCastle = {
+                    ...castle,
+                    white: {
+                        ...castle.black,
+                        castleShort: false,
+                    }
+                }
+                setCastle(updateCastle)
+            }
+            if (activePiece.piece === 6 && x !== 2) {
+                const updateCastle = {
+                    ...castle,
+                    white: {
+                        ...castle.white,
+                        castleLong: false,
+                    }
+                }
+                setCastle(updateCastle)
+            }
+
+            if (activePiece.piece === 6 && x !== 6) {
+                const updateCastle = {
+                    ...castle,
+                    white: {
+                        ...castle.white,
+                        castleShort: false,
+                    }
+                }
+                setCastle(updateCastle)
+            }
+
+
+            if (activePiece.piece === 6 && castle.white.castleShort && x === 6) {
+                const updatePosition = [...position];
+                updatePosition[7][4] = 0;
+                updatePosition[7][5] = 4;
+                updatePosition[7][6] = 6;
+                updatePosition[7][7] = 0;
+                setPosition(updatePosition)
+
+                const updateCastle = {
+                    ...castle,
+                    white: {
+                        ...castle.white,
+                        castleShort: false,
+                    }
+                }
+                setCastle(updateCastle)
+                
+            } else if (activePiece.piece === 6 && castle.white.castleLong && x === 2) {
+                const updatePosition = [...position];
+                updatePosition[7][4] = 0;
+                updatePosition[7][3] = 4;
+                updatePosition[7][2] = 6;
+                updatePosition[7][1] = 0;
+                updatePosition[7][0] = 0;
+                setPosition(updatePosition)
+
+                const updateCastle = {
+                    ...castle,
+                    white: {
+                        ...castle.white,
+                        castleShort: false,
+                    }
+                }
+                setCastle(updateCastle)
+            
+            } else {
+                const newPosition = [...position];
+                newPosition[activePiece.positionY][activePiece.positionX] = 0;
+                newPosition[y][x] = activePiece.piece;
+                setPosition(newPosition);
+            }
     
             setPlayerTurn(prev => !prev)
     
@@ -329,46 +435,6 @@ function Board() {
                 counter: 0
             }
             setActivePiece(updatePiece)
-
-            //check for castling rights
-            if(position[0][7] === 0) {
-                const updateCastle = {
-                    ...castle,
-                    black: {
-                        ...castle.black,
-                        castleShort: false
-                    }
-                }
-                setCastle(updateCastle)
-            } else if (position[0][0] === 0) {
-                const updateCastle = {
-                    ...castle,
-                    black: {
-                        ...castle.black,
-                        castleLong: false
-                    }
-                }
-                setCastle(updateCastle)
-            } else if(position[7][7] === 0) {
-                const updateCastle = {
-                    ...castle,
-                    white: {
-                        ...castle.white,
-                        castleShort: false
-                    }
-                }
-                setCastle(updateCastle)
-            } else if (position[7][0] === 0) {
-                const updateCastle = {
-                    ...castle,
-                    white: {
-                        ...castle.white,
-                        castleLong: false
-                    }
-                }
-                setCastle(updateCastle)
-            }
-
         }      
     
         activePiece.isActive.style.position = "static";
@@ -379,7 +445,7 @@ function Board() {
     
     }
 
-    //execute pawn promotion
+    //execute pawn promotionm(executed from Promotion.js)
     function executePromotion (piece) {
 
         let pieceId;
@@ -393,12 +459,18 @@ function Board() {
             
         }
 
-        if (pieceId === 99) {
-            console.log("cancel move")
+        if (pawnIsPromoting.color === "black") {
+            pieceId += 10;
+        }
+
+        if (pieceId >= 99) {
+
             const newPosition = [...position];
-            newPosition[lastPiece.oldPositionY][lastPiece.oldPositionX] = 1;
-            newPosition[pawnIsPromoting.posY][pawnIsPromoting.posX] = 0;
+            newPosition[lastPiece.oldPositionY][lastPiece.oldPositionX] = pawnIsPromoting.color === "black" ? 11 : 1;
+            newPosition[pawnIsPromoting.posY][pawnIsPromoting.posX] = pawnIsPromoting.capturedPiece;
             setPosition(newPosition);
+
+            setPlayerTurn(prev => !prev)
         } else {
             const newPosition = [...position];
             newPosition[pawnIsPromoting.posY][pawnIsPromoting.posX] = pieceId;
@@ -410,13 +482,14 @@ function Board() {
             isPromoting: false,
             color: null,
             posX: null,
-            posY: null
+            posY: null,
+            capturedPiece: null
         }
         setPawnIsPromoting(updatePromotion)
     }
 
     if(pawnIsPromoting.isPromoting && pawnIsPromoting.posX !== null) {
-        board.push(<Promotion key="promotion" posX={pawnIsPromoting.posX} posY={pawnIsPromoting.posY} executePromotion={executePromotion}/>)
+        board.push(<Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion}/>)
     }
 
 

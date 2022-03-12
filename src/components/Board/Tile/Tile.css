@@ -10,8 +10,6 @@
 #Board .tile {
     width: 100px;
     height: 100px;
-    display: grid;
-    place-content: center;
 }
 
 #Board .tile.light.highlight {
@@ -23,8 +21,8 @@
 }
 
 #Board .tile > div {
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    height: 100px;
     background-size: cover;
     cursor: grab;
 }

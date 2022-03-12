@@ -5,9 +5,5 @@
     display: grid;
     grid-template-columns: repeat(8, 100px);
     grid-template-rows: repeat(8, 100px);
+    position: relative;
 }
-
-/*
-Grün: #769656
-Hell: #eeeed2
-*/
