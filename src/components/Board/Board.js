@@ -144,7 +144,20 @@ function Board() {
     //grabbing the piece
     function grabPiece (e) {
 
-        if (e.target.classList.contains("piece")) {
+        //get tile on which the piece was standing
+        const currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
+        const currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
+
+        exitMove: if (e.target.classList.contains("piece")) {
+
+            //capture piece when clicking on it 
+            for (let i = 0; i < possibleCaptures.length; i++) {
+                if (JSON.stringify(possibleCaptures[i]) === JSON.stringify([currentY, currentX])) {
+                    console.log("drin")
+                    executeMove(currentX, currentY)
+                    break exitMove;
+                }
+            }
 
             //Reset possible Tiles and captures
             setPossibleTiles([]);
@@ -158,16 +171,10 @@ function Board() {
             const BoardMinX = BoardRef.current.offsetLeft;
             const BoardMinY = BoardRef.current.offsetTop;
 
-            console.log(e.clientX)
-
             //set piece position to mouse position
             e.target.style.position = "absolute";
             e.target.style.left = mouseX - BoardMinX - 50 + "px";
             e.target.style.top = mouseY - BoardMinY - 50 + "px";
-
-            //get tile on which the piece was standing
-            const currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
-            const currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
 
             //set active piece
             let samePiece = false;

@@ -7,11 +7,6 @@
     --color-dark-highlight: rgba(186,202,43, 0.5)
 }
 
-#Board .tile {
-    width: 100px;
-    height: 100px;
-}
-
 #Board .tile.light.highlight {
     background: var(--color-light-highlight);
 }
@@ -38,4 +33,8 @@
     width: 86px;
     height: 86px;
     border-radius: 50%;
+}
+
+#Board .tile > div.possibleTile {
+    cursor: pointer;
 }
