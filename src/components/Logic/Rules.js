@@ -1,7 +1,3 @@
-import { isLabelWithInternallyDisabledControl } from "@testing-library/user-event/dist/utils";
-
-document.getElementById("root")
-
 export default class Rules {
 
     checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant, setPawnCanEnPassant) {
@@ -341,72 +337,48 @@ export default class Rules {
             case 16:
                 if ((playerTurn && piece === 6) || (!playerTurn && piece === 16)) {
 
-                    tile1: if (posY - 1 < 8 && posX + 1 < 8 && posY - 1 >= 0 && posX + 1 >= 0) {
-                        if (position[posY - 1][posX + 1] === 0) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 1]]);
-                        } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX + 1]]);
-                            break tile1;
-                        }
+                    if (posY - 1 < 8 && posX + 1 < 8 && posY - 1 >= 0 && posX + 1 >= 0 && position[posY - 1][posX + 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 1]]);
+                    } else {
+                        setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX + 1]]);
+                    }
+                    if (posX + 1 < 8 && posX + 1 >= 0 && position[posY][posX + 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY, posX + 1]]);
+                    } else {
+                        setPossibleCaptures(oldArray => [...oldArray, [posY, posX + 1]]);
+                    }
+                    if (posY + 1 < 8 && posX + 1 < 8 && posY - 1 >= 0 && posX + 1 >= 0 && position[posY + 1][posX + 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 1]]);
+                    } else {
+                        setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX + 1]]);
+                    }
+                    if (posY + 1 < 8 && posY + 1 >= 0 && position[posY + 1][posX] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX]]);
+                    } else {
+                        setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX]]);
+                    }
+                    if (posY + 1 < 8 && posX - 1 < 8 && posY + 1 >= 0 && posX - 1 >= 0 && position[posY + 1][posX - 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 1]]);
+                    } else {
+                        setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX - 1]]);
+                    }
+                    if (posX - 1 < 8 && posX - 1 >= 0 && position[posY][posX - 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY, posX - 1]]);
+                    } else {
+                        setPossibleCaptures(oldArray => [...oldArray, [posY, posX - 1]]);
+                    }
+                    if (posY - 1 < 8 && posX - 1 < 8 && posY - 1 >= 0 && posX - 1 >= 0 && position[posY - 1][posX - 1] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 1]]);
+                    } else {
+                        setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX - 1]]);
+                    }
+                    if (posY - 1 < 8 && posY - 1 >= 0 && position[posY - 1][posX] === 0) {
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX]]);
+                    } else {
+                        setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX]]);
                     }
                     
-                    tile2: if (posX + 1 < 8 && posX + 1 >= 0) {
-                        if (position[posY][posX + 1] === 0) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY, posX + 1]]);
-                        } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY, posX + 1]]);
-                            break tile2;
-                        }
-                    }
-                    
-                    tile3: if (posY + 1 < 8 && posX + 1 < 8 && posY - 1 >= 0 && posX + 1 >= 0) {
-                        if (position[posY + 1][posX + 1] === 0) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 1]]);
-                        } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX + 1]]);
-                            break tile3;
-                        }
-                    }
-                    tile4: if (posY + 1 < 8 && posY + 1 >= 0) {
-                        if (position[posY + 1][posX] === 0) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX]]);
-                        } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX]]);
-                            break tile4;
-                        }
-                    }
-                    tile5: if (posY + 1 < 8 && posX - 1 < 8 && posY + 1 >= 0 && posX - 1 >= 0) {
-                        if (position[posY + 1][posX - 1] === 0) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 1]]);
-                        } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX - 1]]);
-                            break tile5;
-                        }
-                    }
-                    tile6: if (posX - 1 < 8 && posX - 1 >= 0) {
-                        if (position[posY][posX - 1] === 0) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY, posX - 1]]);
-                        } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY, posX - 1]]);
-                            break tile6;
-                        }
-                    }
-                    tile7: if (posY - 1 < 8 && posX - 1 < 8 && posY - 1 >= 0 && posX - 1 >= 0) {
-                        if (position[posY - 1][posX - 1] === 0) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 1]]);
-                        } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX - 1]]);
-                            break tile7;
-                        }
-                    }
-                    tile8: if (posY - 1 < 8 && posY - 1 >= 0) {
-                        if (position[posY - 1][posX] === 0) {
-                            setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX]]);
-                        } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX]]);
-                            break tile8;
-                        }
-                    }
+                    //check for castling
                     if (piece === 6 && posX === 4 && posY === 7) {
                         if (castle.white.castleShort && position[7][5] === 0 && position[7][6] === 0 && position[7][7] === 4) {                              
                             setPossibleTiles(oldArray => [...oldArray, [posY, posX + 2]]);
