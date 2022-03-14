@@ -3,6 +3,7 @@ import './Board.css';
 import Tile from './Tile/Tile';
 import Promotion from './Promotion/Promotion'
 import Rules from '../Logic/Rules'
+import Check from '../Logic/Check'
 import resetBoard from '../Logic/resetBoard';
 
 
@@ -12,7 +13,6 @@ import resetBoard from '../Logic/resetBoard';
 // checkmate
 // pins
 // stalemate
-// capture piece by clicking
 
 // X complete movement of all pieces              
 // X capturing pieces                             
@@ -50,8 +50,9 @@ function Board() {
     const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
     const verticalAxis = ["8", "7", "6", "5", "4", "3", "2", "1"];
 
-    //Get rules
+    //Get rules and checks
     const rules = new Rules();
+    const check = new Check();
 
     //initialize the board
     let board = [];
@@ -70,13 +71,13 @@ function Board() {
     // 15 = Queen (black)
     // 16 = King (black)
     const [position, setPosition] = useState([
-        [14,12,13,15,16,13,12,14],
-        [11,11,11,11,11,11,11,11],
+        [16,0,13,15,0,13,12,14],
+        [0,0,0,0,14,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
-        [1,1,1,1,1,1,1,1],
+        [0,0,0,0,0,0,0,0],
         [4,2,3,5,6,3,2,4],
     ])
 
@@ -139,6 +140,11 @@ function Board() {
             castleLong: true,
             castleShort: true
         }
+    })
+
+    const [playerIsInCheck, setPlayerIsInCheck] = useState({
+        inCheck: false,
+        player: null,
     })
 
     //grabbing the piece
@@ -216,11 +222,15 @@ function Board() {
 
     //Check possible moves
     useEffect(() => {
+
         if (activePiece.isActive) {
             rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant, setPawnCanEnPassant);
         }
+
+        check.checkForCheck(position, playerTurn, playerIsInCheck, setPlayerIsInCheck)
     }, [activePiece, position])
 
+    console.log(playerIsInCheck)
 
     //move piece
     function movePiece (e) {
