@@ -7,6 +7,13 @@ import Check from '../Logic/Check'
 import resetBoard from '../Logic/resetBoard';
 
 
+//Ablauf
+//Piece wird ausgewählt
+//Mögliche Tiles werden berechnet
+//Wenn das Zielfeld mit den möglichen Tiles übereinstimmt, wird der Zug ausgeführt
+//Wenn nicht, wird die Figur zurück auf das ursprüngliche Feld gesetzt
+
+
 // TODO
 
 // check
@@ -71,13 +78,13 @@ function Board() {
     // 15 = Queen (black)
     // 16 = King (black)
     const [position, setPosition] = useState([
-        [16,0,13,15,0,13,12,14],
-        [0,0,0,0,14,0,0,0],
+        [14,12,13,15,16,13,12,14],
+        [11,11,11,11,11,11,11,11],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0],
+        [1,1,1,1,1,1,1,1],
         [4,2,3,5,6,3,2,4],
     ])
 
@@ -142,10 +149,14 @@ function Board() {
         }
     })
 
-    const [playerIsInCheck, setPlayerIsInCheck] = useState({
-        inCheck: false,
-        player: null,
-    })
+    // const [playerIsInCheck, setPlayerIsInCheck] = useState({
+    //     inCheck: false,
+    //     player: null,
+    // })
+
+    const [simulatedTiles, setSimulatedTiles] = useState([])
+
+
 
     //grabbing the piece
     function grabPiece (e) {
@@ -159,9 +170,14 @@ function Board() {
             //capture piece when clicking on it 
             for (let i = 0; i < possibleCaptures.length; i++) {
                 if (JSON.stringify(possibleCaptures[i]) === JSON.stringify([currentY, currentX])) {
-                    console.log("drin")
-                    executeMove(currentX, currentY)
-                    break exitMove;
+                    let string = JSON.stringify(possibleCaptures[i])
+                    let y = string.charAt(1)
+                    let x = string.charAt(3)
+                    if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8)) {
+                        console.log("drin")
+                        executeMove(currentX, currentY)
+                        break exitMove;
+                    }
                 }
             }
 
@@ -218,19 +234,24 @@ function Board() {
 
         }
     }
-       
 
+       
     //Check possible moves
     useEffect(() => {
 
         if (activePiece.isActive) {
-            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant, setPawnCanEnPassant);
+            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant);
         }
 
-        check.checkForCheck(position, playerTurn, playerIsInCheck, setPlayerIsInCheck)
+        // console.log(possibleTiles)
+        // console.log(possibleCaptures)
+
+        // check.checkForCheck(position, playerTurn, playerIsInCheck, setPlayerIsInCheck)
+        check.checkForCheck(position, playerTurn, simulatedTiles, setSimulatedTiles)
     }, [activePiece, position])
 
-    console.log(playerIsInCheck)
+    // console.log(playerIsInCheck)
+    // console.log(simulatedTiles)
 
     //move piece
     function movePiece (e) {
