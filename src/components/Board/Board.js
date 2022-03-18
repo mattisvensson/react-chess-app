@@ -51,11 +51,11 @@ import resetBoard from '../Logic/resetBoard';
 //    -> get openings
 //    -> puzzles
 
-function Board() {
 
-    //Board axis
-    const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"];
-    const verticalAxis = ["8", "7", "6", "5", "4", "3", "2", "1"];
+let width = window.innerHeight / 1.2;
+let pieceWidth = width / 8;
+
+function Board() {
 
     //Get rules and checks
     const rules = new Rules();
@@ -162,8 +162,8 @@ function Board() {
     function grabPiece (e) {
 
         //get tile on which the piece was standing
-        const currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
-        const currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
+        const currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
+        const currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
 
         exitMove: if (e.target.classList.contains("piece")) {
 
@@ -188,15 +188,18 @@ function Board() {
             //get coordinates of mouse
             const mouseX = e.clientX;
             const mouseY = e.clientY;
+            console.log(mouseX)
+            
 
             //get borders of the board
             const BoardMinX = BoardRef.current.offsetLeft;
             const BoardMinY = BoardRef.current.offsetTop;
+            console.log(BoardMinX)
 
             //set piece position to mouse position
             e.target.style.position = "absolute";
-            e.target.style.left = mouseX - BoardMinX - 50 + "px";
-            e.target.style.top = mouseY - BoardMinY - 50 + "px";
+            e.target.style.left = mouseX - BoardMinX - (pieceWidth / 2) + "px";
+            e.target.style.top = mouseY - BoardMinY - (pieceWidth / 2) + "px";
 
             //set active piece
             let samePiece = false;
@@ -227,8 +230,8 @@ function Board() {
 
         } else if (activePiece.isActive) {
             
-            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
-            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
+            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
+            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
 
             executeMove(x, y)
 
@@ -264,23 +267,23 @@ function Board() {
 
             //get borders of the board
             const BoardMinX = BoardRef.current.offsetLeft;
-            const BoardMaxX = BoardRef.current.offsetLeft + 800;
+            const BoardMaxX = BoardRef.current.offsetLeft + width;
             const BoardMinY = BoardRef.current.offsetTop;
-            const BoardMaxY = BoardRef.current.offsetTop + 800;
+            const BoardMaxY = BoardRef.current.offsetTop + width;
             const BoardWidth = BoardRef.current.offsetWidth;
 
             if (activePiece.isActive && pieceIsDagged) {
 
                 //set piece position to mouse position
                 activePiece.isActive.style.position = "absolute";
-                activePiece.isActive.style.left = mouseX - BoardMinX - 50 + "px";
-                activePiece.isActive.style.top = mouseY - BoardMinY - 50 + "px";
+                activePiece.isActive.style.left = mouseX - BoardMinX - (pieceWidth / 2) + "px";
+                activePiece.isActive.style.top = mouseY - BoardMinY -(pieceWidth / 2) + "px";
 
                 //stop piece from following the mouse if mouse is outside of the board
-                if (mouseX < BoardMinX) {activePiece.isActive.style.left = -50 + "px";}
-                if (mouseX > BoardMaxX) {activePiece.isActive.style.left = BoardWidth - 50 + "px";}
-                if (mouseY < BoardMinY) {activePiece.isActive.style.top = -50 + "px";}
-                if (mouseY > BoardMaxY) {activePiece.isActive.style.top = BoardWidth - 50 + "px";}
+                if (mouseX < BoardMinX) {activePiece.isActive.style.left = -(pieceWidth / 2) + "px";}
+                if (mouseX > BoardMaxX) {activePiece.isActive.style.left = BoardWidth - (pieceWidth / 2) + "px";}
+                if (mouseY < BoardMinY) {activePiece.isActive.style.top = -(pieceWidth / 2) + "px";}
+                if (mouseY > BoardMaxY) {activePiece.isActive.style.top = BoardWidth - (pieceWidth / 2) + "px";}
             }
         }
     }
@@ -313,8 +316,8 @@ function Board() {
         
         if (activePiece.isActive && BoardRef) {
     
-            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / 100);
-            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / 100);
+            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
+            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
     
             executeMove(x, y);
     
@@ -623,14 +626,15 @@ function Board() {
         setPawnIsPromoting(updatePromotion)
     }
 
+
     //renders if pawn is promoting
     if(pawnIsPromoting.isPromoting && pawnIsPromoting.posX !== null) {
         board.push(<Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion}/>)
     }
 
 
-    for (let j = 0; j < verticalAxis.length; j++) {
-        for (let i = 0; i < horizontalAxis.length; i++){
+    for (let j = 0; j < 8; j++) {
+        for (let i = 0; i < 8; i++){
             const checkColor = j + i + 2;
             let image = undefined;
             let color = undefined;
@@ -677,13 +681,13 @@ function Board() {
                 default: image = undefined; break;
             }
 
-            board.push(<Tile key={`${j}, ${i}`} posX={posX} posY={posY} image={`../../assets/images/pieces/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} isHighlighted={isHighlighted} checkColor={checkColor} color={color}/>)
+            board.push(<Tile key={`${j}, ${i}`} posX={posX} posY={posY} image={`../../assets/images/pieces/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} isHighlighted={isHighlighted} checkColor={checkColor} color={color} width={width}/>)
         }
     }
 
     return (
         <>
-            <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(../../assets/images/chessboard_white.svg)`}}>{board}</div>
+            <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(../../assets/images/chessboard_white.svg)`, gridTemplateColumns: `repeat(8, ${width / 8}px`, gridTemplateRows: `repeat(8, ${width/ 8}px`}}>{board}</div>
             <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPossibleCaptures, setPlayerTurn, setCastle)}>Reset Board</button>
         </>
     );

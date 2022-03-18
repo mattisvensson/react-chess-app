@@ -1,10 +1,14 @@
 import './App.css';
 import Board from './components/Board/Board';
+import Nav from './components/Nav/Nav'
 
 function App() {
   return (
       <div className="App">
-        <Board/>
+          <Nav/>
+          <section>
+          <Board/>
+          </section>
       </div>
   );
 }

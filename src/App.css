@@ -12,7 +12,8 @@ body {
 .App {
   height: 100vh;
   display: grid;
-  place-items: center;
+  /* place-items: center; */
+  grid-template-columns: 20% auto;
   background: #202020;
 }
 
@@ -27,4 +28,9 @@ button {
 
 button:hover {
   background: #dddddd;
+}
+
+section {
+  display: grid;
+  place-items: center;
 }

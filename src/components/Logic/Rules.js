@@ -1,6 +1,6 @@
 export default class Rules {
 
-    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant, setPawnCanEnPassant) {
+    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant) {
         console.log("checking possible moves...")
 
         switch (piece) {
@@ -377,6 +377,8 @@ export default class Rules {
                     } else {
                         setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX]]);
                     }
+
+                    
                     
                     //check for castling
                     if (piece === 6 && posX === 4 && posY === 7) {
