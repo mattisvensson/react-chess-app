@@ -16,6 +16,7 @@
 }
 
 #Board .tile > div {
+    position: relative;
     height: 100%;
     background-size: cover;
     cursor: grab;
@@ -23,15 +24,17 @@
 
 #Board .tile > div:active {
     cursor: grabbing;
+    z-index: 1;
 }
 
 #Board .tile.capture > div::before {
     content: "";
     position: absolute;
     border: 7px solid rgba(0, 0, 0, 0.15);
-    width: 86px;
-    height: 86px;
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
+    box-sizing: border-box;
 }
 
 #Board .tile > div.possibleTile {

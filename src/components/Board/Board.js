@@ -5,6 +5,8 @@ import Promotion from './Promotion/Promotion'
 import Rules from '../Logic/Rules'
 import Check from '../Logic/Check'
 import resetBoard from '../Logic/resetBoard';
+import checkCastleMoves from '../Logic/checkCastleMoves';
+import GameOver from '../Board/GameOver/GameOver';
 
 
 //Ablauf
@@ -119,7 +121,7 @@ function Board() {
     const [possibleCaptures, setPossibleCaptures] = useState([])
 
     //keep track of if piece is dragged or not
-    const [pieceIsDagged, setPieceIsDragged] = useState(false);
+    const [pieceIsDragged, setPieceIsDragged] = useState(false);
 
     //saves data about promoting pawn
     const [pawnIsPromoting, setPawnIsPromoting] = useState({
@@ -149,10 +151,10 @@ function Board() {
         }
     })
 
-    // const [playerIsInCheck, setPlayerIsInCheck] = useState({
-    //     inCheck: false,
-    //     player: null,
-    // })
+    //player is in check
+    const [playerIsInCheck, setPlayerIsInCheck] = useState(false)
+
+    const [gameOver, setGameOver] = useState(false)
 
     const [simulatedTiles, setSimulatedTiles] = useState([])
 
@@ -174,7 +176,6 @@ function Board() {
                     let y = string.charAt(1)
                     let x = string.charAt(3)
                     if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8)) {
-                        console.log("drin")
                         executeMove(currentX, currentY)
                         break exitMove;
                     }
@@ -187,14 +188,11 @@ function Board() {
         
             //get coordinates of mouse
             const mouseX = e.clientX;
-            const mouseY = e.clientY;
-            console.log(mouseX)
-            
+            const mouseY = e.clientY;            
 
             //get borders of the board
             const BoardMinX = BoardRef.current.offsetLeft;
             const BoardMinY = BoardRef.current.offsetTop;
-            console.log(BoardMinX)
 
             //set piece position to mouse position
             e.target.style.position = "absolute";
@@ -241,25 +239,18 @@ function Board() {
        
     //Check possible moves
     useEffect(() => {
-
         if (activePiece.isActive) {
             rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant);
         }
 
-        // console.log(possibleTiles)
-        // console.log(possibleCaptures)
-
         // check.checkForCheck(position, playerTurn, playerIsInCheck, setPlayerIsInCheck)
-        check.checkForCheck(position, playerTurn, simulatedTiles, setSimulatedTiles)
+        check.checkForCheck(position, playerTurn, simulatedTiles, setSimulatedTiles, setPlayerIsInCheck)
     }, [activePiece, position])
 
-    // console.log(playerIsInCheck)
-    // console.log(simulatedTiles)
 
     //move piece
     function movePiece (e) {
-        // console.log("movePiece: " + pieceIsDagged)
-        if (pieceIsDagged) {
+        if (pieceIsDragged) {
 
             //get coordinates of mouse
             const mouseX = e.clientX;
@@ -272,7 +263,7 @@ function Board() {
             const BoardMaxY = BoardRef.current.offsetTop + width;
             const BoardWidth = BoardRef.current.offsetWidth;
 
-            if (activePiece.isActive && pieceIsDagged) {
+            if (activePiece.isActive) {
 
                 //set piece position to mouse position
                 activePiece.isActive.style.position = "absolute";
@@ -382,7 +373,7 @@ function Board() {
                 }
 
                 //castle 
-                checkCastleMoves(x, y);
+                checkCastleMoves(x, position, castle, setCastle, activePiece);
 
                 if (activePiece.piece === 6 && castle.white.castleShort && x === 6) {
                     const updatePosition = [...position];
@@ -397,6 +388,7 @@ function Board() {
                         white: {
                             ...castle.white,
                             castleShort: false,
+                            castleLong: false
                         }
                     }
                     setCastle(updateCastle)
@@ -415,6 +407,7 @@ function Board() {
                         white: {
                             ...castle.white,
                             castleShort: false,
+                            castleLong: false
                         }
                     }
                     setCastle(updateCastle)
@@ -432,6 +425,7 @@ function Board() {
                         black: {
                             ...castle.black,
                             castleShort: false,
+                            castleLong: false
                         }
                     }
                     setCastle(updateCastle)
@@ -450,6 +444,7 @@ function Board() {
                         black: {
                             ...castle.black,
                             castleShort: false,
+                            castleLong: false
                         }
                     }
                     setCastle(updateCastle)
@@ -490,7 +485,7 @@ function Board() {
             setActivePiece(updatePiece)
         }      
     
-        activePiece.isActive.style.position = "static";
+        activePiece.isActive.style.position = "relative";
         activePiece.isActive.style.left = "unset";
         activePiece.isActive.style.top = "unset";
     
@@ -518,71 +513,6 @@ function Board() {
         }
     }
 
-    function checkCastleMoves (x, y) {
-        //check for castle moves
-        if (position[7][7] === 0) {
-            const updateCastle = {
-                ...castle,
-                white: {
-                    ...castle.white,
-                    castleShort: false,
-                }
-            }
-            setCastle(updateCastle)
-        }
-        if (position[7][0] === 0) {
-            const updateCastle = {
-                ...castle,
-                white: {
-                    ...castle.white,
-                    castleLong: false,
-                }
-            }
-            setCastle(updateCastle)
-        }
-        if (position[0][0] === 0) {
-            const updateCastle = {
-                ...castle,
-                black: {
-                    ...castle.black,
-                    castleLong: false,
-                }
-            }
-            setCastle(updateCastle)
-        }
-        if (position[0][7] === 0) {
-            const updateCastle = {
-                ...castle,
-                black: {
-                    ...castle.black,
-                    castleShort: false,
-                }
-            }
-            setCastle(updateCastle)
-        }
-        if (activePiece.piece === 6 && (x !== 2 && x !== 6)) {
-            const updateCastle = {
-                ...castle,
-                white: {
-                    ...castle.white,
-                    castleShort: false,
-                    castleLong: false,
-                }
-            }
-            setCastle(updateCastle)
-        }
-        if (activePiece.piece === 16 && (x !== 2 && x !== 6)) {
-            const updateCastle = {
-                ...castle,
-                black: {
-                    ...castle.black,
-                    castleShort: false,
-                    castleLong: false,
-                }
-            }
-            setCastle(updateCastle)
-        }
-    }
 
     //execute pawn promotionm(executed from Promotion.js)
     function executePromotion (piece) {
@@ -627,10 +557,16 @@ function Board() {
     }
 
 
+    if (gameOver) {
+        board.push(<GameOver key="gameover"/>)           
+    }
+
     //renders if pawn is promoting
     if(pawnIsPromoting.isPromoting && pawnIsPromoting.posX !== null) {
-        board.push(<Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion}/>)
+        board.push(<Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/>)
     }
+
+
 
 
     for (let j = 0; j < 8; j++) {
