@@ -7,13 +7,14 @@ export default class Check {
     //Wenn nein: Kopie von position in position einsetzen und Zug ausführen
 
 
-    checkForCheck (position, playerTurn, simulatedTiles, setSimulatedTiles, setPlayerIsInCheck) {
+    checkForCheck (position, simulatedTiles, setSimulatedTiles, setPlayerIsInCheck, castle, pawnCanEnPassant) {
 
         console.log("checking for checks...")
 
         // console.log(playerTurn)
 
         let kingPosition;
+        let playerTurn = true;
 
         if (playerTurn) {
 
@@ -35,13 +36,13 @@ export default class Check {
                     case 1:
                         if (!playerTurn && piece === 1) {
                             //en passant
-                            // if (b === 3 && b === pawnCanEnPassant.b) {
-                            //     if (a - 1 === pawnCanEnPassant.a) {
-                            //         allSimulatedTiles.push([b - 1, a - 1]);
-                            //     } else if (a + 1 === pawnCanEnPassant.a) {
-                            //         allSimulatedTiles.push([b - 1, a + 1]);
-                            //     }  
-                            // } 
+                            if (b === 3 && b === pawnCanEnPassant.b) {
+                                if (a - 1 === pawnCanEnPassant.a) {
+                                    allSimulatedTiles.push([b - 1, a - 1]);
+                                } else if (a + 1 === pawnCanEnPassant.a) {
+                                    allSimulatedTiles.push([b - 1, a + 1]);
+                                }  
+                            } 
                             //standing on starting rank (two steps possible)
                             if (b === 6) {
                                 for (let i = 5; i >= 4; i--) {
@@ -389,24 +390,24 @@ export default class Check {
                             
                             
                             //check for castling
-                            // if (piece === 6 && a === 4 && b === 7) {
-                            //     if (castle.white.castleShort && position[7][5] === 0 && position[7][6] === 0 && position[7][7] === 4) {                              
-                            //         allSimulatedTiles.push([b, a + 2]);
-                            //     } 
+                            if (piece === 6 && a === 4 && b === 7) {
+                                if (castle.white.castleShort && position[7][5] === 0 && position[7][6] === 0 && position[7][7] === 4) {                              
+                                    allSimulatedTiles.push([b, a + 2]);
+                                } 
                             
-                            //     if (castle.white.castleLong && position[7][3] === 0 && position[7][2] === 0 && position[7][1] === 0 && position[7][0] === 4) {
-                            //         allSimulatedTiles.push([b, a - 2]);                           
-                            //     } 
-                            // }
-                            // if (piece === 16 && a === 4 && b === 0) {
-                            //     if (castle.black.castleShort && position[0][5] === 0 && position[0][6] === 0 && position[0][7] === 14) {                              
-                            //         allSimulatedTiles.push([b, a + 2]);
-                            //     } 
+                                if (castle.white.castleLong && position[7][3] === 0 && position[7][2] === 0 && position[7][1] === 0 && position[7][0] === 4) {
+                                    allSimulatedTiles.push([b, a - 2]);                           
+                                } 
+                            }
+                            if (piece === 16 && a === 4 && b === 0) {
+                                if (castle.black.castleShort && position[0][5] === 0 && position[0][6] === 0 && position[0][7] === 14) {                              
+                                    allSimulatedTiles.push([b, a + 2]);
+                                } 
                             
-                            //     if (castle.black.castleLong && position[0][3] === 0 && position[0][2] === 0 && position[0][1] === 0 && position[0][0] === 14) {
-                            //         allSimulatedTiles.push([b, a - 2]);                           
-                            //     } 
-                            // }
+                                if (castle.black.castleLong && position[0][3] === 0 && position[0][2] === 0 && position[0][1] === 0 && position[0][0] === 14) {
+                                    allSimulatedTiles.push([b, a - 2]);                           
+                                } 
+                            }
                         }
                         break;
                     default: break;
@@ -461,7 +462,7 @@ export default class Check {
                 console.log("black is in check")
                 setPlayerIsInCheck(true)
             } else {
-                console.log("no cheks")
+                console.log("no checks")
             }
         }
     }

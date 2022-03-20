@@ -1,5 +1,5 @@
 function checkEnPassant (x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant) {
-    console.log("en passant")
+    
     let tileDifference = Math.abs(y - activePiece.positionY)
     if ((activePiece.piece === 1 || activePiece.piece === 11) && tileDifference === 2) {
         const updateEnPassant = {

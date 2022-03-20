@@ -4,10 +4,12 @@ import Tile from './Tile/Tile';
 import Promotion from './Promotion/Promotion'
 import Rules from '../Logic/Rules'
 import Check from '../Logic/Check'
+import SimulateMove from '../Logic/SimulateMove';
 import resetBoard from '../Logic/resetBoard';
 import checkCastleMoves from '../Logic/checkCastleMoves';
 import checkEnPassant from '../Logic/checkEnPassant';
 import GameOver from '../Board/GameOver/GameOver';
+import simulateMove from '../Logic/SimulateMove';
 
 
 //Ablauf
@@ -63,6 +65,7 @@ function Board() {
     //Get rules and checks
     const rules = new Rules();
     const check = new Check();
+    const simulateMove = new SimulateMove();
 
     //initialize the board
     let board = [];
@@ -146,9 +149,6 @@ function Board() {
     //saves possible Tiles to move to when piece is grabbed
     const [possibleTiles, setPossibleTiles] = useState([]);
 
-    //saves possible piece captures when piece is grabbed
-    const [possibleCaptures, setPossibleCaptures] = useState([])
-
     //keep track of if piece is dragged or not
     const [pieceIsDragged, setPieceIsDragged] = useState(false);
 
@@ -172,13 +172,19 @@ function Board() {
 
         exitMove: if (e.target.classList.contains("piece")) {
 
+            if (playerIsInCheck) {
+                console.log("check")
+                const noMoreCheck = simulateMove.tryMoves(position);
+                console.log(noMoreCheck)
+            }
+
             //capture piece when clicking on it 
-            for (let i = 0; i < possibleCaptures.length; i++) {
-                if (JSON.stringify(possibleCaptures[i]) === JSON.stringify([currentY, currentX])) {
-                    let string = JSON.stringify(possibleCaptures[i])
+            for (let i = 0; i < possibleTiles.length; i++) {
+                if (JSON.stringify(possibleTiles[i]) === JSON.stringify([currentY, currentX])) {
+                    let string = JSON.stringify(possibleTiles[i])
                     let y = string.charAt(1)
                     let x = string.charAt(3)
-                    if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8)) {
+                    if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8 && position[y][x] > 0)) {
                         executeMove(currentX, currentY)
                         break exitMove;
                     }
@@ -187,7 +193,6 @@ function Board() {
 
             //Reset possible Tiles and captures
             setPossibleTiles([]);
-            setPossibleCaptures([])
         
             //get coordinates of mouse
             const mouseX = e.clientX;
@@ -235,24 +240,25 @@ function Board() {
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
 
             executeMove(x, y)
-
         }
     }
+
+    console.log(possibleTiles)
 
        
     //Check possible moves and checks
     useEffect(() => {
         if (activePiece.isActive) {
-            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant);
+            rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant);
         }
 
-        // check.checkForCheck(position, playerTurn, playerIsInCheck, setPlayerIsInCheck)
-        check.checkForCheck(position, playerTurn, simulatedTiles, setSimulatedTiles, setPlayerIsInCheck)
+        check.checkForCheck(position, simulatedTiles, setSimulatedTiles, setPlayerIsInCheck, castle, pawnCanEnPassant)
     }, [activePiece])
 
 
     //move piece
-    function movePiece (e) {
+    function movePiece (e) {  
+
         if (pieceIsDragged) {
 
             //get coordinates of mouse
@@ -299,7 +305,6 @@ function Board() {
             setActivePiece(updatePiece)
     
             setPossibleTiles([]);
-            setPossibleCaptures([])
         } else {
             const updatePiece = {
                 ...activePiece,
@@ -312,7 +317,6 @@ function Board() {
     
             const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
             const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
-    
             executeMove(x, y);
     
         }
@@ -321,10 +325,6 @@ function Board() {
 
     //execute move
     function executeMove (x, y) {
-
-        if (playerIsInCheck) {
-            console.log("check")
-        }
         
         //check if desired tile is in possible moves
         let match = false;
@@ -334,50 +334,38 @@ function Board() {
                 break;
             }
         }
-        //check if desired tile is in possible captures
-        for (let i = 0; i < possibleCaptures.length; i++) {
-            if (JSON.stringify(possibleCaptures[i]) === JSON.stringify([y, x])) {
-                if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8)) {
-                    match = true;
-                    break;
-                }
-            }
-        }
         
         //if desired tile is in possible moves/captures...
         if (match) {
 
-                //if pawn is promoting, set coordinates for promotion and display promotion menu
-                if (pawnIsPromoting.isPromoting) {
-                    const updatePromotion = {
-                        ...pawnIsPromoting,
-                        posX: x,
-                        posY: y,
-                        capturedPiece: position[y][x]
-                    }
-                    setPawnIsPromoting(updatePromotion)
+            //if pawn is promoting, set coordinates for promotion and display promotion menu
+            if (pawnIsPromoting.isPromoting) {
+                const updatePromotion = {
+                    ...pawnIsPromoting,
+                    posX: x,
+                    posY: y,
+                    capturedPiece: position[y][x]
                 }
+                setPawnIsPromoting(updatePromotion)
+            }
 
-                //en passant
-                checkEnPassant(x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant);
+            //en passant
+            checkEnPassant(x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant);
 
-                //castle 
-                checkCastleMoves(x, position, castle, setCastle, activePiece, setPosition);
+            //castle 
+            checkCastleMoves(x, position, castle, setCastle, activePiece, setPosition);
 
-                //normal move
-                const newPosition = [...position];
-                newPosition[activePiece.positionY][activePiece.positionX] = 0;
-                newPosition[y][x] = activePiece.piece;
-                setPosition(newPosition);
-            
-            
+            //normal move
+            const newPosition = [...position];
+            newPosition[activePiece.positionY][activePiece.positionX] = 0;
+            newPosition[y][x] = activePiece.piece;
+            setPosition(newPosition);
     
             //switch player turn
             setPlayerTurn(prev => !prev)
     
             //Reset possible Tiles
             setPossibleTiles([]);
-            setPossibleCaptures([])
     
             //highlight last move
             const updateLastPiece = {
@@ -398,10 +386,10 @@ function Board() {
             setActivePiece(updatePiece)
         }      
     
+        //drop dragged piece
         activePiece.isActive.style.position = "relative";
         activePiece.isActive.style.left = "unset";
         activePiece.isActive.style.top = "unset";
-    
         setPieceIsDragged(false)
     }
 
@@ -471,15 +459,10 @@ function Board() {
             //highlight possible Tiles
             for (let x = 0; x < possibleTiles.length; x++) {
                 if (JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) {
-                    isPossibleMove = true;
-                }
-            }
-
-            //highlight pieces which can be captured
-            for (let x = 0; x < possibleCaptures.length; x++) {
-                if (JSON.stringify(possibleCaptures[x]) === JSON.stringify([j, i])) {
-                    if ((playerTurn && position[j][i] > 8) || (!playerTurn && position[j][i] < 8)) {
+                    if ((playerTurn && position[j][i] > 8) || (!playerTurn && position[j][i] < 8 && position[j][i] > 0)) {
                         isPossibleCapture = true;
+                    } else if (position[j][i] === 0) {
+                        isPossibleMove = true;
                     }
                 }
             }
@@ -512,7 +495,7 @@ function Board() {
     return (
         <>
             <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(../../assets/images/chessboard_white.svg)`, gridTemplateColumns: `repeat(8, ${width / 8}px`, gridTemplateRows: `repeat(8, ${width/ 8}px`}}>{board}</div>
-            <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPossibleCaptures, setPlayerTurn, setCastle)}>Reset Board</button>
+            <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle)}>Reset Board</button>
         </>
     );
 }

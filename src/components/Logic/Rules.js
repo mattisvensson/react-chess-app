@@ -1,6 +1,6 @@
 export default class Rules {
 
-    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant) {
+    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant) {
         console.log("checking possible moves...")
 
         switch (piece) {
@@ -38,10 +38,10 @@ export default class Rules {
                     }
                     //Check if piece can be captured
                     if (position[posY - 1][posX - 1] > 8) {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX - 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 1]]);
                     }
                     if (position[posY - 1][posX + 1] > 8) {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX + 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 1]]);
                     }
                 }
                 
@@ -80,10 +80,10 @@ export default class Rules {
                     }
                     //Check if piece can be captured
                     if (position[posY + 1][posX - 1] < 8 && position[posY + 1][posX - 1] > 0 ) {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX - 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 1]]);
                     }
                     if (position[posY + 1][posX + 1] < 8 && position[posY + 1][posX + 1] > 0) {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX + 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 1]]);
                     }
                 }
                 break;
@@ -96,28 +96,28 @@ export default class Rules {
                         if (position[posY + 1][posX + 2] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 2]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX + 2]]);  
+                            setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 2]]);  
                         }
                     }
                     if (posY - 1 < 8 && posX + 2 < 8 && posY - 1 >= 0 && posX + 2 >= 0) {
                         if (position[posY - 1][posX + 2] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 2]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX + 2]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 2]]);
                         }
                     }
                     if (posY + 1 < 8 && posX - 2 < 8 && posY + 1 >= 0 && posX - 2 >= 0) {
                         if (position[posY + 1][posX - 2] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 2]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX - 2]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 2]]);
                         }
                     }
                     if (posY - 1 < 8 && posX - 2 < 8 && posY - 1 >= 0 && posX - 2 >= 0) {
                         if (position[posY - 1][posX - 2] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 2]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX - 2]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 2]]);
                         }
                     }
 
@@ -126,28 +126,28 @@ export default class Rules {
                         if (position[posY + 2][posX + 1] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX + 1]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY + 2, posX + 1]]); 
+                            setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX + 1]]); 
                         }
                     }
                     if (posY - 2 < 8 && posX + 1 < 8 && posY - 2 >= 0 && posX + 1 >= 0) {
                         if (position[posY - 2][posX + 1] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX + 1]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY - 2, posX + 1]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX + 1]]);
                         }
                     }
                     if (posY + 2 < 8 && posX - 1 < 8 && posY + 2 >= 0 && posX - 1 >= 0) {
                         if (position[posY + 2][posX - 1] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX - 1]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY + 2, posX - 1]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY + 2, posX - 1]]);
                         }
                     }
                     if (posY - 2 < 8 && posX - 1 < 8 && posY - 2 >= 0 && posX - 1 >= 0) {
                         if (position[posY - 2][posX - 1] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX - 1]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY - 2, posX - 1]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY - 2, posX - 1]]);
                         }
                     }
                 }
@@ -163,7 +163,7 @@ export default class Rules {
                             if (position[posY + i][posX + i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY + i, posX + i]]);
                             } else {
-                                setPossibleCaptures(oldArray => [...oldArray, [posY + i, posX + i]]);
+                                setPossibleTiles(oldArray => [...oldArray, [posY + i, posX + i]]);
                                 break;
                             }
                         }
@@ -174,7 +174,7 @@ export default class Rules {
                             if (position[posY - i][posX + i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY - i, posX + i]]);
                             } else {
-                                setPossibleCaptures(oldArray => [...oldArray, [posY - i, posX + i]]);
+                                setPossibleTiles(oldArray => [...oldArray, [posY - i, posX + i]]);
                                 break;
                             }
                         }
@@ -185,7 +185,7 @@ export default class Rules {
                             if (position[posY + i][posX - i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY + i, posX - i]]);
                             } else {
-                                setPossibleCaptures(oldArray => [...oldArray, [posY + i, posX - i]]);
+                                setPossibleTiles(oldArray => [...oldArray, [posY + i, posX - i]]);
                                 break;
                             }
                         }
@@ -196,7 +196,7 @@ export default class Rules {
                             if (position[posY - i][posX - i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY - i, posX - i]]);
                             } else {
-                                setPossibleCaptures(oldArray => [...oldArray, [posY - i, posX - i]]);
+                                setPossibleTiles(oldArray => [...oldArray, [posY - i, posX - i]]);
                                 break;
                             }
                         }
@@ -212,7 +212,7 @@ export default class Rules {
                         if (position[i][posX] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [i, posX]]);
+                            setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
                             break;
                         }
                     }
@@ -221,7 +221,7 @@ export default class Rules {
                         if (position[i][posX] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [i, posX]]);
+                            setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
                             break;
                         }
                     }
@@ -230,7 +230,7 @@ export default class Rules {
                         if (position[posY][i] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY, i]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY, i]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY, i]]);
                             break;
                         }
                     }
@@ -239,7 +239,7 @@ export default class Rules {
                         if (position[posY][i] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY, i]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY, i]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY, i]]);
                             break;
                         }
                     }
@@ -254,7 +254,7 @@ export default class Rules {
                         if (position[i][posX] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [i, posX]]);
+                            setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
                             break;
                         }
                     }
@@ -263,7 +263,7 @@ export default class Rules {
                         if (position[i][posX] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [i, posX]]);
+                            setPossibleTiles(oldArray => [...oldArray, [i, posX]]);
                             break;
                         }
                     }
@@ -272,7 +272,7 @@ export default class Rules {
                         if (position[posY][i] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY, i]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY, i]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY, i]]);
                             break;
                         }
                     }
@@ -281,7 +281,7 @@ export default class Rules {
                         if (position[posY][i] === 0) {
                             setPossibleTiles(oldArray => [...oldArray, [posY, i]]);
                         } else {
-                            setPossibleCaptures(oldArray => [...oldArray, [posY, i]]);
+                            setPossibleTiles(oldArray => [...oldArray, [posY, i]]);
                             break;
                         }
                     }
@@ -291,7 +291,7 @@ export default class Rules {
                             if (position[posY + i][posX + i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY + i, posX + i]]);
                             } else {
-                                setPossibleCaptures(oldArray => [...oldArray, [posY + i, posX + i]]);
+                                setPossibleTiles(oldArray => [...oldArray, [posY + i, posX + i]]);
                                 break
                             }
                         }
@@ -302,7 +302,7 @@ export default class Rules {
                             if (position[posY - i][posX + i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY - i, posX + i]]);
                             } else {
-                                setPossibleCaptures(oldArray => [...oldArray, [posY - i, posX + i]]);
+                                setPossibleTiles(oldArray => [...oldArray, [posY - i, posX + i]]);
                                 break
                             }
                         }
@@ -313,7 +313,7 @@ export default class Rules {
                             if (position[posY + i][posX - i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY + i, posX - i]]);
                             } else {
-                                setPossibleCaptures(oldArray => [...oldArray, [posY + i, posX - i]]);
+                                setPossibleTiles(oldArray => [...oldArray, [posY + i, posX - i]]);
                                 break
                             }
                         }
@@ -324,7 +324,7 @@ export default class Rules {
                             if (position[posY - i][posX - i] === 0) {
                                 setPossibleTiles(oldArray => [...oldArray, [posY - i, posX - i]]);
                             } else {
-                                setPossibleCaptures(oldArray => [...oldArray, [posY - i, posX - i]]);
+                                setPossibleTiles(oldArray => [...oldArray, [posY - i, posX - i]]);
                                 break
                             }
                         }
@@ -340,42 +340,42 @@ export default class Rules {
                     if (posY - 1 < 8 && posX + 1 < 8 && posY - 1 >= 0 && posX + 1 >= 0 && position[posY - 1][posX + 1] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 1]]);
                     } else {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX + 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX + 1]]);
                     }
                     if (posX + 1 < 8 && posX + 1 >= 0 && position[posY][posX + 1] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY, posX + 1]]);
                     } else {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY, posX + 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY, posX + 1]]);
                     }
                     if (posY + 1 < 8 && posX + 1 < 8 && posY - 1 >= 0 && posX + 1 >= 0 && position[posY + 1][posX + 1] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 1]]);
                     } else {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX + 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX + 1]]);
                     }
                     if (posY + 1 < 8 && posY + 1 >= 0 && position[posY + 1][posX] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX]]);
                     } else {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX]]);
                     }
                     if (posY + 1 < 8 && posX - 1 < 8 && posY + 1 >= 0 && posX - 1 >= 0 && position[posY + 1][posX - 1] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 1]]);
                     } else {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY + 1, posX - 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY + 1, posX - 1]]);
                     }
                     if (posX - 1 < 8 && posX - 1 >= 0 && position[posY][posX - 1] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY, posX - 1]]);
                     } else {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY, posX - 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY, posX - 1]]);
                     }
                     if (posY - 1 < 8 && posX - 1 < 8 && posY - 1 >= 0 && posX - 1 >= 0 && position[posY - 1][posX - 1] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 1]]);
                     } else {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX - 1]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX - 1]]);
                     }
                     if (posY - 1 < 8 && posY - 1 >= 0 && position[posY - 1][posX] === 0) {
                         setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX]]);
                     } else {
-                        setPossibleCaptures(oldArray => [...oldArray, [posY - 1, posX]]);
+                        setPossibleTiles(oldArray => [...oldArray, [posY - 1, posX]]);
                     }
 
                     
