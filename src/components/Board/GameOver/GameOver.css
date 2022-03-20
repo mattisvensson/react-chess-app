@@ -1,0 +1,15 @@
+div#GameOver {
+    position: absolute;
+    width: 20%;
+    height: 20%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #ccc;
+    display: grid;
+    place-items: center;
+}
+
+div#GameOver p {
+    font-family: sans-serif;
+}

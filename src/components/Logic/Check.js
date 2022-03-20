@@ -15,13 +15,15 @@ export default class Check {
 
         let kingPosition;
 
+        if (playerTurn) {
+
+        }
+
         //find position of king
         setSimulatedTiles([])
         let allSimulatedTiles = []
         for (let a =  0; a < 8; a++) {
             for (let b = 0; b < 8; b++) {
-
-
                 if ((playerTurn && position[b][a] === 6) || (!playerTurn && position[b][a] === 16)) {
                     kingPosition = [b, a];
                 }
@@ -31,7 +33,7 @@ export default class Check {
                 switch (piece) {
                     //Pawn (white)
                     case 1:
-                        if (!playerTurn) {
+                        if (!playerTurn && piece === 1) {
                             //en passant
                             // if (b === 3 && b === pawnCanEnPassant.b) {
                             //     if (a - 1 === pawnCanEnPassant.a) {
@@ -49,14 +51,14 @@ export default class Check {
                                         break;
                                     }
                                 }
-                            } else if (position[b - 1][a] === 0) {
+                            } else if (b - 1 >= 0 && position[b - 1][a] === 0) {
                                 allSimulatedTiles.push([b - 1, a]);
                             }
                             //Check if piece can be captured
-                            if (position[b - 1][a - 1] > 8) {
+                            if (b - 1 >= 0 && a - 1 >= 0 && position[b - 1][a - 1] > 8) {
                                 allSimulatedTiles.push([b - 1, a - 1]);
                             }
-                            if (position[b - 1][a + 1] > 8) {
+                            if (b - 1 >= 0 && a + 1 < 8 && position[b - 1][a + 1] > 8) {
                                 allSimulatedTiles.push([b - 1, a + 1]);
                             }
                         }
@@ -64,7 +66,7 @@ export default class Check {
                         break;
                     //Pawn (black)
                     case 11: 
-                        if (playerTurn) {
+                        if (playerTurn && piece === 11) {
                             // //en passant
                             // if (b === 4 && b === pawnCanEnPassant.b) {
                             //     if (a - 1 === pawnCanEnPassant.a) {
@@ -82,14 +84,14 @@ export default class Check {
                                         break;
                                     }
                                 }
-                            } else if (position[b + 1][a] === 0) {
+                            } else if (b + 1 < 8 && position[b + 1][a] === 0) {
                                 allSimulatedTiles.push([b + 1, a]);
                             }
                             //Check if piece can be captured
-                            if (position[b + 1][a - 1] < 8 && position[b + 1][a - 1] > 0 ) {
+                            if (b + 1 < 8 && a - 1 >= 0 && position[b + 1][a - 1] < 8 && position[b + 1][a - 1] > 0 ) {
                                 allSimulatedTiles.push([b + 1, a - 1]);
                             }
-                            if (position[b + 1][a + 1] < 8 && position[b + 1][a + 1] > 0) {
+                            if (b + 1 < 8 && a + 1 < 8 && position[b + 1][a + 1] < 8 && position[b + 1][a + 1] > 0) {
                                 allSimulatedTiles.push([b + 1, a + 1]);
                             }
                         }

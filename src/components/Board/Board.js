@@ -6,6 +6,7 @@ import Rules from '../Logic/Rules'
 import Check from '../Logic/Check'
 import resetBoard from '../Logic/resetBoard';
 import checkCastleMoves from '../Logic/checkCastleMoves';
+import checkEnPassant from '../Logic/checkEnPassant';
 import GameOver from '../Board/GameOver/GameOver';
 
 
@@ -110,19 +111,6 @@ function Board() {
         newPositionY: null
     })
 
-    //true = white's turn
-    //false = black's turn
-    const [playerTurn, setPlayerTurn] = useState(true);
-
-    //saves possible Tiles to move to when piece is grabbed
-    const [possibleTiles, setPossibleTiles] = useState([]);
-
-    //saves possible piece captures when piece is grabbed
-    const [possibleCaptures, setPossibleCaptures] = useState([])
-
-    //keep track of if piece is dragged or not
-    const [pieceIsDragged, setPieceIsDragged] = useState(false);
-
     //saves data about promoting pawn
     const [pawnIsPromoting, setPawnIsPromoting] = useState({
         isPromoting: false,
@@ -151,11 +139,26 @@ function Board() {
         }
     })
 
+    //true = white's turn
+    //false = black's turn
+    const [playerTurn, setPlayerTurn] = useState(true);
+
+    //saves possible Tiles to move to when piece is grabbed
+    const [possibleTiles, setPossibleTiles] = useState([]);
+
+    //saves possible piece captures when piece is grabbed
+    const [possibleCaptures, setPossibleCaptures] = useState([])
+
+    //keep track of if piece is dragged or not
+    const [pieceIsDragged, setPieceIsDragged] = useState(false);
+
     //player is in check
     const [playerIsInCheck, setPlayerIsInCheck] = useState(false)
 
+    //true = game is over
     const [gameOver, setGameOver] = useState(false)
 
+    //save all possible moves
     const [simulatedTiles, setSimulatedTiles] = useState([])
 
 
@@ -237,7 +240,7 @@ function Board() {
     }
 
        
-    //Check possible moves
+    //Check possible moves and checks
     useEffect(() => {
         if (activePiece.isActive) {
             rules.checkPossibleMoves(activePiece.positionX, activePiece.positionY, activePiece.piece, position, playerTurn, setPossibleTiles, setPossibleCaptures, pawnIsPromoting, setPawnIsPromoting, castle, pawnCanEnPassant);
@@ -245,7 +248,7 @@ function Board() {
 
         // check.checkForCheck(position, playerTurn, playerIsInCheck, setPlayerIsInCheck)
         check.checkForCheck(position, playerTurn, simulatedTiles, setSimulatedTiles, setPlayerIsInCheck)
-    }, [activePiece, position])
+    }, [activePiece])
 
 
     //move piece
@@ -318,6 +321,10 @@ function Board() {
 
     //execute move
     function executeMove (x, y) {
+
+        if (playerIsInCheck) {
+            console.log("check")
+        }
         
         //check if desired tile is in possible moves
         let match = false;
@@ -340,8 +347,6 @@ function Board() {
         //if desired tile is in possible moves/captures...
         if (match) {
 
-            move: if (true) {
-
                 //if pawn is promoting, set coordinates for promotion and display promotion menu
                 if (pawnIsPromoting.isPromoting) {
                     const updatePromotion = {
@@ -354,102 +359,10 @@ function Board() {
                 }
 
                 //en passant
-                checkEnPassant(x, y, activePiece.positionY);
-
-                //en passant (with white)
-                if (activePiece.piece === 1 && x !== activePiece.positionX) {
-                    const updatePosition = [...position];
-                    updatePosition[activePiece.positionY][activePiece.positionX] = 0;
-                    updatePosition[y + 1][x] = 0;
-                    updatePosition[y][x] = 1;
-                    break move;
-                //en passant (with black)
-                } else if (activePiece.piece === 11 && x !== activePiece.positionX){
-                    const updatePosition = [...position];
-                    updatePosition[activePiece.positionY][activePiece.positionX] = 0;
-                    updatePosition[y - 1][x] = 0;
-                    updatePosition[y][x] = 11;
-                    break move;
-                }
+                checkEnPassant(x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant);
 
                 //castle 
-                checkCastleMoves(x, position, castle, setCastle, activePiece);
-
-                if (activePiece.piece === 6 && castle.white.castleShort && x === 6) {
-                    const updatePosition = [...position];
-                    updatePosition[7][4] = 0;
-                    updatePosition[7][5] = 4;
-                    updatePosition[7][6] = 6;
-                    updatePosition[7][7] = 0;
-                    setPosition(updatePosition)
-
-                    const updateCastle = {
-                        ...castle,
-                        white: {
-                            ...castle.white,
-                            castleShort: false,
-                            castleLong: false
-                        }
-                    }
-                    setCastle(updateCastle)
-                    break move;
-                } else if (activePiece.piece === 6 && castle.white.castleLong && x === 2) {
-                    const updatePosition = [...position];
-                    updatePosition[7][4] = 0;
-                    updatePosition[7][3] = 4;
-                    updatePosition[7][2] = 6;
-                    updatePosition[7][1] = 0;
-                    updatePosition[7][0] = 0;
-                    setPosition(updatePosition)
-
-                    const updateCastle = {
-                        ...castle,
-                        white: {
-                            ...castle.white,
-                            castleShort: false,
-                            castleLong: false
-                        }
-                    }
-                    setCastle(updateCastle)
-                    break move;
-                } else if (activePiece.piece === 16 && castle.black.castleShort && x === 6) {
-                    const updatePosition = [...position];
-                    updatePosition[0][4] = 0;
-                    updatePosition[0][5] = 14;
-                    updatePosition[0][6] = 16;
-                    updatePosition[0][7] = 0;
-                    setPosition(updatePosition)
-
-                    const updateCastle = {
-                        ...castle,
-                        black: {
-                            ...castle.black,
-                            castleShort: false,
-                            castleLong: false
-                        }
-                    }
-                    setCastle(updateCastle)
-                    break move;
-                } else if (activePiece.piece === 16 && castle.black.castleLong && x === 2) {
-                    const updatePosition = [...position];
-                    updatePosition[0][4] = 0;
-                    updatePosition[0][3] = 14;
-                    updatePosition[0][2] = 16;
-                    updatePosition[0][1] = 0;
-                    updatePosition[0][0] = 0;
-                    setPosition(updatePosition)
-
-                    const updateCastle = {
-                        ...castle,
-                        black: {
-                            ...castle.black,
-                            castleShort: false,
-                            castleLong: false
-                        }
-                    }
-                    setCastle(updateCastle)
-                    break move;
-                }
+                checkCastleMoves(x, position, castle, setCastle, activePiece, setPosition);
 
                 //normal move
                 const newPosition = [...position];
@@ -457,7 +370,7 @@ function Board() {
                 newPosition[y][x] = activePiece.piece;
                 setPosition(newPosition);
             
-            }
+            
     
             //switch player turn
             setPlayerTurn(prev => !prev)
@@ -492,32 +405,10 @@ function Board() {
         setPieceIsDragged(false)
     }
 
-    function checkEnPassant (x, y, lastY) {
-        let tileDifference = Math.abs(y - lastY)
-        if ((activePiece.piece === 1 || activePiece.piece === 11) && tileDifference === 2) {
-            const updateEnPassant = {
-                ...pawnCanEnPassant,
-                isActive: true,
-                posX: x,
-                posY: y
-            }
-            setPawnCanEnPassant(updateEnPassant)
-        } else {
-            const updateEnPassant = {
-                ...pawnCanEnPassant,
-                isActive: false,
-                posX: null,
-                posY: null
-            }
-            setPawnCanEnPassant(updateEnPassant)
-        }
-    }
-
-
     //execute pawn promotionm(executed from Promotion.js)
     function executePromotion (piece) {
-
         let pieceId;
+
 
         switch (piece) {
             case "queen": pieceId = 5; break;
@@ -556,7 +447,6 @@ function Board() {
         setPawnIsPromoting(updatePromotion)
     }
 
-
     if (gameOver) {
         board.push(<GameOver key="gameover"/>)           
     }
@@ -565,8 +455,6 @@ function Board() {
     if(pawnIsPromoting.isPromoting && pawnIsPromoting.posX !== null) {
         board.push(<Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/>)
     }
-
-
 
 
     for (let j = 0; j < 8; j++) {
