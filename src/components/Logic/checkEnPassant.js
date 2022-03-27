@@ -1,7 +1,10 @@
 function checkEnPassant (x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant) {
     
-    let tileDifference = Math.abs(y - activePiece.positionY)
-    if ((activePiece.piece === 1 || activePiece.piece === 11) && tileDifference === 2) {
+    let tileDifferenceY = Math.abs(y - activePiece.positionY)
+    let tileDifferenceX = Math.abs(pawnCanEnPassant.posX - activePiece.positionX)
+
+    //set possible en passant pawn
+    if ((activePiece.piece === 1 || activePiece.piece === 11) && tileDifferenceY === 2) {
         const updateEnPassant = {
             ...pawnCanEnPassant,
             isActive: true,
@@ -20,14 +23,14 @@ function checkEnPassant (x, y, activePiece, position, pawnCanEnPassant, setPawnC
     }
 
     
-    //en passant (with white)
-    if (pawnCanEnPassant.isActive && activePiece.piece === 1 && x !== activePiece.positionX) {
+    //execute en passant (with white)
+    if (pawnCanEnPassant.isActive && activePiece.piece === 1 && tileDifferenceX === 1) {
         const updatePosition = [...position];
         updatePosition[activePiece.positionY][activePiece.positionX] = 0;
         updatePosition[y + 1][x] = 0;
         updatePosition[y][x] = 1;
     //en passant (with black)
-    } else if (pawnCanEnPassant.isActive && activePiece.piece === 11 && x !== activePiece.positionX){
+    } else if (pawnCanEnPassant.isActive && activePiece.piece === 11 && tileDifferenceX === 1){
         const updatePosition = [...position];
         updatePosition[activePiece.positionY][activePiece.positionX] = 0;
         updatePosition[y - 1][x] = 0;

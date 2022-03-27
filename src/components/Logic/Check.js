@@ -1,3 +1,5 @@
+import Rules from "./Rules";
+
 export default class Check {
 
     //Kopie von position erstellen
@@ -7,463 +9,172 @@ export default class Check {
     //Wenn nein: Kopie von position in position einsetzen und Zug ausführen
 
 
-    checkForCheck (position, simulatedTiles, setSimulatedTiles, setPlayerIsInCheck, castle, pawnCanEnPassant) {
+    checkForCheck (position, setSimulatedTilesWhite, setSimulatedTilesBlack, setPlayerIsInCheck, castle, pawnCanEnPassant) {
+
+        const rules = new Rules()
 
         console.log("checking for checks...")
 
-        // console.log(playerTurn)
+        let whiteKingPosition;
+        let blackKingPosition;
 
-        let kingPosition;
         let playerTurn = true;
 
-        if (playerTurn) {
+        let simulatedTilesWhite = []
+        let simulatedTilesBlack = []
 
+        let whiteIsInCheck = false;
+        let blackIsInCheck = false;
+
+        for (let c = 0; c < 2; c++) {
+
+            setSimulatedTilesWhite([])
+            setSimulatedTilesBlack([])
+            
+            let allSimulatedTiles = []
+
+            for (let posX =  0; posX < 8; posX++) {
+                for (let posY = 0; posY < 8; posY++) {
+                    
+                    //find position of king
+                    if (!playerTurn && position[posY][posX] === 6) {
+                        whiteKingPosition = [posY, posX];
+                    }
+                    if (playerTurn && position[posY][posX] === 16) {
+                        blackKingPosition = [posY, posX]
+                    }
+
+                    // console.log(allSimulatedTiles)
+                    let piece = position[posY][posX];
+
+                    switch (piece) {
+                        case 1: 
+                            if (playerTurn && piece === 1) {
+                                const pawnWhite = rules.pawnWhiteMove(posX, posY, position, pawnCanEnPassant)
+                                // console.log(pawnWhite)
+                                allSimulatedTiles = [...allSimulatedTiles, ...pawnWhite]
+                            }
+                            break;
+                        case 11: 
+                            if (!playerTurn && piece === 11) {
+                                const pawnBlack = rules.pawnBlackMove(posX, posY, position, pawnCanEnPassant)
+                                allSimulatedTiles = [...allSimulatedTiles, ...pawnBlack]
+                            }
+                            break;
+                        case 2:
+                        case 12: 
+                            if ((playerTurn && piece === 2) || (!playerTurn && piece === 12)) {
+                                const knight = rules.knightMove(posX, posY, position)
+                                allSimulatedTiles = [...allSimulatedTiles, ...knight]
+                            }
+                            break;
+                        case 3:
+                        case 13: 
+                            if ((playerTurn && piece === 3) || (!playerTurn && piece === 13)) {
+                                const bishop = rules.bishopMove(posX, posY, position)
+                                allSimulatedTiles = [...allSimulatedTiles, ...bishop]
+                            }
+                            break;
+                        case 4:
+                        case 14: 
+                            if ((playerTurn && piece === 4) || (!playerTurn && piece === 14)) {
+                                const rook = rules.rookMove(posX, posY, position)
+                                allSimulatedTiles = [...allSimulatedTiles, ...rook]
+                            }
+                            break;
+                        case 5:
+                        case 15: 
+                            if ((playerTurn && piece === 5) || (!playerTurn && piece === 15)) {
+                                const queen = rules.queenMove(posX, posY, position)
+                                allSimulatedTiles = [...allSimulatedTiles, ...queen]
+                            }
+                            break;
+                        case 6:
+                        case 16: 
+                            if ((playerTurn && piece === 6) || (!playerTurn && piece === 16)) {
+                                const king = rules.kingMove(posX, posY, position, piece, castle)
+                                allSimulatedTiles = [...allSimulatedTiles, ...king]
+                            }
+                            break;
+                        default: break;
+                    }
+                }
+            }  
+            
+            // console.log(allSimulatedTiles)
+
+            //remove tile if its white turn und on the tile is a white piece (same for black)
+            if (allSimulatedTiles.length > 0) {
+
+                let itemsFound = {};
+
+                for (let i = 0; i < allSimulatedTiles.length; i++) {
+
+                    let string = JSON.stringify(allSimulatedTiles[i])
+                    let y = string.charAt(1)
+                    let x = string.charAt(3)
+
+                    if ((!playerTurn && position[y][x] > 8) || (playerTurn && position[y][x] < 8 && position[y][x] > 0)) {
+                        allSimulatedTiles.splice(i, 1);
+                        i--
+                    }
+                }
+                
+                // remove duplicates from array
+                for (let i = 0; i < allSimulatedTiles.length; i++) {
+        
+                    let string = JSON.stringify(allSimulatedTiles[i])
+
+                    if(itemsFound[string]) { continue; }
+                    if (playerTurn) {
+                        simulatedTilesWhite.push(allSimulatedTiles[i]);
+                    } else {
+                        simulatedTilesBlack.push(allSimulatedTiles[i]);
+                    }
+                    itemsFound[string] = true;
+                }
+
+                setSimulatedTilesWhite(simulatedTilesWhite)
+                setSimulatedTilesBlack(simulatedTilesBlack)
+                // console.log(allSimulatedTiles)
+                // console.log(simulatedTiles)
+                // console.log(kingPosition)
+
+                //check if player is in check
+                for (let i = 0; i < simulatedTilesWhite.length; i++) {
+                    if (JSON.stringify(simulatedTilesWhite[i]) === JSON.stringify(blackKingPosition)) {
+                        blackIsInCheck = true;
+                        break;
+                    } 
+                }
+                for (let i = 0; i < simulatedTilesBlack.length; i++) {
+                    if (JSON.stringify(simulatedTilesBlack[i]) === JSON.stringify(whiteKingPosition)) {
+                        whiteIsInCheck = true;
+                        break;
+                    } 
+                }
+            }
+            playerTurn = false;
         }
 
-        //find position of king
-        setSimulatedTiles([])
-        let allSimulatedTiles = []
-        for (let a =  0; a < 8; a++) {
-            for (let b = 0; b < 8; b++) {
-                if ((playerTurn && position[b][a] === 6) || (!playerTurn && position[b][a] === 16)) {
-                    kingPosition = [b, a];
-                }
+                
+        // console.log("Whites moves:")
+        // console.log(simulatedTilesWhite)
+        // console.log("Blacks moves:")
+        // console.log(simulatedTilesBlack)
 
-                let piece = position[b][a];
-
-                switch (piece) {
-                    //Pawn (white)
-                    case 1:
-                        if (!playerTurn && piece === 1) {
-                            //en passant
-                            if (b === 3 && b === pawnCanEnPassant.b) {
-                                if (a - 1 === pawnCanEnPassant.a) {
-                                    allSimulatedTiles.push([b - 1, a - 1]);
-                                } else if (a + 1 === pawnCanEnPassant.a) {
-                                    allSimulatedTiles.push([b - 1, a + 1]);
-                                }  
-                            } 
-                            //standing on starting rank (two steps possible)
-                            if (b === 6) {
-                                for (let i = 5; i >= 4; i--) {
-                                    if (position[i][a] === 0) {
-                                        allSimulatedTiles.push([i, a]);
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            } else if (b - 1 >= 0 && position[b - 1][a] === 0) {
-                                allSimulatedTiles.push([b - 1, a]);
-                            }
-                            //Check if piece can be captured
-                            if (b - 1 >= 0 && a - 1 >= 0 && position[b - 1][a - 1] > 8) {
-                                allSimulatedTiles.push([b - 1, a - 1]);
-                            }
-                            if (b - 1 >= 0 && a + 1 < 8 && position[b - 1][a + 1] > 8) {
-                                allSimulatedTiles.push([b - 1, a + 1]);
-                            }
-                        }
-                        
-                        break;
-                    //Pawn (black)
-                    case 11: 
-                        if (playerTurn && piece === 11) {
-                            // //en passant
-                            // if (b === 4 && b === pawnCanEnPassant.b) {
-                            //     if (a - 1 === pawnCanEnPassant.a) {
-                            //         allSimulatedTiles.push([b + 1, a - 1]);
-                            //     } else if (a + 1 === pawnCanEnPassant.a) {
-                            //         allSimulatedTiles.push([b + 1, a + 1]);
-                            //     }  
-                            // } 
-                            //standing on starting rank (two moves possible)
-                            if(b === 1) {
-                                for (let i = 2; i <= 3; i++) {
-                                    if (position[i][a] === 0) {
-                                        allSimulatedTiles.push([i, a]);
-                                    } else {
-                                        break;
-                                    }
-                                }
-                            } else if (b + 1 < 8 && position[b + 1][a] === 0) {
-                                allSimulatedTiles.push([b + 1, a]);
-                            }
-                            //Check if piece can be captured
-                            if (b + 1 < 8 && a - 1 >= 0 && position[b + 1][a - 1] < 8 && position[b + 1][a - 1] > 0 ) {
-                                allSimulatedTiles.push([b + 1, a - 1]);
-                            }
-                            if (b + 1 < 8 && a + 1 < 8 && position[b + 1][a + 1] < 8 && position[b + 1][a + 1] > 0) {
-                                allSimulatedTiles.push([b + 1, a + 1]);
-                            }
-                        }
-                        break;
-                    //Knight (white and black)
-                    case 2:
-                    case 12:
-                        if ((!playerTurn && piece === 2) || (playerTurn && piece === 12)) {
-        
-                            if (b + 1 < 8 && a + 2 < 8 && b + 1 >= 0 && a + 2 >= 0) {
-                                if (position[b + 1][a + 2] === 0) {
-                                    allSimulatedTiles.push([b + 1, a + 2]);
-                                } else {
-                                    allSimulatedTiles.push([b + 1, a + 2]);  
-                                }
-                            }
-                            if (b - 1 < 8 && a + 2 < 8 && b - 1 >= 0 && a + 2 >= 0) {
-                                if (position[b - 1][a + 2] === 0) {
-                                    allSimulatedTiles.push([b - 1, a + 2]);
-                                } else {
-                                    allSimulatedTiles.push([b - 1, a + 2]);
-                                }
-                            }
-                            if (b + 1 < 8 && a - 2 < 8 && b + 1 >= 0 && a - 2 >= 0) {
-                                if (position[b + 1][a - 2] === 0) {
-                                    allSimulatedTiles.push([b + 1, a - 2]);
-                                } else {
-                                    allSimulatedTiles.push([b + 1, a - 2]);
-                                }
-                            }
-                            if (b - 1 < 8 && a - 2 < 8 && b - 1 >= 0 && a - 2 >= 0) {
-                                if (position[b - 1][a - 2] === 0) {
-                                    allSimulatedTiles.push([b - 1, a - 2]);
-                                } else {
-                                    allSimulatedTiles.push([b - 1, a - 2]);
-                                }
-                            }
-        
-        
-                            if (b + 2 < 8 && a + 1 < 8 && b + 2 >= 0 && a + 1 >= 0) {
-                                if (position[b + 2][a + 1] === 0) {
-                                    allSimulatedTiles.push([b + 2, a + 1]);
-                                } else {
-                                    allSimulatedTiles.push([b + 2, a + 1]); 
-                                }
-                            }
-                            if (b - 2 < 8 && a + 1 < 8 && b - 2 >= 0 && a + 1 >= 0) {
-                                if (position[b - 2][a + 1] === 0) {
-                                    allSimulatedTiles.push([b - 2, a + 1]);
-                                } else {
-                                    allSimulatedTiles.push([b - 2, a + 1]);
-                                }
-                            }
-                            if (b + 2 < 8 && a - 1 < 8 && b + 2 >= 0 && a - 1 >= 0) {
-                                if (position[b + 2][a - 1] === 0) {
-                                    allSimulatedTiles.push([b + 2, a - 1]);
-                                } else {
-                                    allSimulatedTiles.push([b + 2, a - 1]);
-                                }
-                            }
-                            if (b - 2 < 8 && a - 1 < 8 && b - 2 >= 0 && a - 1 >= 0) {
-                                if (position[b - 2][a - 1] === 0) {
-                                    allSimulatedTiles.push([b - 2, a - 1]);
-                                } else {
-                                    allSimulatedTiles.push([b - 2, a - 1]);
-                                }
-                            }
-                        }
-                        break;
-                    //Bishop (white and black)
-                    case 3:
-                    case 13: 
-                        if ((!playerTurn && piece === 3) || (playerTurn && piece === 13)) {
-        
-                            //bottom right
-                            for (let i = 1; i < 8; i++) {
-                                if (b + i < 8 && a + i < 8 && b + i >= 0 && a + i >= 0) {
-                                    if (position[b + i][a + i] === 0) {
-                                        allSimulatedTiles.push([b + i, a + i]);
-                                    } else {
-                                        allSimulatedTiles.push([b + i, a + i]);
-                                        break;
-                                    }
-                                }
-                            }
-                            //top right    
-                            for (let i = 1; i < 8; i++) {
-                                if (b - i < 8 && a + i < 8 && b - i >= 0 && a + i >= 0) {
-                                    if (position[b - i][a + i] === 0) {
-                                        allSimulatedTiles.push([b - i, a + i]);
-                                    } else {
-                                        allSimulatedTiles.push([b - i, a + i]);
-                                        break;
-                                    }
-                                }
-                            }
-                            //bottom left
-                            for (let i = 1; i < 8; i++) {
-                                if (b + i < 8 && a - i < 8 && b + i >= 0 && a - i >= 0) {
-                                    if (position[b + i][a - i] === 0) {
-                                        allSimulatedTiles.push([b + i, a - i]);
-                                    } else {
-                                        allSimulatedTiles.push([b + i, a - i]);
-                                        break;
-                                    }
-                                }
-                            }
-                            //top left
-                            for (let i = 1; i < 8; i++) {
-                                if (b - i < 8 && a - i < 8 && b - i >= 0 && a - i >= 0) {
-                                    if (position[b - i][a - i] === 0) {
-                                        allSimulatedTiles.push([b - i, a - i]);
-                                    } else {
-                                        allSimulatedTiles.push([b - i, a - i]);
-                                        break;
-                                    }
-                                }
-                            }
-                        }              
-                        break;
-                    //Rook (white and black)
-                    case 4:
-                    case 14:
-                        if ((!playerTurn && piece === 4) || (playerTurn && piece === 14)) {
-                            //down
-                            for (let i = b + 1; i < 8; i++) {
-                                if (position[i][a] === 0) {
-                                    allSimulatedTiles.push([i, a]);
-                                } else {
-                                    allSimulatedTiles.push([i, a]);
-                                    break;
-                                }
-                            }
-                            //up
-                            for (let i = b - 1; i >= 0; i--) {
-                                if (position[i][a] === 0) {
-                                    allSimulatedTiles.push([i, a]);
-                                } else {
-                                    allSimulatedTiles.push([i, a]);
-                                    break;
-                                }
-                            }
-                            //right
-                            for (let i = a + 1; i < 8; i++) {
-                                if (position[b][i] === 0) {
-                                    allSimulatedTiles.push([b, i]);
-                                } else {
-                                    allSimulatedTiles.push([b, i]);
-                                    break;
-                                }
-                            }
-                            //left
-                            for (let i = a - 1; i >= 0; i--) {
-                                if (position[b][i] === 0) {
-                                    allSimulatedTiles.push([b, i]);
-                                } else {
-                                    allSimulatedTiles.push([b, i]);
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                    //Queen (white and black)
-                    case 5:
-                    case 15:
-                        if ((!playerTurn && piece === 5) || (playerTurn && piece === 15)) {
-                            //down
-                            for (let i = b + 1; i < 8; i++) {
-                                if (position[i][a] === 0) {
-                                    allSimulatedTiles.push([i, a]);
-                                } else {
-                                    allSimulatedTiles.push([i, a]);
-                                    break;
-                                }
-                            }
-                            //up
-                            for (let i = b - 1; i >= 0; i--) {
-                                if (position[i][a] === 0) {
-                                    allSimulatedTiles.push([i, a]);
-                                } else {
-                                    allSimulatedTiles.push([i, a]);
-                                    break;
-                                }
-                            }
-                            //right
-                            for (let i = a + 1; i < 8; i++) {
-                                if (position[b][i] === 0) {
-                                    allSimulatedTiles.push([b, i]);
-                                } else {
-                                    allSimulatedTiles.push([b, i]);
-                                    break;
-                                }
-                            }
-                            //left
-                            for (let i = a - 1; i >= 0; i--) {
-                                if (position[b][i] === 0) {
-                                    allSimulatedTiles.push([b, i]);
-                                } else {
-                                    allSimulatedTiles.push([b, i]);
-                                    break;
-                                }
-                            }
-                            //bottom right
-                            for (let i = 1; i < 8; i++) {
-                                if (b + i < 8 && a + i < 8 && b + i >= 0 && a + i >= 0) {
-                                    if (position[b + i][a + i] === 0) {
-                                        allSimulatedTiles.push([b + i, a + i]);
-                                    } else {
-                                        allSimulatedTiles.push([b + i, a + i]);
-                                        break
-                                    }
-                                }
-                            }
-                            //top right    
-                            for (let i = 1; i < 8; i++) {
-                                if (b - i < 8 && a + i < 8 && b - i >= 0 && a + i >= 0) {
-                                    if (position[b - i][a + i] === 0) {
-                                        allSimulatedTiles.push([b - i, a + i]);
-                                    } else {
-                                        allSimulatedTiles.push([b - i, a + i]);
-                                        break
-                                    }
-                                }
-                            }  
-                            //bottom left
-                            for (let i = 1; i < 8; i++) {
-                                if (b + i < 8 && a - i < 8 && b + i >= 0 && a - i >= 0) {
-                                    if (position[b + i][a - i] === 0) {
-                                        allSimulatedTiles.push([b + i, a - i]);
-                                    } else {
-                                        allSimulatedTiles.push([b + i, a - i]);
-                                        break
-                                    }
-                                }
-                            }
-                            //top left
-                            for (let i = 1; i < 8; i++) {
-                                if (b - i < 8 && a - i < 8 && b - i >= 0 && a - i >= 0) {
-                                    if (position[b - i][a - i] === 0) {
-                                        allSimulatedTiles.push([b - i, a - i]);
-                                    } else {
-                                        allSimulatedTiles.push([b - i, a - i]);
-                                        break
-                                    }
-                                }
-                            }
-                        }
-                        
-                    break;
-                    //King (white and black)
-                    case 6:
-                    case 16:
-                        if ((!playerTurn && piece === 6) || (playerTurn && piece === 16)) {
-        
-                            if (b - 1 < 8 && a + 1 < 8 && b - 1 >= 0 && a + 1 >= 0 && position[b - 1][a + 1] === 0) {
-                                allSimulatedTiles.push([b - 1, a + 1]);
-                            } else if (b - 1 < 8 && a + 1 < 8 && b - 1 >= 0 && a + 1 >= 0) {
-                                allSimulatedTiles.push([b - 1, a + 1]);
-                            }
-                            if (a + 1 < 8 && a + 1 >= 0 && position[b][a + 1] === 0) {
-                                allSimulatedTiles.push([b, a + 1]);
-                            } else if (a + 1 < 8 && a + 1 >= 0) {
-                                allSimulatedTiles.push([b, a + 1]);
-                            }
-                            if (b + 1 < 8 && a + 1 < 8 && b - 1 >= 0 && a + 1 >= 0 && position[b + 1][a + 1] === 0) {
-                                allSimulatedTiles.push([b + 1, a + 1]);
-                            } else if (b + 1 < 8 && a + 1 < 8 && b - 1 >= 0 && a + 1 >= 0) {
-                                allSimulatedTiles.push([b + 1, a + 1]);
-                            }
-                            if (b + 1 < 8 && b + 1 >= 0 && position[b + 1][a] === 0) {
-                                allSimulatedTiles.push([b + 1, a]);
-                            } else if (b + 1 < 8 && b + 1 >= 0) {
-                                allSimulatedTiles.push([b + 1, a]);
-                            }
-                            if (b + 1 < 8 && a - 1 < 8 && b + 1 >= 0 && a - 1 >= 0 && position[b + 1][a - 1] === 0) {
-                                allSimulatedTiles.push([b + 1, a - 1]);
-                            } else if (b + 1 < 8 && a - 1 < 8 && b + 1 >= 0 && a - 1 >= 0) {
-                                allSimulatedTiles.push([b + 1, a - 1]);
-                            }
-                            if (a - 1 < 8 && a - 1 >= 0 && position[b][a - 1] === 0) {
-                                allSimulatedTiles.push([b, a - 1]);
-                            } else if (a - 1 < 8 && a - 1 >= 0) {
-                                allSimulatedTiles.push([b, a - 1]);
-                            }
-                            if (b - 1 < 8 && a - 1 < 8 && b - 1 >= 0 && a - 1 >= 0 && position[b - 1][a - 1] === 0) {
-                                allSimulatedTiles.push([b - 1, a - 1]);
-                            } else if (b - 1 < 8 && a - 1 < 8 && b - 1 >= 0 && a - 1 >= 0) {
-                                allSimulatedTiles.push([b - 1, a - 1]);
-                            }
-                            if (b - 1 < 8 && b - 1 >= 0 && position[b - 1][a] === 0) {
-                                allSimulatedTiles.push([b - 1, a]);
-                            } else if (b - 1 < 8 && b - 1 >= 0) {
-                                allSimulatedTiles.push([b - 1, a]);
-                            }
-                            
-                            
-                            //check for castling
-                            if (piece === 6 && a === 4 && b === 7) {
-                                if (castle.white.castleShort && position[7][5] === 0 && position[7][6] === 0 && position[7][7] === 4) {                              
-                                    allSimulatedTiles.push([b, a + 2]);
-                                } 
-                            
-                                if (castle.white.castleLong && position[7][3] === 0 && position[7][2] === 0 && position[7][1] === 0 && position[7][0] === 4) {
-                                    allSimulatedTiles.push([b, a - 2]);                           
-                                } 
-                            }
-                            if (piece === 16 && a === 4 && b === 0) {
-                                if (castle.black.castleShort && position[0][5] === 0 && position[0][6] === 0 && position[0][7] === 14) {                              
-                                    allSimulatedTiles.push([b, a + 2]);
-                                } 
-                            
-                                if (castle.black.castleLong && position[0][3] === 0 && position[0][2] === 0 && position[0][1] === 0 && position[0][0] === 14) {
-                                    allSimulatedTiles.push([b, a - 2]);                           
-                                } 
-                            }
-                        }
-                        break;
-                    default: break;
-                }
-            }
-        }  
-        
-        // console.log(allSimulatedTiles)
-
-        //remove tile if its white turn und on the tile is a white piece (same for black)
-        if (allSimulatedTiles.length > 0) {
-
-            let uniques = [];
-            let itemsFound = {};
-            let check = false;
-
-            for (let i = 0; i < allSimulatedTiles.length; i++) {
-
-                let string = JSON.stringify(allSimulatedTiles[i])
-                let y = string.charAt(1)
-                let x = string.charAt(3)
-
-                if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8 && position[y][x] > 0)) {
-                    allSimulatedTiles.splice(i, 1);
-                    i--
-                }
-            }
-            
-            // remove duplicates from array
-            for (let i = 0; i < allSimulatedTiles.length; i++) {
-    
-                let string = JSON.stringify(allSimulatedTiles[i])
-
-                //remove cuplicates from array
-                if(itemsFound[string]) { continue; }
-                uniques.push(allSimulatedTiles[i]);
-                itemsFound[string] = true;
-            }
-
-            //check if player is in check
-            for (let i = 0; i < uniques.length; i++) {
-                if (JSON.stringify(uniques[i]) === JSON.stringify(kingPosition)) {
-                    check = true;
-                    break;
-                } 
-            }
-
-            if (playerTurn && check) {
-                console.log("white is in check")
-                setPlayerIsInCheck(true)
-            } else if (!playerTurn && check) {
-                console.log("black is in check")
-                setPlayerIsInCheck(true)
-            } else {
-                console.log("no checks")
-            }
+        if (playerTurn && whiteIsInCheck) {
+            // console.log("white is in check")
+            setPlayerIsInCheck("white")
+            return "check"
+        } else if (!playerTurn && blackIsInCheck) {
+            // console.log("black is in check")
+            setPlayerIsInCheck("black")
+            return "check"
+        } else {
+            console.log("no checks")
+            // setPlayerIsInCheck("")
+            return "no check"
         }
     }
 }
