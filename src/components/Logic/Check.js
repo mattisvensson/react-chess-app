@@ -2,13 +2,6 @@ import Rules from "./Rules";
 
 export default class Check {
 
-    //Kopie von position erstellen
-    //Zug in position Kopie simulieren
-    //Gucken, ob nach simuliertem Zug König im Schach steht
-    //Wenn ja: Abbrechen und original position nicht verändern
-    //Wenn nein: Kopie von position in position einsetzen und Zug ausführen
-
-
     checkForCheck (position, setSimulatedTilesWhite, setSimulatedTilesBlack, setPlayerIsInCheck, castle, pawnCanEnPassant) {
 
         const rules = new Rules()
@@ -37,10 +30,10 @@ export default class Check {
                 for (let posY = 0; posY < 8; posY++) {
                     
                     //find position of king
-                    if (!playerTurn && position[posY][posX] === 6) {
+                    if (position[posY][posX] === 6) {
                         whiteKingPosition = [posY, posX];
                     }
-                    if (playerTurn && position[posY][posX] === 16) {
+                    if (position[posY][posX] === 16) {
                         blackKingPosition = [posY, posX]
                     }
 
@@ -100,8 +93,6 @@ export default class Check {
                     }
                 }
             }  
-            
-            // console.log(allSimulatedTiles)
 
             //remove tile if its white turn und on the tile is a white piece (same for black)
             if (allSimulatedTiles.length > 0) {
@@ -118,6 +109,7 @@ export default class Check {
                         allSimulatedTiles.splice(i, 1);
                         i--
                     }
+
                 }
                 
                 // remove duplicates from array
@@ -136,9 +128,6 @@ export default class Check {
 
                 setSimulatedTilesWhite(simulatedTilesWhite)
                 setSimulatedTilesBlack(simulatedTilesBlack)
-                // console.log(allSimulatedTiles)
-                // console.log(simulatedTiles)
-                // console.log(kingPosition)
 
                 //check if player is in check
                 for (let i = 0; i < simulatedTilesWhite.length; i++) {
@@ -156,25 +145,116 @@ export default class Check {
             }
             playerTurn = false;
         }
-
                 
-        // console.log("Whites moves:")
-        // console.log(simulatedTilesWhite)
-        // console.log("Blacks moves:")
-        // console.log(simulatedTilesBlack)
+        console.log("Whites moves:")
+        console.log(simulatedTilesWhite)
+        console.log("Blacks moves:")
+        console.log(simulatedTilesBlack)
 
         if (playerTurn && whiteIsInCheck) {
-            // console.log("white is in check")
+            console.log("white is in check")
             setPlayerIsInCheck("white")
             return "check"
         } else if (!playerTurn && blackIsInCheck) {
-            // console.log("black is in check")
+            console.log("black is in check")
             setPlayerIsInCheck("black")
             return "check"
         } else {
             console.log("no checks")
-            // setPlayerIsInCheck("")
             return "no check"
         }
+    }
+
+
+
+
+    checkForKingMoves (position, setSimulatedTilesKing, simulatedTilesWhite, simulatedTilesBlack, castle, playerTurn) {
+
+        console.log("checking for king moves...")
+
+        const rules = new Rules()
+
+        let king;
+        let kingPosition;
+        let simulatedTiles;
+        let simulatedTilesKing = [];
+        let allSimulatedTilesKing = [];
+        let playerIsInCheck = false;
+
+        console.log(simulatedTilesWhite)
+        console.log(simulatedTilesBlack)
+        
+        if (playerTurn) {
+            king = 6;
+            simulatedTiles = simulatedTilesBlack;
+        } else {
+            king = 16;
+            simulatedTiles = simulatedTilesWhite;
+        }
+        
+        for (let posX =  0; posX < 8; posX++) {
+            for (let posY = 0; posY < 8; posY++) {
+                
+                //find position of king
+                if (position[posY][posX] === king) {
+                    kingPosition = [posY, posX];
+                }
+            }
+        }
+        // console.log(kingPosition)
+        
+        const kingMove = rules.kingMove(kingPosition[1], kingPosition[0], position, king, castle)
+        allSimulatedTilesKing = [...allSimulatedTilesKing, ...kingMove]
+
+
+        //remove tile if its white turn und on the tile is a white piece (same for black)
+        if (allSimulatedTilesKing.length > 0) {
+
+            let itemsFound = {};
+
+            for (let i = 0; i < allSimulatedTilesKing.length; i++) {
+
+                let string = JSON.stringify(allSimulatedTilesKing[i])
+                let y = string.charAt(1)
+                let x = string.charAt(3)
+
+                if ((!playerTurn && position[y][x] > 8) || (playerTurn && position[y][x] < 8 && position[y][x] > 0)) {
+                    allSimulatedTilesKing.splice(i, 1);
+                    i--
+                }
+            }
+            
+            // remove duplicates from array
+            for (let i = 0; i < allSimulatedTilesKing.length; i++) {
+    
+                let string = JSON.stringify(allSimulatedTilesKing[i])
+
+                if(itemsFound[string]) { continue; }
+                simulatedTilesKing.push(allSimulatedTilesKing[i]);
+                itemsFound[string] = true;
+            }
+
+            setSimulatedTilesKing(simulatedTilesKing)
+
+            //check if player is in check
+            // console.log(simulatedTiles)
+            for (let i = 0; i < simulatedTiles.length; i++) {
+                // console.log(simulatedTiles[i], kingPosition)
+                if (JSON.stringify(simulatedTiles[i]) === JSON.stringify(kingPosition)) {
+                    playerIsInCheck = true;
+                    break;
+                } 
+            }
+        }
+    
+
+        if (playerIsInCheck) {
+            console.log("player is in check")
+            return "check"
+        } else {
+            console.log("no checks with king")
+            return "no check"
+        }
+
     }
 }

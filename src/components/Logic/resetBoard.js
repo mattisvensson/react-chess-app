@@ -1,5 +1,7 @@
 //reset board
-function resetBoard (setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle) {
+function resetBoard (setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle, setPlayerIsInCheck) {
+
+    setPlayerIsInCheck(false)
 
     const updatePiece = {
         ...activePiece,
