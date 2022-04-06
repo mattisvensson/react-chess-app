@@ -193,9 +193,6 @@ function Board() {
                 }
             }
 
-            //Reset possible Tiles and captures
-            setPossibleTiles([]);
-        
             //get coordinates of mouse
             const mouseX = e.clientX;
             const mouseY = e.clientY;            
@@ -210,12 +207,8 @@ function Board() {
             e.target.style.top = mouseY - BoardMinY - (pieceWidth / 2) + "px";
 
             //set active piece
-            let samePiece = false;
-            (e.target === activePiece.isActive) ? samePiece = true : samePiece = false;
-
-            if (!samePiece) {
+            if ((!(e.target === activePiece.piece) && activePiece.counter === 0) || activePiece.positionX !== currentX || activePiece.positionY !== currentY) {
                 const updatePiece = {
-                    ...activePiece,
                     isActive: e.target,
                     piece: position[currentY][currentX],
                     positionX: currentX,
@@ -223,28 +216,15 @@ function Board() {
                     counter: 0
                 }
                 setActivePiece(updatePiece)
-            } else {
-                const updatePiece = {
-                    ...activePiece,
-                    isActive: e.target,
-                    piece: position[currentY][currentX],
-                    positionX: currentX,
-                    positionY: currentY,
-                }
-                setActivePiece(updatePiece)
             }
 
             setPieceIsDragged(true)
 
         } else if (activePiece.isActive) {
-            
-            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
-            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
 
-            executeMove(x, y)
+            executeMove(currentX, currentY)
         }
     }
-    
 
     //move piece
     function movePiece (e) {  
@@ -281,9 +261,11 @@ function Board() {
 
     //drop piece
     function dropPiece (e) {
-    
-        if (e.target === activePiece.isActive && activePiece.counter > 0) {
-    
+
+        const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
+        const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
+
+        if (x === activePiece.positionX && y === activePiece.positionY && activePiece.counter === 1) {
             const updatePiece = {
                 ...activePiece,
                 isActive: false,
@@ -293,7 +275,8 @@ function Board() {
                 counter: 0
             }
             setActivePiece(updatePiece)
-    
+
+            //Reset possible Tiles and captures
             setPossibleTiles([]);
         } else {
             const updatePiece = {
@@ -304,12 +287,10 @@ function Board() {
         }
         
         if (activePiece.isActive && BoardRef) {
-    
-            const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
-            const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
 
             executeMove(x, y);
         }
+
     }
 
 
@@ -523,12 +504,12 @@ function Board() {
             setLastPiece(updateLastPiece)
     
             //reset active piece
-            const updatePiece = {
-                ...activePiece,
-                isActive: false,
-                counter: 0
-            }
-            setActivePiece(updatePiece)
+            // const updatePiece = {
+            //     ...activePiece,
+            //     isActive: false,
+            //     counter: 0
+            // }
+            // setActivePiece(updatePiece)
             setPlayerIsInCheck(false)
         }      
     
@@ -537,6 +518,13 @@ function Board() {
         activePiece.isActive.style.left = "unset";
         activePiece.isActive.style.top = "unset";
         setPieceIsDragged(false)
+
+        //reset active piece
+        // const updatePiece = {
+        //     ...activePiece,
+        //     counter: 1
+        // }
+        // setActivePiece(updatePiece)
     }
 
     //execute pawn promotionm(executed from Promotion.js)
