@@ -311,8 +311,6 @@ function Board() {
         
         check.checkForCheck(position, setSimulatedTilesWhite, setSimulatedTilesBlack, setPlayerIsInCheck, castle, pawnCanEnPassant)
         check.checkForKingMoves(position, setSimulatedTilesKing, simulatedTilesWhite, simulatedTilesBlack, castle, playerTurn)
-        // console.log(simulatedTilesKing)
-        // console.log(possibleMovesAfterCheck)
     }, [playerTurn])
     
     //check for checkmate
@@ -418,6 +416,8 @@ function Board() {
     //execute move
     function executeMove (x, y) {
 
+        console.log(possibleTiles)
+
         //promotion
         let savePromotion = {};
         if (activePiece.piece === 1 && y === 0) {
@@ -453,9 +453,11 @@ function Board() {
             }
         } else {
             for (let i = 0; i < possibleTiles.length; i++) {
-                if (JSON.stringify(possibleTiles[i]) === JSON.stringify([y, x])) {
-                    match = true;
-                    break;
+                if ((playerTurn && (position[y][x] > 8 || position[y][x] === 0)) || (!playerTurn && position[y][x] < 8)) {
+                    if (JSON.stringify(possibleTiles[i]) === JSON.stringify([y, x])) {
+                        match = true;
+                        break;
+                    }
                 }
             }
         }
