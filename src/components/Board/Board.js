@@ -62,7 +62,7 @@ function Board() {
 
     //Get rules and checks
     const rules = new Rules();
-    const check = new Check();
+    // const check = new Check();
 
     //initialize the board
     let board = [];
@@ -309,8 +309,8 @@ function Board() {
         setPossibleMovesAfterCheck([])
         setPossibleKingMovesAfterCheck([])
         
-        check.checkForCheck(position, setSimulatedTilesWhite, setSimulatedTilesBlack, setPlayerIsInCheck, castle, pawnCanEnPassant)
-        check.checkForKingMoves(position, setSimulatedTilesKing, simulatedTilesWhite, simulatedTilesBlack, castle, playerTurn)
+        checkForCheck(position)
+        checkForKingMoves(position)
     }, [playerTurn])
     
     //check for checkmate
@@ -345,6 +345,7 @@ function Board() {
             }
         }
 
+        //blocking the check
         for (let i = 0; i < possibleMoves.length; i++) {
 
             //create copy of current position
@@ -365,9 +366,9 @@ function Board() {
             positionCopy[y][x] = 10;
 
             //check if new simulated position is still check
-            const stillCheck = check.checkForCheck(positionCopy, setSimulatedTilesWhite, setSimulatedTilesBlack, setPlayerIsInCheck, castle, pawnCanEnPassant, pawnIsPromoting, setPawnIsPromoting)
+            const stillCheck = checkForCheck(positionCopy)
 
-            if (stillCheck === "no check") {
+            if (stillCheck === false) {
                 setPossibleMovesAfterCheck(oldArray => [...oldArray, [y, x]])
             }
         }
@@ -402,11 +403,13 @@ function Board() {
             positionCopy[ky][kx] = 0;
             positionCopy[y][x] = king;
 
+            // console.log(positionCopy)
+
             //check if new simulated position is still check
-            const stillCheck = check.checkForKingMoves(positionCopy, setSimulatedTilesKing, simulatedTilesWhite, simulatedTilesBlack, castle, playerTurn)
-            // console.log(stillCheck)
+            const stillCheck = checkForKingMoves(positionCopy)
             
-            if (stillCheck === "no check") {
+            if (stillCheck === false) {
+                console.log("no check")
                 setPossibleKingMovesAfterCheck(oldArray => [...oldArray, [y, x]])
             }
         }
@@ -415,8 +418,6 @@ function Board() {
 
     //execute move
     function executeMove (x, y) {
-
-        console.log(possibleTiles)
 
         //promotion
         let savePromotion = {};
@@ -569,6 +570,268 @@ function Board() {
         }
         setPawnIsPromoting(updatePromotion)
     }
+
+    // ------------------------------------------------------------------------------------------------
+    let blackKingPosition;
+    let whiteKingPosition;
+    
+    let whiteIsInCheck = false;
+    let blackIsInCheck = false;
+
+    function checkForCheck (position) {
+
+        const simulatedTiles = getPossibleTiles(position)
+
+        //check if player is in check
+        for (let i = 0; i < simulatedTiles.simulatedTilesWhite.length; i++) {
+            if (JSON.stringify(simulatedTiles.simulatedTilesWhite[i]) === JSON.stringify(blackKingPosition)) {
+                blackIsInCheck = true;
+                break;
+            } 
+        }
+        for (let i = 0; i < simulatedTiles.simulatedTilesBlack.length; i++) {
+            if (JSON.stringify(simulatedTiles.simulatedTilesBlack[i]) === JSON.stringify(whiteKingPosition)) {
+                whiteIsInCheck = true;
+                break;
+            } 
+        }
+
+
+        // console.log("Whites moves:")
+        // console.log(simulatedTiles.simulatedTilesWhite)
+        // console.log("Blacks moves:")
+        // console.log(simulatedTiles.simulatedTilesBlack)
+
+        if (playerTurn && whiteIsInCheck) {
+            // console.log("white is in check")
+            setPlayerIsInCheck("white")
+            return true
+        } else if (!playerTurn && blackIsInCheck) {
+            // console.log("black is in check")
+            setPlayerIsInCheck("black")
+            return true
+        } else {
+            // console.log("no checks")
+            return false
+        }
+    }
+
+    function checkForKingMoves (position) {
+
+        console.log("checking for king moves...")
+        console.log(position)
+
+        getPossibleTiles(position)
+
+        let king;
+        let kingPosition;
+        let simulatedTiles;
+        let simulatedTilesKing = [];
+        let allSimulatedTilesKing = [];
+        let playerIsInCheck = false;
+
+        // console.log(simulatedTilesWhite)
+        // console.log(simulatedTilesBlack)
+        
+        if (playerTurn) {
+            king = 6;
+            simulatedTiles = simulatedTilesBlack;
+        } else {
+            king = 16;
+            simulatedTiles = simulatedTilesWhite;
+        }
+        
+        for (let posX =  0; posX < 8; posX++) {
+            for (let posY = 0; posY < 8; posY++) {
+                
+                //find position of king
+                if (position[posY][posX] === king) {
+                    kingPosition = [posY, posX];
+                }
+            }
+        }
+        
+        const kingMove = rules.kingMove(kingPosition[1], kingPosition[0], position, king, castle)
+        allSimulatedTilesKing = [...allSimulatedTilesKing, ...kingMove]
+
+        // console.log(allSimulatedTilesKing)
+
+        //remove tile if its white turn and on the tile is a white piece (same for black)
+        if (allSimulatedTilesKing.length > 0) {
+
+            let itemsFound = {};
+
+            for (let i = 0; i < allSimulatedTilesKing.length; i++) {
+
+                let string = JSON.stringify(allSimulatedTilesKing[i])
+                let y = string.charAt(1)
+                let x = string.charAt(3)
+
+                if ((!playerTurn && position[y][x] > 8) || (playerTurn && position[y][x] < 8 && position[y][x] > 0)) {
+                    allSimulatedTilesKing.splice(i, 1);
+                    i--
+                }
+            }
+            
+            // remove duplicates from array
+            for (let i = 0; i < allSimulatedTilesKing.length; i++) {
+    
+                let string = JSON.stringify(allSimulatedTilesKing[i])
+
+                if(itemsFound[string]) { continue; }
+                simulatedTilesKing.push(allSimulatedTilesKing[i]);
+                itemsFound[string] = true;
+            }
+
+            setSimulatedTilesKing(simulatedTilesKing)
+
+            //check if player is in check
+            for (let i = 0; i < simulatedTiles.length; i++) {
+                // console.log(simulatedTiles[i], kingPosition)
+                if (JSON.stringify(simulatedTiles[i]) === JSON.stringify(kingPosition)) {
+                    playerIsInCheck = true;
+                    break;
+                } 
+            }
+        }
+    
+
+        if (playerIsInCheck) {
+            // console.log("player is in check")
+            return true
+        } else {
+            // console.log("no checks with king")
+            return false
+        }
+
+    }
+
+    function getPossibleTiles (position) {
+
+        const rules = new Rules()
+
+        // console.log("checking for checks...")
+
+        let pTurn = true;
+
+        let simulatedTilesWhite = []
+        let simulatedTilesBlack = []
+
+        for (let c = 0; c < 2; c++) {
+
+            setSimulatedTilesWhite([])
+            setSimulatedTilesBlack([])
+            
+            let allSimulatedTiles = []
+
+            for (let posX =  0; posX < 8; posX++) {
+                for (let posY = 0; posY < 8; posY++) {
+                    
+                    //find position of king
+                    if (position[posY][posX] === 6) {
+                        whiteKingPosition = [posY, posX];
+                    }
+                    if (position[posY][posX] === 16) {
+                        blackKingPosition = [posY, posX]
+                    }
+
+                    // console.log(allSimulatedTiles)
+                    let piece = position[posY][posX];
+
+                    switch (piece) {
+                        case 1: 
+                            if (pTurn && piece === 1) {
+                                const pawnWhite = rules.pawnWhiteMove(posX, posY, position, pawnCanEnPassant)
+                                // console.log(pawnWhite)
+                                allSimulatedTiles = [...allSimulatedTiles, ...pawnWhite]
+                            }
+                            break;
+                        case 11: 
+                            if (!pTurn && piece === 11) {
+                                const pawnBlack = rules.pawnBlackMove(posX, posY, position, pawnCanEnPassant)
+                                allSimulatedTiles = [...allSimulatedTiles, ...pawnBlack]
+                            }
+                            break;
+                        case 2:
+                        case 12: 
+                            if ((pTurn && piece === 2) || (!pTurn && piece === 12)) {
+                                const knight = rules.knightMove(posX, posY, position)
+                                allSimulatedTiles = [...allSimulatedTiles, ...knight]
+                            }
+                            break;
+                        case 3:
+                        case 13: 
+                            if ((pTurn && piece === 3) || (!pTurn && piece === 13)) {
+                                const bishop = rules.bishopMove(posX, posY, position)
+                                allSimulatedTiles = [...allSimulatedTiles, ...bishop]
+                            }
+                            break;
+                        case 4:
+                        case 14: 
+                            if ((pTurn && piece === 4) || (!pTurn && piece === 14)) {
+                                const rook = rules.rookMove(posX, posY, position)
+                                allSimulatedTiles = [...allSimulatedTiles, ...rook]
+                            }
+                            break;
+                        case 5:
+                        case 15: 
+                            if ((pTurn && piece === 5) || (!pTurn && piece === 15)) {
+                                const queen = rules.queenMove(posX, posY, position)
+                                allSimulatedTiles = [...allSimulatedTiles, ...queen]
+                            }
+                            break;
+                        case 6:
+                        case 16: 
+                            if ((pTurn && piece === 6) || (!pTurn && piece === 16)) {
+                                const king = rules.kingMove(posX, posY, position, piece, castle)
+                                allSimulatedTiles = [...allSimulatedTiles, ...king]
+                            }
+                            break;
+                        default: break;
+                    }
+                }
+            }  
+
+            //remove tile if its white turn und on the tile is a white piece (same for black)
+            if (allSimulatedTiles.length > 0) {
+
+                let itemsFound = {};
+
+                for (let i = 0; i < allSimulatedTiles.length; i++) {
+
+                    let string = JSON.stringify(allSimulatedTiles[i])
+                    let y = string.charAt(1)
+                    let x = string.charAt(3)
+
+                    if ((!pTurn && position[y][x] > 8) || (pTurn && position[y][x] < 8 && position[y][x] > 0)) {
+                        allSimulatedTiles.splice(i, 1);
+                        i--
+                    }
+
+                }
+                
+                // remove duplicates from array
+                for (let i = 0; i < allSimulatedTiles.length; i++) {
+        
+                    let string = JSON.stringify(allSimulatedTiles[i])
+
+                    if(itemsFound[string]) { continue; }
+                    if (pTurn) {
+                        simulatedTilesWhite.push(allSimulatedTiles[i]);
+                    } else {
+                        simulatedTilesBlack.push(allSimulatedTiles[i]);
+                    }
+                    itemsFound[string] = true;
+                }
+
+                setSimulatedTilesWhite(simulatedTilesWhite)
+                setSimulatedTilesBlack(simulatedTilesBlack)
+            }
+            pTurn = false;
+        }
+            return {simulatedTilesWhite, simulatedTilesBlack}
+    }
+    // ------------------------------------------------------------------------------------------------
 
     //renders if game is over
     if (gameOver) {

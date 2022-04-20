@@ -1,7 +1,7 @@
 export default class Rules {
 
     checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, castle, pawnCanEnPassant) {
-        console.log("checking possible moves...")
+        // console.log("checking possible moves...")
 
         switch (piece) {
             //Pawn (white)
