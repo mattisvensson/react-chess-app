@@ -1,69 +1,5 @@
 export default class Rules {
 
-    checkPossibleMoves(posX, posY, piece, position, playerTurn, setPossibleTiles, castle, pawnCanEnPassant) {
-        // console.log("checking possible moves...")
-
-        switch (piece) {
-            //Pawn (white)
-            case 1:
-                if (playerTurn) {
-                    const pawnWhite = this.pawnWhiteMove(posX, posY, position, pawnCanEnPassant)
-                    setPossibleTiles(pawnWhite)
-                }
-                
-                break;
-            //Pawn (black)
-            case 11: 
-                if (!playerTurn) {
-                    const pawnBlack = this.pawnBlackMove(posX, posY, position, pawnCanEnPassant)
-                    setPossibleTiles(pawnBlack)
-                }
-                break;
-            //Knight (white and black)
-            case 2:
-            case 12:
-                if ((playerTurn && piece === 2) || (!playerTurn && piece === 12)) {
-                    const knight = this.knightMove(posX, posY, position)
-                    setPossibleTiles(knight)
-                }
-                break;
-            //Bishop (white and black)
-            case 3:
-            case 13: 
-                if ((playerTurn && piece === 3) || (!playerTurn && piece === 13)) {
-                    const bishop = this.bishopMove(posX, posY, position)
-                    setPossibleTiles(bishop)
-                }              
-                break;
-            //Rook (white and black)
-            case 4:
-            case 14:
-                if ((playerTurn && piece === 4) || (!playerTurn && piece === 14)) {
-                    const rook = this.rookMove(posX, posY, position)
-                    setPossibleTiles(rook)
-                }
-                break;
-            //Queen (white and black)
-            case 5:
-            case 15:
-                if ((playerTurn && piece === 5) || (!playerTurn && piece === 15)) {
-                    const queen = this.queenMove(posX, posY, position)
-                    setPossibleTiles(queen)
-                }
-                break;
-            //King (white and black)
-            case 6:
-            case 16:
-                if ((playerTurn && piece === 6) || (!playerTurn && piece === 16)) {
-                    const king = this.kingMove(posX, posY, position, piece, castle)
-                    setPossibleTiles(king)
-                }
-                break;
-            default: break;
-        }
-    }
-
-
     pawnWhiteMove (posX, posY, position, pawnCanEnPassant) {
         let tiles = []
 
@@ -383,7 +319,7 @@ export default class Rules {
     }
 
 
-    kingMove (posX, posY, position, piece, castle) {
+    kingMove (posX, posY, position, piece, castle, playerIsInCheck) {
         let tiles = []
         if (posY - 1 >= 0 && posX + 1 < 8) {
             tiles.push([posY - 1, posX + 1]);
@@ -411,7 +347,7 @@ export default class Rules {
         }    
 
         //check for castling
-        if (piece === 6 && posX === 4 && posY === 7) {
+        if (piece === 6 && posX === 4 && posY === 7 && playerIsInCheck === false) {
             if (castle.white.castleShort && position[7][5] === 0 && position[7][6] === 0 && position[7][7] === 4) {                           
                 tiles.push([posY, posX + 2]);
             } 
@@ -420,7 +356,7 @@ export default class Rules {
                 tiles.push([posY, posX - 2]);                           
             } 
         }
-        if (piece === 16 && posX === 4 && posY === 0) {
+        if (piece === 16 && posX === 4 && posY === 0 && playerIsInCheck === false) {
             if (castle.black.castleShort && position[0][5] === 0 && position[0][6] === 0 && position[0][7] === 14) {                              
                 tiles.push([posY, posX + 2]);
             } 
