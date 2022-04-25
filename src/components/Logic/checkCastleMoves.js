@@ -1,4 +1,5 @@
 function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosition) {
+    
     //check for castle moves
     if (position[7][7] === 0) {
         const updateCastle = {
@@ -80,7 +81,6 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
             }
         }
         setCastle(updateCastle)
-        // break move;
     } else if (activePiece.piece === 6 && castle.white.castleLong && x === 2) {
         const updatePosition = [...position];
         updatePosition[7][4] = 0;
@@ -99,7 +99,6 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
             }
         }
         setCastle(updateCastle)
-        // break move;
     } else if (activePiece.piece === 16 && castle.black.castleShort && x === 6) {
         const updatePosition = [...position];
         updatePosition[0][4] = 0;
@@ -117,7 +116,6 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
             }
         }
         setCastle(updateCastle)
-        // break move;
     } else if (activePiece.piece === 16 && castle.black.castleLong && x === 2) {
         const updatePosition = [...position];
         updatePosition[0][4] = 0;
@@ -136,7 +134,6 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
             }
         }
         setCastle(updateCastle)
-        // break move;
     }
 }
 
