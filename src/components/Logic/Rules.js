@@ -324,7 +324,7 @@ export default class Rules {
         if (posY - 1 >= 0 && posX + 1 < 8) {
             tiles.push([posY - 1, posX + 1]);
         }
-        if (posX - 1 >= 0 && posX + 1 < 8) {
+        if (posX + 1 < 8) {
             tiles.push([posY, posX + 1]);
         }
         if (posY + 1 < 8 && posX + 1 < 8) {

@@ -1,11 +1,12 @@
 import './GameOver.css'
 
-function GameOver () {
+function GameOver (props) {
 
-    console.log("test")
     return (
         <div id="GameOver">
             <p>Game Over</p>
+            <p>Winner: {props.winner}</p>
+            <p>Reason: {props.reason}</p>
         </div>
     )
 }
