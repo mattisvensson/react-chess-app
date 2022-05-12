@@ -31,11 +31,7 @@ import GameOver from '../Board/GameOver/GameOver';
 // X  -> 50 move rule (50 moves without pawn move or capture)
 //    -> threefold repition
 // X  -> no legal moves for player
-//    -> insufficient material
-//      -> King vs king with no other pieces
-//      -> King and bishop vs king
-//      -> King and knight vs king
-//      -> King and bishop vs king and bishop of the same coloured square
+// X  -> insufficient material
 // X tile highlighting
 // X  -> possible Moves
 // X  -> capturable pieces
@@ -77,14 +73,14 @@ function Board() {
     // 15 = Queen (black)
     // 16 = King (black)
     const [position, setPosition] = useState([
-        [14,12,13,15,16,13,12,14],
-        [11,11,11,11,11,11,11,11],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,11],
+        [16,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0],
-        [1,1,1,1,1,1,1,1],
-        [4,2,3,5,6,3,2,4],
+        [0,4,0,0,0,0,0,1],
+        [0,0,4,0,6,0,0,0],
     ])
 
     //default
@@ -126,6 +122,16 @@ function Board() {
     // [0,0,0,0,0,0,0,0],
     // [0,0,0,0,0,0,0,1],
     // [0,0,4,0,6,0,0,0],
+
+    //insuffiecent material
+    // [16,0,0,0,0,0,0,0],
+    // [1,0,0,0,0,0,0,0],
+    // [0,0,0,0,0,0,0,0],
+    // [0,0,0,0,0,0,0,0],
+    // [0,0,0,6,2,0,0,0],
+    // [0,0,0,0,0,0,0,0],
+    // [0,0,0,0,0,0,0,0],
+    // [0,0,0,0,0,0,0,0],
 
     //Referencing the board
     const BoardRef = useRef(null);
@@ -203,19 +209,7 @@ function Board() {
 
     const [fifthyMoveRule, setFifthyMoveRule] = useState(0);
     const [positionList, setPositionList] = useState([])
-    // let positionList= [
-    //     {
-    //         position: [[14,12,13,15,16,13,12,14],
-    //         [11,11,11,11,11,11,11,11],
-    //         [0,0,0,0,0,0,0,0],
-    //         [0,0,0,0,0,0,0,0],
-    //         [0,0,0,0,0,0,0,0],
-    //         [0,0,0,0,0,0,0,0],
-    //         [1,1,1,1,1,1,1,1],
-    //         [4,2,3,5,6,3,2,4],],
-    //         counter: 0
-    //     },
-    // ]
+    // let positionList= []
 
 
     //-------------------------------------------------------------------------------------
@@ -1349,47 +1343,81 @@ function Board() {
         return tiles;
     }
 
+    
+    // ------------------------------------------------------------------------------------------------
 
-    //check possible moves
-    useEffect(() => {
-        if (activePiece.isActive) {
-            const tiles = getPossibleTiles(position, activePiece.piece, activePiece.positionX, activePiece.positionY, playerTurn);
-            setPossibleTiles(tiles)
+
+    function checkForInsufficientMaterial () {
+
+        let pieces = {
+            white: [],
+            black: []
         }
-    }, [activePiece.piece, activePiece.positionX, activePiece.positionY])
-
-    //check for checkmate
-    useEffect(() => {
-        if (playerIsInCheck) {
-            const tiles = getPossibleTilesAfterCheck()
-            if (tiles.tiles.length === 0 && tiles.tilesKing.length === 0) {
-                let winner;
-                playerIsInCheck === "white" ? winner = "black" : winner = "white";
-                const updateGameOver = {
-                    ...gameOver,
-                    gameOver: true,
-                    reason: "Checkmate",
-                    winner: winner
+        let bishopColor = {
+            white: undefined,
+            black: undefined
+        }
+        let insufficientMaterial = false;
+        for (let posX = 0; posX < 8; posX++) {
+            for (let posY = 0; posY < 8; posY++) {
+                if (position[posY][posX] > 0 && position[posY][posX] < 8) {
+                    if (position[posY][posX] === 3) { 
+                        let color;
+                        (posX + posY + 2) % 2 === 0 ? color = "light" : color = "dark";
+                        bishopColor.white = color;
+                    }
+                    pieces.white.push(position[posY][posX])
+                } else if (position[posY][posX] > 8) {
+                    if (position[posY][posX] === 13) {
+                        let color;
+                        (posX + posY + 2) % 2 === 0 ? color = "light" : color = "dark";
+                        bishopColor.black = color;
+                    }
+                    pieces.black.push(position[posY][posX])
                 }
-                setGameOver(updateGameOver)
+            
             }
         }
-    }, [playerIsInCheck])
+        
+        if (pieces.white.length === 1 && pieces.black.length === 1) {
+            insufficientMaterial = true;
+        }
 
-    //default actions for each move
-    useEffect(() => {
-        setPossibleTiles([])
-        setPossibleTilesAfterCheck([])
-        setPossibleKingTilesAfterCheck([])
-        setPlayerIsInCheck(false)
+        if (pieces.white.length === 2 && pieces.white.includes(3) && pieces.black.length === 2 && pieces.black.includes(13)) {
+            if (bishopColor.white === bishopColor.black) {
+                insufficientMaterial = true;
+            }
+        }
 
-        //check for threefold repition
+        if (pieces.white.length === 1) {
+            if (pieces.black.length === 2 && (pieces.black.includes(12) || pieces.black.includes(13))) {
+                insufficientMaterial = true;
+            }
+        } else if (pieces.black.length === 1) {
+            if (pieces.white.length === 2 && (pieces.white.includes(2) || pieces.white.includes(3))) {
+                insufficientMaterial = true;
+            }
+        }
+
+        if (insufficientMaterial) {
+            const updateGameOver = {
+                gameOver: true,
+                reason: "insufficient material",
+                winner: "draw"
+            }
+            setGameOver(updateGameOver)
+        }
+    }
+
+    //check for threefold repition
+    function checkForThreefoldRepition () {
+
         let found = false
         for (let i = 0; i < positionList.length; i++) {
             console.log(positionList[i].position, position)
             if (JSON.stringify(positionList[i].position) === JSON.stringify(position)) {
                 console.log("same")
-                positionList[i].counter = positionList[i].counter + 1
+                // positionList[i].counter = positionList[i].counter + 1
                 found = true;
                 break;
             } 
@@ -1397,6 +1425,7 @@ function Board() {
 
         if (found === false) {
             console.log("not same")
+            // positionList = [...positionList, {position: position, counter: 1}]
             setPositionList(positionList => [...positionList, {position: position, counter: 1}]);
         }
 
@@ -1404,7 +1433,6 @@ function Board() {
         for (let i = 0; i < positionList.length; i++) {
             if (positionList[i].counter === 3) {
                 const updateGameOver = {
-                    ...gameOver,
                     gameOver: true,
                     reason: "threefold repition",
                     winner: "draw"
@@ -1412,19 +1440,25 @@ function Board() {
                 setGameOver(updateGameOver)
             }
         }
-        
+    }
 
+    useEffect(() => {
+        console.log("changed", positionList)
+    }, [positionList])
+
+    function checkForFifthyMoveRule () {
         //check for 50 move rule
         if (fifthyMoveRule === 100) {
             const updateGameOver = {
-                ...gameOver,
                 gameOver: true,
-                reason: "50 move rule",
+                reason: "moverule",
                 winner: "draw"
             }
             setGameOver(updateGameOver)
         }
+    }
 
+    function checkForStalemate () {
         //check for stalemate
         let allTiles = [];
         for (let posX = 0; posX < 8; posX++) {
@@ -1437,15 +1471,56 @@ function Board() {
         }
         if (allTiles.length === 0 && playerIsInCheck === false) {
             const updateGameOver = {
-                ...gameOver,
                 gameOver: true,
                 reason: "stalemate",
                 winner: "draw"
             }
             setGameOver(updateGameOver)
         }
+    }
+
+    
+    // ------------------------------------------------------------------------------------------------
 
 
+    //check possible moves
+    useEffect(() => {
+        if (activePiece.isActive) {
+            const tiles = getPossibleTiles(position, activePiece.piece, activePiece.positionX, activePiece.positionY, playerTurn);
+            setPossibleTiles(tiles)
+        }
+    }, [activePiece.piece, activePiece.positionX, activePiece.positionY])
+
+
+    //check for checkmate
+    useEffect(() => {
+        if (playerIsInCheck) {
+            const tiles = getPossibleTilesAfterCheck()
+            if (tiles.tiles.length === 0 && tiles.tilesKing.length === 0) {
+                let winner;
+                playerIsInCheck === "white" ? winner = "black" : winner = "white";
+                const updateGameOver = {
+                    gameOver: true,
+                    reason: "checkmate",
+                    winner: winner
+                }
+                setGameOver(updateGameOver)
+            }
+        }
+    }, [playerIsInCheck])
+
+
+    //default actions for each move
+    useEffect(() => {
+        setPossibleTiles([])
+        setPossibleTilesAfterCheck([])
+        setPossibleKingTilesAfterCheck([])
+        setPlayerIsInCheck(false)
+
+        checkForInsufficientMaterial();
+        checkForThreefoldRepition();
+        checkForFifthyMoveRule();
+        checkForStalemate();
 
         const isCheck = checkForCheck(position);
 
@@ -1455,10 +1530,6 @@ function Board() {
             setPlayerIsInCheck("black")
         }
     }, [playerTurn])
-
-    useEffect(() => {
-        console.log("changed", positionList)
-    }, [positionList])
 
 
     // ------------------------------------------------------------------------------------------------
@@ -1550,8 +1621,7 @@ function Board() {
                 {pawnIsPromoting.isPromoting && pawnIsPromoting.posX !== null ? <Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/> : null}
                 {gameOver.gameOver ? <GameOver winner={gameOver.winner} reason={gameOver.reason}/> : null}
             </div>
-            <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle, setPlayerIsInCheck)}>Reset Board</button>
-
+            <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle, setPlayerIsInCheck, setGameOver)}>Reset Board</button>
         </>
     );
 }
