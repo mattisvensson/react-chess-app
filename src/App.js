@@ -1,14 +1,12 @@
 import './App.css';
 import Board from './components/Board/Board';
-import Nav from './components/Nav/Nav'
+import Info from './components/Info/Info';
 
 function App() {
   return (
       <div className="App">
-          {/* <Nav/> */}
-          {/* <section> */}
           <Board/>
-          {/* </section> */}
+          <Info/>
       </div>
   );
 }

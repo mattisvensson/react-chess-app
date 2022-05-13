@@ -137,6 +137,8 @@ function Board() {
     //false = black's turn
     const [playerTurn, setPlayerTurn] = useState(true);
 
+    const [allowPieceSelection, setAllowPieceSelection] = useState(true)
+
     //saves possible Tiles for active piece
     const [possibleTiles, setPossibleTiles] = useState([]);
 
@@ -364,6 +366,7 @@ function Board() {
                     capturedPiece: position[y][x]
                 }
                 setPawnIsPromoting(updatePromotion)
+                setAllowPieceSelection(false)
             } else {
                 //en passant
                 checkEnPassant(x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant);
@@ -449,6 +452,7 @@ function Board() {
             capturedPiece: null
         }
         setPawnIsPromoting(updatePromotion)
+        setAllowPieceSelection(true)
     }
 
 
@@ -1414,7 +1418,7 @@ function Board() {
 
     //check possible moves
     useEffect(() => {
-        if (activePiece.isActive && gameOver.gameOver === false) {
+        if (activePiece.isActive && allowPieceSelection &&gameOver.gameOver === false) {
             const tiles = getPossibleTiles(position, activePiece.piece, activePiece.positionX, activePiece.positionY, playerTurn);
             setPossibleTiles(tiles)
         }
@@ -1517,13 +1521,13 @@ function Board() {
                 default: image = undefined; break;
             }
 
-            board.push(<Tile key={`${j}, ${i}`} posX={posX} posY={posY} image={`../../assets/images/pieces/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} isHighlighted={isHighlighted} isCheck={isCheck} checkColor={checkColor} color={color} width={width}/>)
+            board.push(<Tile key={`${j}, ${i}`} posX={posX} posY={posY} image={`./assets/images/pieces/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} isHighlighted={isHighlighted} isCheck={isCheck} checkColor={checkColor} color={color} width={width}/>)
         }
     }
 
     return (
         <>
-            <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(../../assets/images/chessboard_white.svg)`, gridTemplateColumns: `repeat(8, ${width / 8}px`, gridTemplateRows: `repeat(8, ${width/ 8}px`}}>
+            <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(./assets/images/chessboard_white.svg)`, gridTemplateColumns: `repeat(8, ${width / 8}px`, gridTemplateRows: `repeat(8, ${width/ 8}px`}}>
                 {board}
                 {pawnIsPromoting.isPromoting && pawnIsPromoting.posX !== null ? <Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/> : null}
                 {gameOver.gameOver ? <GameOver winner={gameOver.winner} reason={gameOver.reason}/> : null}
