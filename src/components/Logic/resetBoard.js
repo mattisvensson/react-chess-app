@@ -1,5 +1,5 @@
 //reset board
-function resetBoard (setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle, setPlayerIsInCheck, setGameOver) {
+function resetBoard (setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle, setPlayerIsInCheck, setGameOver, setPositionList) {
 
     setPlayerIsInCheck(false)
 
@@ -33,9 +33,9 @@ function resetBoard (setPosition, activePiece, setActivePiece, lastPiece, setLas
     }
     setCastle(updateCastle)
 
+    setPositionList([])
     setPossibleTiles([]);
     setPlayerTurn(true)
-    console.clear()
 
     const updateGameOver = {
         gameOver: false,
@@ -54,6 +54,7 @@ function resetBoard (setPosition, activePiece, setActivePiece, lastPiece, setLas
         [1,1,1,1,1,1,1,1],
         [4,2,3,5,6,3,2,4],
     ])
+    console.clear()
 }
 
 export default resetBoard;

@@ -27,9 +27,9 @@ import GameOver from '../Board/GameOver/GameOver';
 // X  -> check for pins
 // X  -> check if king can capture unprotected piece
 // X checkmate
-//   draw
+// X draw
 // X  -> 50 move rule (50 moves without pawn move or capture)
-//    -> threefold repition
+// X  -> threefold repetition
 // X  -> no legal moves for player
 // X  -> insufficient material
 // X tile highlighting
@@ -73,65 +73,15 @@ function Board() {
     // 15 = Queen (black)
     // 16 = King (black)
     const [position, setPosition] = useState([
-        [0,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,11],
-        [16,0,0,0,0,0,0,0],
-        [0,0,0,0,0,0,0,0],
+        [14,12,13,15,16,13,12,14],
+        [11,11,11,11,11,11,11,11],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
-        [0,4,0,0,0,0,0,1],
-        [0,0,4,0,6,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [1,1,1,1,1,1,1,1],
+        [4,2,3,5,6,3,2,4],
     ])
-
-    //default
-    // [14,12,13,15,16,13,12,14],
-    // [11,11,11,11,11,11,11,11],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [1,1,1,1,1,1,1,1],
-    // [4,2,3,5,6,3,2,4],
-
-    //castle
-    // [14,12,13,15,16,13,12,14],
-    // [11,11,11,11,11,11,11,11],
-    // [0,0,0,15,0,15,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [1,1,1,0,1,0,1,1],
-    // [4,0,0,0,6,0,0,4],
-
-    //checkmate
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,11],
-    // [16,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,4,0,0,0,0,0,1],
-    // [0,0,4,0,6,0,0,0],
-
-    //stalemate
-    // [16,0,0,0,0,0,0,0],
-    // [11,0,0,0,0,0,0,0],
-    // [1,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,1],
-    // [0,0,4,0,6,0,0,0],
-
-    //insuffiecent material
-    // [16,0,0,0,0,0,0,0],
-    // [1,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,6,2,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
-    // [0,0,0,0,0,0,0,0],
 
     //Referencing the board
     const BoardRef = useRef(null);
@@ -209,7 +159,6 @@ function Board() {
 
     const [fifthyMoveRule, setFifthyMoveRule] = useState(0);
     const [positionList, setPositionList] = useState([])
-    // let positionList= []
 
 
     //-------------------------------------------------------------------------------------
@@ -727,7 +676,7 @@ function Board() {
         return {tiles, tilesKing}
     }
 
-
+    //check if a position contains a check
     function checkForCheck (position) {
 
         let king;
@@ -763,39 +712,8 @@ function Board() {
             return false
         }
     }
-    function checkForCheck2 (position, tiles) {
 
-        let king;
-        let inCheck;
-        let possibleMoves;
-
-        //set variables
-        if (playerTurn) {
-            king = 6;
-            possibleMoves = tiles.tilesBlack.tiles;
-        } else {
-            king = 16;
-            possibleMoves = tiles.tilesWhite.tiles;
-        }
-
-        //get king position
-        const kingPosition = getKingPosition(position, king)
-
-        //check if player is in check
-        for (let i = 0; i < possibleMoves.length; i++) {
-            if (JSON.stringify(possibleMoves[i]) === JSON.stringify(kingPosition)) {
-                inCheck = true;
-                break;
-            }
-        }
-
-        if ((playerTurn && inCheck) || (!playerTurn && inCheck)) {
-            return true
-        } else {
-            return false
-        }
-    }
-
+    //check if the two kings are close to each other
     function isKingNear (position) {
 
         const whiteKing = getKingPosition(position, 6)
@@ -1347,6 +1265,7 @@ function Board() {
     // ------------------------------------------------------------------------------------------------
 
 
+    //check for insufficient material
     function checkForInsufficientMaterial () {
 
         let pieces = {
@@ -1409,45 +1328,27 @@ function Board() {
         }
     }
 
-    //check for threefold repition
-    function checkForThreefoldRepition () {
-
-        let found = false
+    //check for threefold repetition
+    function checkForThreefoldRepetition () {
+        let counter = 0;
         for (let i = 0; i < positionList.length; i++) {
-            console.log(positionList[i].position, position)
-            if (JSON.stringify(positionList[i].position) === JSON.stringify(position)) {
-                console.log("same")
-                // positionList[i].counter = positionList[i].counter + 1
-                found = true;
-                break;
+            if (JSON.stringify(positionList[i]) === JSON.stringify(position)) {
+                counter++;
             } 
         }
 
-        if (found === false) {
-            console.log("not same")
-            // positionList = [...positionList, {position: position, counter: 1}]
-            setPositionList(positionList => [...positionList, {position: position, counter: 1}]);
-        }
-
-
-        for (let i = 0; i < positionList.length; i++) {
-            if (positionList[i].counter === 3) {
-                const updateGameOver = {
-                    gameOver: true,
-                    reason: "threefold repition",
-                    winner: "draw"
-                }
-                setGameOver(updateGameOver)
+        if (counter === 2) {
+            const updateGameOver = {
+                gameOver: true,
+                reason: "threefold repetition",
+                winner: "draw"
             }
+            setGameOver(updateGameOver) 
         }
     }
 
-    useEffect(() => {
-        console.log("changed", positionList)
-    }, [positionList])
-
+    //check for 50 move rule
     function checkForFifthyMoveRule () {
-        //check for 50 move rule
         if (fifthyMoveRule === 100) {
             const updateGameOver = {
                 gameOver: true,
@@ -1458,8 +1359,8 @@ function Board() {
         }
     }
 
+    //check for stalemate
     function checkForStalemate () {
-        //check for stalemate
         let allTiles = [];
         for (let posX = 0; posX < 8; posX++) {
             for (let posY = 0; posY < 8; posY++) {
@@ -1483,9 +1384,37 @@ function Board() {
     // ------------------------------------------------------------------------------------------------
 
 
+    //default actions for each move
+    useEffect(() => {
+        let positionCopy = [];
+        for (let i = 0; i < position.length; i++) {
+            positionCopy[i] = position[i].slice();
+        }
+        setPositionList([...positionList, positionCopy]);
+
+        setPossibleTiles([])
+        setPossibleTilesAfterCheck([])
+        setPossibleKingTilesAfterCheck([])
+        setPlayerIsInCheck(false)
+
+        checkForInsufficientMaterial();
+        checkForThreefoldRepetition();
+        checkForFifthyMoveRule();
+        checkForStalemate();
+
+        const isCheck = checkForCheck(position);
+
+        if (playerTurn && isCheck) {
+            setPlayerIsInCheck("white")
+        } else if (!playerTurn && isCheck){
+            setPlayerIsInCheck("black")
+        }
+    }, [playerTurn])
+
+
     //check possible moves
     useEffect(() => {
-        if (activePiece.isActive) {
+        if (activePiece.isActive && gameOver.gameOver === false) {
             const tiles = getPossibleTiles(position, activePiece.piece, activePiece.positionX, activePiece.positionY, playerTurn);
             setPossibleTiles(tiles)
         }
@@ -1508,28 +1437,6 @@ function Board() {
             }
         }
     }, [playerIsInCheck])
-
-
-    //default actions for each move
-    useEffect(() => {
-        setPossibleTiles([])
-        setPossibleTilesAfterCheck([])
-        setPossibleKingTilesAfterCheck([])
-        setPlayerIsInCheck(false)
-
-        checkForInsufficientMaterial();
-        checkForThreefoldRepition();
-        checkForFifthyMoveRule();
-        checkForStalemate();
-
-        const isCheck = checkForCheck(position);
-
-        if (playerTurn && isCheck) {
-            setPlayerIsInCheck("white")
-        } else if (!playerTurn && isCheck){
-            setPlayerIsInCheck("black")
-        }
-    }, [playerTurn])
 
 
     // ------------------------------------------------------------------------------------------------
@@ -1621,7 +1528,7 @@ function Board() {
                 {pawnIsPromoting.isPromoting && pawnIsPromoting.posX !== null ? <Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/> : null}
                 {gameOver.gameOver ? <GameOver winner={gameOver.winner} reason={gameOver.reason}/> : null}
             </div>
-            <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle, setPlayerIsInCheck, setGameOver)}>Reset Board</button>
+            <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle, setPlayerIsInCheck, setGameOver, setPositionList)}>Reset Board</button>
         </>
     );
 }
