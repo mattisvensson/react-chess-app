@@ -18,4 +18,5 @@ div#GameOver {
 div#GameOver p,
 div#GameOver h2 {
     font-family: sans-serif;
+    text-align: center;
 }

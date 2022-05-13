@@ -51,7 +51,15 @@ import GameOver from '../Board/GameOver/GameOver';
 //    -> puzzles
 
 //responsive board size
-let width = window.innerHeight / 1.2;
+let width
+console.log(window.innerHeight, window.innerWidth)
+if (window.innerHeight > window.innerWidth) {
+    console.log("1")
+    width = window.innerWidth / 1.05;
+} else {
+    console.log("2")
+    width = window.innerHeight / 1.2;
+}
 let pieceWidth = width / 8;
 
 function Board() {
