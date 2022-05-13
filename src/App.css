@@ -14,7 +14,6 @@ body {
   height: 100vh;
   display: grid;
   place-items: center;
-  /* grid-template-columns: 20% auto; */
   background: #202020;
 }
 
@@ -34,4 +33,12 @@ button:hover {
 section {
   display: grid;
   place-items: center;
+}
+
+.App.mobile {
+  grid-template-rows: auto auto 20%;
+}
+
+.App.mobile button {
+  margin: 30px;
 }

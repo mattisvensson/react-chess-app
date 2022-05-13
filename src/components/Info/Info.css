@@ -37,3 +37,9 @@ div#Info a {
 div#Info a:hover {
     color: darkorange;
 }
+
+div.App.mobile div#Info {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+}

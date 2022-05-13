@@ -51,15 +51,7 @@ import GameOver from '../Board/GameOver/GameOver';
 //    -> puzzles
 
 //responsive board size
-let width
-console.log(window.innerHeight, window.innerWidth)
-if (window.innerHeight > window.innerWidth) {
-    console.log("1")
-    width = window.innerWidth / 1.05;
-} else {
-    console.log("2")
-    width = window.innerHeight / 1.2;
-}
+let width = window.innerHeight > window.innerWidth ? window.innerWidth / 1.05 : window.innerHeight / 1.2;
 let pieceWidth = width / 8;
 
 function Board() {
@@ -82,7 +74,7 @@ function Board() {
     // 16 = King (black)
     const [position, setPosition] = useState([
         [14,12,13,15,16,13,12,14],
-        [11,11,11,11,11,11,11,11],
+        [11,1,11,11,11,11,11,11],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0],
@@ -181,7 +173,7 @@ function Board() {
         const currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
         const currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
 
-        exitMove: if (e.target.classList.contains("piece")) {
+        exitMove: if (e.target.classList.contains("piece") && allowPieceSelection) {
             if (playerIsInCheck) {
                 const tiles = getPossibleTilesAfterCheck()
                 setPossibleTilesAfterCheck(tiles.tiles)
@@ -447,19 +439,25 @@ function Board() {
             setLastPiece(updateLastPiece)
 
             setPlayerTurn(prev => !prev)
-        }
 
-        const updatePromotion = {
-            ...pawnIsPromoting,
-            isPromoting: false,
-            color: null,
-            posX: null,
-            posY: null,
-            prevX: null,
-            prevY: null,
-            capturedPiece: null
+            const updatePromotion = {
+                ...pawnIsPromoting,
+                isPromoting: false,
+                color: null,
+                posX: null,
+                posY: null,
+                prevX: null,
+                prevY: null,
+                capturedPiece: null
+            }
+            setPawnIsPromoting(updatePromotion)
+        } else if (pieceId === 99) {
+            const updatePromotion = {
+                ...pawnIsPromoting,
+                isPromoting: false
+            }
+            setPawnIsPromoting(updatePromotion)
         }
-        setPawnIsPromoting(updatePromotion)
         setAllowPieceSelection(true)
     }
 
@@ -1426,7 +1424,7 @@ function Board() {
 
     //check possible moves
     useEffect(() => {
-        if (activePiece.isActive && allowPieceSelection &&gameOver.gameOver === false) {
+        if (activePiece.isActive && gameOver.gameOver === false) {
             const tiles = getPossibleTiles(position, activePiece.piece, activePiece.positionX, activePiece.positionY, playerTurn);
             setPossibleTiles(tiles)
         }
