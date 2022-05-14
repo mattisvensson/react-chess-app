@@ -1,59 +1,20 @@
-:root {
-  --color-tile-highlight: rgba(241, 241, 23, 0.5);
-  --color-tile-check: rgba(255, 0, 0, 0.5);
-  --color-tile-marked: rgba(0, 155, 255, 0.5);
-  --color-font: #FFFFFF;
-  --color-font-dark: #222222;
-  --color-background: #2A2A2A;
-  --color-aside-background: #202020;
-  --color-button-background: #2C2C2C;
-  --color-button-hover: #3F3F3F;
-  --color-scrollbar: #555555;
-  --color-scrollbar-hover: #777777;
-  /* --color-scrollbar: rgba(255, 145, 0, 0.5);
-  --color-scrollbar-hover: rgba(255, 145, 0, 0.8); */
-  --color-tooltip: #666666;
-  --gap-grid: 10px;
-  --input-radius: 9px;
-}
-
-::-webkit-scrollbar {width: 4px;}
-::-webkit-scrollbar-track {background: none}
-::-webkit-scrollbar-thumb {background: var(--color-scrollbar); border-radius: 20px;}
-::-webkit-scrollbar-thumb:hover {background: var(--color-scrollbar-hover)}
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  color: var(--color-font);
-  font-family: sans-serif;
-  user-select: none;
-  scrollbar-width: thin;
-  /* outline: 1px solid red; */
 }
 
 body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: var(--color-background);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-input {
-  color: var(--color-font-dark)
 }
 
 .App {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-gap: 0 50px;
-  place-items: center;
   height: 100vh;
-  padding: 6% 30px;
+  display: grid;
+  place-items: center;
+  background: #202020;
 }
 
 button {
@@ -61,12 +22,12 @@ button {
   border: none;
   font-size: 1.3rem;
   border-radius: 2px;
-  background: var(--color-button-background);
+  background: #ffffff;
   cursor: pointer;
 }
 
 button:hover {
-  background: var(--color-button-hover);
+  background: #dddddd;
 }
 
 section {
@@ -74,79 +35,10 @@ section {
   place-items: center;
 }
 
-option, select {
-  color: var(--color-font-dark)
+.App.mobile {
+  grid-template-rows: auto auto 20%;
 }
 
-
-/* Tooltip container */
-.tooltip {
-  position: relative;
-  display: inline-block;
-}
-
-.tooltip svg path {fill: var(--color-font)}
-
-/* Tooltip text */
-.tooltip .tooltipcontent {
-  visibility: hidden;
-  width: 200px;
-  background-color: var(--color-tooltip);
-  color: var(--color-font);
-  text-align: center;
-  padding: 5px;
-  border-radius: 6px;
- 
-  /* Position the tooltip text - see examples below! */
-  position: absolute;
-  bottom: 120%;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
-}
-
-/* Show the tooltip text when you mouse over the tooltip container */
-.tooltip:hover .tooltipcontent {
-  visibility: visible;
-}
-
-.tooltip .tooltipcontent::after {
-  content: "";
-  position: absolute;
-  top: 100%;  /* At the top of the tooltip */
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: var(--color-tooltip) transparent transparent transparent;
-}
-
-
-div.mobilemenu {
-  display: none;
-  position: absolute;
-  top: 0;
-  right: 0;
-  cursor: pointer;
-  transition: transform .3s;
-}
-
-div.mobilemenu svg path {
-  fill:var(--color-font)
-}
-
-@media screen and (max-width: 1023px) {
-  div.App {
-    width: 100vw;
-    grid-template-columns: 1fr;
-    padding: 0;
-  }
-
-  div.mobilemenu {
-    display: block;
-  }
-
-  div.mobilemenu.active {
-    transform: rotate(60deg);
-  }
+.App.mobile button {
+  margin: 30px;
 }

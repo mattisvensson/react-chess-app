@@ -13,12 +13,10 @@ div#GameOver {
     border-radius: 20px;    
     box-shadow: 0 0 9px 2px rgb(0 0 0 / 20%);
     gap: 8%;
-    padding: 10px;
 }
 
 div#GameOver p,
 div#GameOver h2 {
     font-family: sans-serif;
     text-align: center;
-    color: var(--color-font-dark)
 }
