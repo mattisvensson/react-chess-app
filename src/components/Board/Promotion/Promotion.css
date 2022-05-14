@@ -1,0 +1,41 @@
+#Board .promotion {
+    position: absolute;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0px 0px 14px 5px rgba(0,0,0,0.27);
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+}
+
+#Board .promotion.reversed {
+    flex-direction: column-reverse;
+    bottom: 0;
+}
+
+#Board .promotion div {
+    cursor: pointer;
+}
+
+#Board .promotion div.pomotionPiece {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-color: #fff;
+}
+
+#Board .promotion div.pomotionPiece:hover {
+    background-color: #ccc;
+}
+
+#Board .promotion div.cancelMove {
+    height: 40px;
+    background: #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+}
+
+#Board .promotion div.cancelMove:hover {
+    background: #aaa;
+}

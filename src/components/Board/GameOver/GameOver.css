@@ -1,0 +1,22 @@
+div#GameOver {
+    position: absolute;
+    width: 40%;
+    height: 40%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background: white;
+    border-radius: 20px;    
+    box-shadow: 0 0 9px 2px rgb(0 0 0 / 20%);
+    gap: 8%;
+}
+
+div#GameOver p,
+div#GameOver h2 {
+    font-family: sans-serif;
+    text-align: center;
+}
