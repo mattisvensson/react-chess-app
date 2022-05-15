@@ -9,8 +9,6 @@ import GameOver from '../Board/GameOver/GameOver';
 
 // TODO
 
-// stalemate
-
 // X = completed
 
 // X complete movement of all pieces
@@ -322,16 +320,20 @@ function Board() {
         if (playerIsInCheck) {
             if ((playerTurn && activePiece.piece === 6) || (!playerTurn && activePiece.piece === 16)) {
                 for (let i = 0; i < possibleKingTilesAfterCheck.length; i++) {
-                    if (JSON.stringify(possibleKingTilesAfterCheck[i]) === JSON.stringify([y, x])) {
-                        match = true;
-                        break;
+                    for (let j = 0; j < possibleTiles.length; j++) {
+                        if ((JSON.stringify(possibleTiles[j]) === JSON.stringify(possibleKingTilesAfterCheck[i])) && (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x]))) {
+                            match = true;
+                            break;
+                        }
                     }
                 }
             } else if ((playerTurn && activePiece.piece < 8) || (!playerTurn && activePiece.piece > 8)){
                 for (let i = 0; i < possibleTilesAfterCheck.length; i++) {
-                    if (JSON.stringify(possibleTilesAfterCheck[i]) === JSON.stringify([y, x])) {
-                        match = true;
-                        break;
+                    for (let j = 0; j < possibleTiles.length; j++) {
+                        if ((JSON.stringify(possibleTiles[j]) === JSON.stringify(possibleTilesAfterCheck[i])) && (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x]))) {
+                            match = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -765,12 +767,12 @@ function Board() {
         switch (piece) {
             //King (white and black)
             case 6:
-                case 16:
-                    if ((playerTurn && piece === 6) || (!playerTurn && piece === 16)) {
-                        const king = kingMove(posX, posY, position, piece, castle, playerIsInCheck)
-                        return king;
-                    }
-                    break;
+            case 16:
+                if ((playerTurn && piece === 6) || (!playerTurn && piece === 16)) {
+                    const king = kingMove(posX, posY, position, piece, castle, playerIsInCheck)
+                    return king;
+                }
+                break;
         }
     }
 
@@ -835,6 +837,10 @@ function Board() {
         }
     }
 
+
+    //--------------------------------------------------------------------------------------------------------------
+
+
     function pawnWhiteMove (posX, posY, position, pawnCanEnPassant) {
         let tiles = []
 
@@ -871,7 +877,6 @@ function Board() {
                 tiles.push([posY - 1, posX + 1]);
             }
         }
-
         return tiles;
     }
 
