@@ -78,7 +78,8 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
                 ...castle.white,
                 castleShort: false,
                 castleLong: false
-            }
+            },
+            isCastling: "0-0",
         }
         setCastle(updateCastle)
     } else if (activePiece.piece === 6 && castle.white.castleLong && x === 2) {
@@ -96,7 +97,8 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
                 ...castle.white,
                 castleShort: false,
                 castleLong: false
-            }
+            },
+            isCastling: "0-0-0",
         }
         setCastle(updateCastle)
     } else if (activePiece.piece === 16 && castle.black.castleShort && x === 6) {
@@ -113,7 +115,8 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
                 ...castle.black,
                 castleShort: false,
                 castleLong: false
-            }
+            },
+            isCastling: "0-0",
         }
         setCastle(updateCastle)
     } else if (activePiece.piece === 16 && castle.black.castleLong && x === 2) {
@@ -131,7 +134,14 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
                 ...castle.black,
                 castleShort: false,
                 castleLong: false
-            }
+            },
+            isCastling: "0-0-0",
+        }
+        setCastle(updateCastle)
+    } else {
+        const updateCastle = {
+            ...castle,
+            isCastling: false,
         }
         setCastle(updateCastle)
     }
