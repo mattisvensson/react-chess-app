@@ -10,18 +10,17 @@ function GameInfo (props) {
 
     const [moveCounter, setMoveCounter] = useState(0)
 
-    
-    console.log(props.moveList.length % 2)
-    useEffect(() => {
+    function startGame () {
+        props.startTimer()
+    }
 
-    })
-    // props.moveList.length
 
-    return (
-        <div id="GameInfo">
+    function pgn () {
+
+        return (
             <div className='pgn'>
+                {props.timerStatus ? <button onClick={e => props.continueTimer()}>Continue</button> : <button onClick={e => props.pauseTimer()}>Pause</button>}
                 <div className='moveCounter'>
-                    {moveCounter.map()}
                 </div>
                 <div>
                     {props.moveList.map((move, index) => {
@@ -34,8 +33,22 @@ function GameInfo (props) {
                     })}
                 </div>
             </div>
+        )
+    }
+
+    function gameSettings () {
+        return (
+            <div className='gameSettings'>
+                <button onClick={(event) => { props.setGameStatus(prev => !prev); startGame();}}>Play</button>
+            </div>
+        )
+    }
+
+    return (
+        <div id="GameInfo">
+            {props.gameStatus ? pgn() : gameSettings()}
             {/* <button onClick={e => resetBoard(setPosition, activePiece, setActivePiece, lastPiece, setLastPiece, setPossibleTiles, setPlayerTurn, setCastle, setPlayerIsInCheck, setGameOver, setPositionList)}>Reset Board</button> */}
-            <ViewMoves playerTurn={props.playerTurn} positionList={props.positionList} setPosition={props.setPosition}/>
+            <ViewMoves playerTurn={props.playerTurn} positionList={props.positionList} setPosition={props.setPosition} setActivePiece={props.setActivePiece}/>
         </div>
     )
 }

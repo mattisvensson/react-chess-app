@@ -177,6 +177,7 @@ function App() {
   const [positionList, setPositionList] = useState([]);
   const [moveList, setMoveList] = useState([]);
   const [currentPosition, setCurrentPosition] = useState([]);
+  const [gameStatus, setGameStatus] = useState(false)
 
   const [playerNames, setPlayerNames] = useState({
     white: "Spieler 1",
@@ -1537,6 +1538,84 @@ useEffect(() => {
 }, [activePiece.piece, activePiece.positionX, activePiece.positionY])
 
   
+//--------------------------------------------------------------------------------------------------
+  
+//https://www.geeksforgeeks.org/how-to-create-a-countdown-timer-using-reactjs/
+
+ // The state for our timer
+ const Ref = useRef(null);
+ const [timerWhite, setTimerWhite] = useState('10:00');
+ const [timerBlack, setTimerBlack] = useState('10:00');
+ const [startSeconds, setStartSeconds] = useState(600)
+ const [startTime, setStartTime] = useState(0)
+ const [timerStatus, setTimerStatus] = useState(false)
+
+ const [time, setTime] = useState(0)
+
+
+const startTimer = () => {
+    console.log("start")
+
+    let initialTime = new Date();
+    initialTime.setSeconds(initialTime.getSeconds() + startSeconds);
+
+    // setTimerWhite('10:00');
+    setStartTime(initialTime)
+
+    if (Ref.current) clearInterval(Ref.current);
+
+    const id = setInterval(() => {
+
+        const total = Date.parse(initialTime) - Date.parse(new Date());
+        const seconds = Math.floor((total / 1000) % 60);
+        const minutes = Math.floor((total / 1000 / 60) % 60);
+        setTime(total)
+
+        if (total >= 0) {
+            setTimerWhite(
+                (minutes > 9 ? minutes : '0' + minutes) + ':'
+                + (seconds > 9 ? seconds : '0' + seconds)
+            )
+        }
+    }, 1000)
+    Ref.current = id;
+}
+
+function pauseTimer () {
+    console.log("Pause")
+    setTimerStatus(prev => !prev)
+    clearInterval(Ref.current)
+}
+
+function continueTimer () {
+    console.log("continue")
+    setTimerStatus(prev => !prev)
+
+    const id = setInterval(() => {
+        const total = time - 1000
+        const seconds = Math.floor((total / 1000) % 60);
+        const minutes = Math.floor((total / 1000 / 60) % 60);
+        if (total >= 0) {
+            setTimerWhite(
+                (minutes > 9 ? minutes : '0' + minutes) + ':'
+                + (seconds > 9 ? seconds : '0' + seconds)
+            )
+        }
+        setTime(prev => prev - 1000)
+     }, 1000)
+     Ref.current = id;
+}
+
+useEffect(() => {
+    console.log(startTime)
+}, [startTime])
+
+
+
+
+
+
+
   // ------------------------------------------------------------------------------------------------
   //rendering board
 
@@ -1623,15 +1702,15 @@ useEffect(() => {
   return (
     <div className={`App ${size}`}>
         <div>
-            <PlayerInfo playerNames={playerNames} team="black"/>
+            <PlayerInfo playerNames={playerNames} team="black" timer={timerBlack}/>
             <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(./assets/images/chessboard_white.svg)`, gridTemplateColumns: `repeat(8, ${width / 8}px`, gridTemplateRows: `repeat(8, ${width/ 8}px`}}>
                 {board}
                 {pawnIsPromoting.showPromotionMenu && pawnIsPromoting.posX !== null ? <Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/> : null}
                 {gameOver.gameOver ? <GameOver winner={gameOver.winner} reason={gameOver.reason}/> : null}
             </div>
-            <PlayerInfo playerNames={playerNames} team="white"/>
+            <PlayerInfo playerNames={playerNames} team="white" timer={timerWhite}/>
         </div>
-        <GameInfo playerTurn={playerTurn} positionList={positionList} setPosition={setPosition} moveList={moveList}/>  
+        <GameInfo playerTurn={playerTurn} positionList={positionList} setPosition={setPosition} moveList={moveList} setActivePiece={setActivePiece} startTimer={startTimer} pauseTimer={pauseTimer} continueTimer={continueTimer} timerStatus={timerStatus} gameStatus={gameStatus} setGameStatus={setGameStatus}/>  
         {/* <Info/> */}
     </div>
   );
