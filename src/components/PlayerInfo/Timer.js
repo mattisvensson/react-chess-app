@@ -4,11 +4,8 @@ function Timer (props) {
 
 
     return (
-        <p>
-            <span>
-                {props.timer}
-            </span>
-
+        <p className='timer'>
+            {props.timer}
         </p>
     )
 }

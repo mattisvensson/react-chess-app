@@ -13,7 +13,7 @@ body {
 .App {
   height: 100vh;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto auto;
   place-items: center;
   background: #202020;
 }

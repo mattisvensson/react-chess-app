@@ -1526,6 +1526,12 @@ useEffect(() => {
         [move]
     ]
     setMoveList(updateMoveList)
+
+    //Timer
+
+        pauseTimer()
+        startTimer()
+    
 }, [playerTurn])
 
 
@@ -1546,69 +1552,83 @@ useEffect(() => {
  const Ref = useRef(null);
  const [timerWhite, setTimerWhite] = useState('10:00');
  const [timerBlack, setTimerBlack] = useState('10:00');
- const [startSeconds, setStartSeconds] = useState(600)
- const [startTime, setStartTime] = useState(0)
- const [timerStatus, setTimerStatus] = useState(false)
+ const [startSeconds, setStartSeconds] = useState(6)
+ const [increment, setIncrement] = useState(0)
 
- const [time, setTime] = useState(0)
+ const [remainingTimeWhite, setRemainingTimeWhite] = useState(0)
+ const [remainingTimeBlack, setRemainingTimeBlack] = useState(0)
+ const [isFirstStartWhite, setIsFirstStartWhite] = useState(true)
+ const [isFirstStartBlack, setIsFirstStartBlack] = useState(true)
 
 
-const startTimer = () => {
-    console.log("start")
+function startTimer () {
 
     let initialTime = new Date();
-    initialTime.setSeconds(initialTime.getSeconds() + startSeconds);
 
-    // setTimerWhite('10:00');
-    setStartTime(initialTime)
+    if ((playerTurn && isFirstStartWhite) || (!playerTurn && isFirstStartBlack)) {
+
+        initialTime.setSeconds(initialTime.getSeconds() + startSeconds);
+
+        playerTurn ? setIsFirstStartWhite(false) : setIsFirstStartBlack(false);
+    }
 
     if (Ref.current) clearInterval(Ref.current);
 
+    let cacheTime = playerTurn ? remainingTimeWhite : remainingTimeBlack;
+    let total;
+
     const id = setInterval(() => {
 
-        const total = Date.parse(initialTime) - Date.parse(new Date());
+        cacheTime = cacheTime - 1000
+
+        if ((playerTurn && isFirstStartWhite) || (!playerTurn && isFirstStartBlack)) {
+            total = Date.parse(initialTime) - Date.parse(new Date());
+        } else {
+            playerTurn ? setRemainingTimeWhite(cacheTime) : setRemainingTimeBlack(cacheTime)
+            total = cacheTime + increment
+            console.log(total)
+        }
         const seconds = Math.floor((total / 1000) % 60);
         const minutes = Math.floor((total / 1000 / 60) % 60);
-        setTime(total)
+
+        playerTurn ? setRemainingTimeWhite(total) : setRemainingTimeBlack(total)
 
         if (total >= 0) {
-            setTimerWhite(
-                (minutes > 9 ? minutes : '0' + minutes) + ':'
-                + (seconds > 9 ? seconds : '0' + seconds)
-            )
+            if (playerTurn) {
+                setTimerWhite(
+                    (minutes > 9 ? minutes : '0' + minutes) + ':'
+                    + (seconds > 9 ? seconds : '0' + seconds)
+                )
+            } else {
+                setTimerBlack(
+                    (minutes > 9 ? minutes : '0' + minutes) + ':'
+                    + (seconds > 9 ? seconds : '0' + seconds)
+                )
+            }
+        } else {
+            let winner = playerTurn ? "black" : "white"
+            const updateGameOver = {
+                gameOver: true,
+                reason: "time",
+                winner: winner
+            }
+            setGameOver(updateGameOver)
+            pauseTimer()
         }
     }, 1000)
     Ref.current = id;
 }
 
 function pauseTimer () {
-    console.log("Pause")
-    setTimerStatus(prev => !prev)
     clearInterval(Ref.current)
 }
 
-function continueTimer () {
-    console.log("continue")
-    setTimerStatus(prev => !prev)
-
-    const id = setInterval(() => {
-        const total = time - 1000
-        const seconds = Math.floor((total / 1000) % 60);
-        const minutes = Math.floor((total / 1000 / 60) % 60);
-        if (total >= 0) {
-            setTimerWhite(
-                (minutes > 9 ? minutes : '0' + minutes) + ':'
-                + (seconds > 9 ? seconds : '0' + seconds)
-            )
-        }
-        setTime(prev => prev - 1000)
-     }, 1000)
-     Ref.current = id;
+function setStartTime (time, increment) {
+    setStartSeconds(time * 60)
+    setIncrement(increment * 1000)
+    setTimerWhite(`${time}:00`)
+    setTimerBlack(`${time}:00`)
 }
-
-useEffect(() => {
-    console.log(startTime)
-}, [startTime])
 
 
 
@@ -1710,7 +1730,7 @@ useEffect(() => {
             </div>
             <PlayerInfo playerNames={playerNames} team="white" timer={timerWhite}/>
         </div>
-        <GameInfo playerTurn={playerTurn} positionList={positionList} setPosition={setPosition} moveList={moveList} setActivePiece={setActivePiece} startTimer={startTimer} pauseTimer={pauseTimer} continueTimer={continueTimer} timerStatus={timerStatus} gameStatus={gameStatus} setGameStatus={setGameStatus}/>  
+        <GameInfo playerTurn={playerTurn} positionList={positionList} setPosition={setPosition} moveList={moveList} setActivePiece={setActivePiece} startTimer={startTimer} pauseTimer={pauseTimer} gameStatus={gameStatus} setGameStatus={setGameStatus}/>  
         {/* <Info/> */}
     </div>
   );

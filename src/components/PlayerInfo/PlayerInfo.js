@@ -10,10 +10,8 @@ function PlayerInfo (props) {
 
     return (
         <div className='playerInfo'>
-            <p>{props.team === "white" ? props.playerNames.white : props.playerNames.black}</p>
-            <div className='timer'>
-                <Timer team={props.team} timer={props.timer}/>
-            </div>
+            <p className='playerName'>{props.team === "white" ? props.playerNames.white : props.playerNames.black}</p>
+            <Timer team={props.team} timer={props.timer}/>
         </div>
     )
 }
