@@ -5,7 +5,12 @@ function Timer (props) {
 
     return (
         <p className='timer'>
-            {props.timer}
+            <span className='increment'>
+                Increment: {props.increment / 1000}s
+            </span>
+            <span className='time'>
+                {props.timer}
+            </span>
         </p>
     )
 }

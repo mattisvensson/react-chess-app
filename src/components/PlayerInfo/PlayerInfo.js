@@ -11,7 +11,7 @@ function PlayerInfo (props) {
     return (
         <div className='playerInfo'>
             <p className='playerName'>{props.team === "white" ? props.playerNames.white : props.playerNames.black}</p>
-            <Timer team={props.team} timer={props.timer}/>
+            {props.playWithTimer && <Timer team={props.team} timer={props.timer} increment={props.increment}/>}
         </div>
     )
 }

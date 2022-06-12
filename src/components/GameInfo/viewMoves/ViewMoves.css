@@ -1,3 +1,11 @@
 div#ViewMoves button.inactive {
     background: #888888;
 }
+
+div.moveList {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    color: white;
+    font-family: sans-serif;
+    font-size: 1.3rem;
+}

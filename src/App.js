@@ -1431,12 +1431,15 @@ useEffect(() => {
     setPossibleTilesAfterCheck([])
     setPossibleKingTilesAfterCheck([])
     setPlayerIsInCheck(false)
-
     
     checkForInsufficientMaterial();
     checkForThreefoldRepetition();
     checkForFifthyMoveRule();
     checkForStalemate();
+
+    if (positionList.length === 1) {
+        setGameStatus(true)
+    }
 
     const isCheck = checkForCheck(position);
 
@@ -1552,8 +1555,9 @@ useEffect(() => {
  const Ref = useRef(null);
  const [timerWhite, setTimerWhite] = useState('10:00');
  const [timerBlack, setTimerBlack] = useState('10:00');
- const [startSeconds, setStartSeconds] = useState(6)
- const [increment, setIncrement] = useState(0)
+ const [startSeconds, setStartSeconds] = useState(600);
+ const [increment, setIncrement] = useState(0);
+ const [playWithTimer, setPlayWithTimer] = useState(true);
 
  const [remainingTimeWhite, setRemainingTimeWhite] = useState(0)
  const [remainingTimeBlack, setRemainingTimeBlack] = useState(0)
@@ -1563,7 +1567,22 @@ useEffect(() => {
 
 function startTimer () {
 
+    if (!playWithTimer) return
+
     let initialTime = new Date();
+
+    // if (positionList.length === 1) {
+    //     initialTime.setSeconds(initialTime.getSeconds() + startSeconds);
+    //     let total1 = Date.parse(initialTime) - Date.parse(new Date());
+
+    //     const seconds1 = Math.floor((total1 / 1000) % 60);
+    //     const minutes1 = Math.floor((total1 / 1000 / 60) % 60);
+
+    //     setTimerWhite(
+    //         (minutes1 > 9 ? minutes1 : '0' + minutes1) + ':'
+    //         + (seconds > 9 ? seconds1 : '0' + seconds1)
+    //     )
+    // }
 
     if ((playerTurn && isFirstStartWhite) || (!playerTurn && isFirstStartBlack)) {
 
@@ -1579,13 +1598,13 @@ function startTimer () {
 
     const id = setInterval(() => {
 
-        cacheTime = cacheTime - 1000
+        cacheTime = cacheTime - 100
 
         if ((playerTurn && isFirstStartWhite) || (!playerTurn && isFirstStartBlack)) {
             total = Date.parse(initialTime) - Date.parse(new Date());
         } else {
             playerTurn ? setRemainingTimeWhite(cacheTime) : setRemainingTimeBlack(cacheTime)
-            total = cacheTime + increment
+            total = cacheTime
             console.log(total)
         }
         const seconds = Math.floor((total / 1000) % 60);
@@ -1615,8 +1634,32 @@ function startTimer () {
             setGameOver(updateGameOver)
             pauseTimer()
         }
-    }, 1000)
+    }, 100)
     Ref.current = id;
+
+    if (increment > 0) {
+        if (!playerTurn || positionList.length === 1) {
+            setRemainingTimeWhite(prev => prev + increment)
+            let total = remainingTimeWhite + increment
+            const seconds = Math.floor((total / 1000) % 60);
+            const minutes = Math.floor((total / 1000 / 60) % 60);   
+            
+            setTimerWhite(
+                (minutes > 9 ? minutes : '0' + minutes) + ':'
+                + (seconds > 9 ? seconds : '0' + seconds)
+            )
+        } else {
+            setRemainingTimeBlack(prev => prev + increment)
+            let total = remainingTimeBlack + increment
+            const seconds = Math.floor((total / 1000) % 60);
+            const minutes = Math.floor((total / 1000 / 60) % 60);
+    
+            setTimerBlack(
+                (minutes > 9 ? minutes : '0' + minutes) + ':'
+                + (seconds > 9 ? seconds : '0' + seconds)
+            )
+        }
+    }
 }
 
 function pauseTimer () {
@@ -1624,16 +1667,12 @@ function pauseTimer () {
 }
 
 function setStartTime (time, increment) {
+    setPlayWithTimer(true)
     setStartSeconds(time * 60)
     setIncrement(increment * 1000)
     setTimerWhite(`${time}:00`)
     setTimerBlack(`${time}:00`)
 }
-
-
-
-
-
 
 
   // ------------------------------------------------------------------------------------------------
@@ -1722,15 +1761,15 @@ function setStartTime (time, increment) {
   return (
     <div className={`App ${size}`}>
         <div>
-            <PlayerInfo playerNames={playerNames} team="black" timer={timerBlack}/>
+            <PlayerInfo playerNames={playerNames} team="black" timer={timerBlack} playWithTimer={playWithTimer} increment={increment}/>
             <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(./assets/images/chessboard_white.svg)`, gridTemplateColumns: `repeat(8, ${width / 8}px`, gridTemplateRows: `repeat(8, ${width/ 8}px`}}>
                 {board}
                 {pawnIsPromoting.showPromotionMenu && pawnIsPromoting.posX !== null ? <Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/> : null}
                 {gameOver.gameOver ? <GameOver winner={gameOver.winner} reason={gameOver.reason}/> : null}
             </div>
-            <PlayerInfo playerNames={playerNames} team="white" timer={timerWhite}/>
+            <PlayerInfo playerNames={playerNames} team="white" timer={timerWhite} playWithTimer={playWithTimer} increment={increment}/>
         </div>
-        <GameInfo playerTurn={playerTurn} positionList={positionList} setPosition={setPosition} moveList={moveList} setActivePiece={setActivePiece} startTimer={startTimer} pauseTimer={pauseTimer} gameStatus={gameStatus} setGameStatus={setGameStatus}/>  
+        <GameInfo playerTurn={playerTurn} positionList={positionList} setPosition={setPosition} moveList={moveList} setActivePiece={setActivePiece} startTimer={startTimer} pauseTimer={pauseTimer} gameStatus={gameStatus} setGameStatus={setGameStatus} setStartTime={setStartTime} setPlayWithTimer={setPlayWithTimer}/>  
         {/* <Info/> */}
     </div>
   );
