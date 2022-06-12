@@ -4,7 +4,11 @@ import Info from './components/Info/Info';
 import PlayerInfo from './components/PlayerInfo/PlayerInfo';
 import GameInfo from './components/GameInfo/GameInfo';
 
-import Tile from './components/Board/Tile/Tile';
+import Tile from './components/Board/Tiles/Tile';
+import PossibleMove from './components/Board/Tiles/PossibleMove';
+import PossibleCapture from './components/Board/Tiles/PossibleCapture';
+import HighlightedTile from './components/Board/Tiles/HighlightedTile';
+import CheckedTile from './components/Board/Tiles/CheckedTile';
 import Promotion from './components/Board/Promotion/Promotion'
 import checkCastleMoves from './components/Logic/checkCastleMoves';
 import checkEnPassant from './components/Logic/checkEnPassant';
@@ -14,6 +18,7 @@ import './App.css';
 import './components/Board/Board.css';
 
 import audioMoveFile from './sounds/move.mp3';
+import { act } from '@testing-library/react';
 const audioMove = new Audio(audioMoveFile)
 
 // import Board from './components/Board/Board';
@@ -66,9 +71,6 @@ let pieceWidth = width / 8;
 function App() {
 
   let size = window.innerWidth < 750 ? "mobile" : "desktop"
-
-  //initialize the board
-  let board = [];
 
   // Pieces:
   // 1 = Pawn (white)
@@ -223,9 +225,11 @@ function App() {
           const BoardMinY = BoardRef.current.offsetTop;
 
           //set piece position to mouse position
-          e.target.style.position = "absolute";
-          e.target.style.left = mouseX - BoardMinX - (pieceWidth / 2) + "px";
-          e.target.style.top = mouseY - BoardMinY - (pieceWidth / 2) + "px";
+        //   e.target.style.position = "absolute";
+        //   e.target.style.left = mouseX - BoardMinX - (pieceWidth / 2) + "px";
+        //   e.target.style.top = mouseY - BoardMinY - (pieceWidth / 2) + "px";
+        
+        e.target.style.transform = `translate(${mouseX - BoardMinX -(pieceWidth / 2) + "px"}, ${mouseY - BoardMinY -(pieceWidth / 2) + "px"})`;
 
           //set active piece
           if ((!(e.target === activePiece.piece) && activePiece.counter === 0) || activePiece.positionX !== currentX || activePiece.positionY !== currentY) {
@@ -273,16 +277,21 @@ function App() {
 
           if (activePiece.isActive) {
 
+            // console.log(BoardMinX, BoardMaxX)
+            // console.log(mouseX)
+
               //set piece position to mouse position
-              activePiece.isActive.style.position = "absolute";
-              activePiece.isActive.style.left = mouseX - BoardMinX - (pieceWidth / 2) + "px";
-              activePiece.isActive.style.top = mouseY - BoardMinY -(pieceWidth / 2) + "px";
+            //   activePiece.isActive.style.position = "absolute";
+            //   activePiece.isActive.style.left = mouseX - BoardMinX - (pieceWidth / 2) + "px";
+            //   activePiece.isActive.style.top = mouseY - BoardMinY -(pieceWidth / 2) + "px";
+              
+            activePiece.isActive.style.transform = `translate(${mouseX - BoardMinX -(pieceWidth / 2) + "px"}, ${mouseY - BoardMinY -(pieceWidth / 2) + "px"})`;
 
               //stop piece from following the mouse if mouse is outside of the board
-              if (mouseX < BoardMinX) {activePiece.isActive.style.left = -(pieceWidth / 2) + "px";}
-              if (mouseX > BoardMaxX) {activePiece.isActive.style.left = BoardWidth - (pieceWidth / 2) + "px";}
-              if (mouseY < BoardMinY) {activePiece.isActive.style.top = -(pieceWidth / 2) + "px";}
-              if (mouseY > BoardMaxY) {activePiece.isActive.style.top = BoardWidth - (pieceWidth / 2) + "px";}
+              if (mouseX < BoardMinX) {activePiece.isActive.style.transform = `translate(-50%, ${mouseY}px`}
+              if (mouseX > BoardMaxX) {activePiece.isActive.style.transform = `translate(750%, ${mouseY}px`}
+              if (mouseY < BoardMinY) {activePiece.isActive.style.transform = `translate(${mouseX}px, -50%`}
+              if (mouseY > BoardMaxY) {activePiece.isActive.style.transform = `translate(${mouseX}px, 750%`}
           }
       }
   }
@@ -432,9 +441,10 @@ function App() {
       }
 
       //drop dragged piece
-      activePiece.isActive.style.position = "relative";
-      activePiece.isActive.style.left = "unset";
-      activePiece.isActive.style.top = "unset";
+    //   activePiece.isActive.style.position = "relative";
+    //   activePiece.isActive.style.left = "unset";
+    //   activePiece.isActive.style.top = "unset";
+    activePiece.isActive.style.transform = `translate(${activePiece.positionX}00%, ${activePiece.positionY}00%)`
       setPieceIsDragged(false)
   }
 
@@ -1557,7 +1567,7 @@ useEffect(() => {
  const [timerBlack, setTimerBlack] = useState('10:00');
  const [startSeconds, setStartSeconds] = useState(600);
  const [increment, setIncrement] = useState(0);
- const [playWithTimer, setPlayWithTimer] = useState(true);
+ const [playWithTimer, setPlayWithTimer] = useState(false);
 
  const [remainingTimeWhite, setRemainingTimeWhite] = useState(0)
  const [remainingTimeBlack, setRemainingTimeBlack] = useState(0)
@@ -1674,21 +1684,27 @@ function setStartTime (time, increment) {
     setTimerBlack(`${time}:00`)
 }
 
+useEffect(() => {
+    console.log(activePiece)
+}, [activePiece])
+
 
   // ------------------------------------------------------------------------------------------------
   //rendering board
 
+  let tile = [];
+  let capture = [];
+  let highlight = [];
+  let check = [];
+  let move = [];
+
   for (let j = 0; j < 8; j++) { //y
       for (let i = 0; i < 8; i++){ //x
-          const checkColor = j + i + 2;
-          let image = undefined;
-          let color = undefined;
+          let piece = undefined;
           let isPossibleMove = false;
           let isPossibleCapture = false;
           let isHighlighted = false;
           let isCheck = false;
-          let posX = false;
-          let posY = false;
 
 
           //highlight possible Tiles
@@ -1738,33 +1754,104 @@ function setStartTime (time, increment) {
           }
 
           switch (position[j][i]) {
-              case 1: image = "p_w"; color = "white"; break;
-              case 11: image = "p_b"; color = "black"; break;
-              case 2: image = "n_w"; color = "white"; break;
-              case 12: image = "n_b"; color = "black"; break;
-              case 3: image = "b_w"; color = "white"; break;
-              case 13: image = "b_b"; color = "black"; break;
-              case 4: image = "r_w"; color = "white"; break;
-              case 14: image = "r_b"; color = "black"; break;
-              case 5: image = "q_w"; color = "white"; break;
-              case 15: image = "q_b"; color = "black"; break;
-              case 6: image = "k_w"; color = "white"; break;
-              case 16: image = "k_b"; color = "black"; break;
-              default: image = undefined; break;
+              case 1: piece = "wp"; break;
+              case 11: piece = "bp"; break;
+              case 2: piece = "wn"; break;
+              case 12: piece = "bn"; break;
+              case 3: piece = "wb"; break;
+              case 13: piece = "bb"; break;
+              case 4: piece = "wr"; break;
+              case 14: piece = "br"; break;
+              case 5: piece = "wq"; break;
+              case 15: piece = "bq"; break;
+              case 6: piece = "wk"; break;
+              case 16: piece = "bk"; break;
+              default: piece = "empty"; break;
           }
 
-          board.push(<Tile key={`${j}, ${i}`} posX={posX} posY={posY} image={`./assets/images/pieces/${image}.png`} isPossibleMove={isPossibleMove} isPossibleCapture={isPossibleCapture} isHighlighted={isHighlighted} isCheck={isCheck} checkColor={checkColor} color={color} width={width}/>)
-      }
-  }
+          let newMove = {
+              posX: i,
+              posY: j,
+              isPossibleMove: isPossibleMove
+          }
+          move.push(newMove)
 
+          let newCapture = {
+            posX: i,
+            posY: j,
+            isPossibleCapture: isPossibleCapture
+        }
+        capture.push(newCapture)
+
+        let newHighlight = {
+            posX: i,
+            posY: j,
+            isHighlighted: isHighlighted
+        }
+        highlight.push(newHighlight)
+
+        let newCheck = {
+            posX: i,
+            posY: j,
+            isCheck: isCheck
+        }
+        check.push(newCheck)
+
+          let newTile = {
+              posX: i,
+              posY: j,
+              piece: piece
+          }
+
+          tile.push(newTile)
+        }
+  }
 
   return (
     <div className={`App ${size}`}>
         <div>
             <PlayerInfo playerNames={playerNames} team="black" timer={timerBlack} playWithTimer={playWithTimer} increment={increment}/>
             <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{backgroundImage: `url(./assets/images/chessboard_white.svg)`, gridTemplateColumns: `repeat(8, ${width / 8}px`, gridTemplateRows: `repeat(8, ${width/ 8}px`}}>
-                {board}
-                {pawnIsPromoting.showPromotionMenu && pawnIsPromoting.posX !== null ? <Promotion key="promotion" pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/> : null}
+                {move.map((move) => {
+                    return (
+                        <>
+                            {move.isPossibleMove ? <PossibleMove key={`${move.posY}, ${move.posX}`} posX={move.posX} posY={move.posY} isPossibleMove={move.isPossibleMove}/>: null}
+                        </>
+                    )
+                })}
+
+                {capture.map((capture) => {
+                    return (
+                        <>
+                            {capture.isPossibleCapture ? <PossibleCapture key={`${capture.posY}, ${capture.posX}`} posX={capture.posX} posY={capture.posY} isPossibleCapture={capture.isPossibleCapture}/> : null}
+                        </>
+                    )
+                })}
+
+                {highlight.map((highlight) => {
+                    return (
+                        <>
+                            {highlight.isHighlighted ? <HighlightedTile key={`${highlight.posY}, ${highlight.posX}`} posX={highlight.posX} posY={highlight.posY} isHighlighted={highlight.isHighlighted}/> : null}
+                        </>
+                    )
+                })}
+
+                {check.map((check) => {
+                    return (
+                        <>
+                            {check.isCheck ? <CheckedTile key={`${check.posY}, ${check.posX}`} posX={check.posX} posY={check.posY} isCheck={check.isCheck}/> : null}
+                        </>
+                    )
+                })}
+                
+                {tile.map((tile) => {
+                    return (
+                        <>
+                            {tile.piece !== "empty" ? <Tile key={`${tile.posY}, ${tile.posX}`} posX={tile.posX} posY={tile.posY} piece={tile.piece}/> : null}
+                        </>
+                    )
+                })}
+                {pawnIsPromoting.showPromotionMenu && pawnIsPromoting.posX !== null ? <Promotion pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/> : null}
                 {gameOver.gameOver ? <GameOver winner={gameOver.winner} reason={gameOver.reason}/> : null}
             </div>
             <PlayerInfo playerNames={playerNames} team="white" timer={timerWhite} playWithTimer={playWithTimer} increment={increment}/>
