@@ -18,7 +18,6 @@ import './App.css';
 import './components/Board/Board.css';
 
 import audioMoveFile from './sounds/move.mp3';
-import { act } from '@testing-library/react';
 const audioMove = new Audio(audioMoveFile)
 
 // import Board from './components/Board/Board';
@@ -86,14 +85,14 @@ function App() {
   // 15 = Queen (black)
   // 16 = King (black)
   const [position, setPosition] = useState([
-      [14,12,13,15,16,13,12,14],
+      [14,0,13,15,16,13,0,14],
       [11,11,11,11,11,11,11,11],
       [0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0],
       [0,0,0,0,0,0,0,0],
-      [1,1,1,1,1,1,1,1],
-      [4,2,3,5,6,3,2,4],
+      [1,1,1,1,0,1,1,1],
+      [4,0,3,5,6,0,4,0],
   ])
 
   //Referencing the board
@@ -230,6 +229,7 @@ function App() {
         //   e.target.style.top = mouseY - BoardMinY - (pieceWidth / 2) + "px";
         
         e.target.style.transform = `translate(${mouseX - BoardMinX -(pieceWidth / 2) + "px"}, ${mouseY - BoardMinY -(pieceWidth / 2) + "px"})`;
+        e.target.style.zIndex = "10";
 
           //set active piece
           if ((!(e.target === activePiece.piece) && activePiece.counter === 0) || activePiece.positionX !== currentX || activePiece.positionY !== currentY) {
@@ -415,7 +415,7 @@ function App() {
               checkEnPassant(x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant);
 
               //castle
-              checkCastleMoves(x, position, castle, setCastle, activePiece, setPosition);
+              checkCastleMoves(x, y, position, castle, setCastle, activePiece, setPosition);
 
               //normal move
               const newPosition = [...position];
@@ -445,8 +445,16 @@ function App() {
     //   activePiece.isActive.style.left = "unset";
     //   activePiece.isActive.style.top = "unset";
     activePiece.isActive.style.transform = `translate(${activePiece.positionX}00%, ${activePiece.positionY}00%)`
+    activePiece.isActive.style.zIndex = "0";
       setPieceIsDragged(false)
   }
+
+//   useEffect(() => {
+//     console.log(position)
+//   }, [position])
+//   useEffect(() => {
+//     console.log(castle)
+//   }, [castle])
 
 
   //execute pawn promotionm(executed from Promotion.js)
@@ -1683,10 +1691,6 @@ function setStartTime (time, increment) {
     setTimerWhite(`${time}:00`)
     setTimerBlack(`${time}:00`)
 }
-
-useEffect(() => {
-    console.log(activePiece)
-}, [activePiece])
 
 
   // ------------------------------------------------------------------------------------------------

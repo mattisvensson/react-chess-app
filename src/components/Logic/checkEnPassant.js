@@ -24,13 +24,13 @@ function checkEnPassant (x, y, activePiece, position, pawnCanEnPassant, setPawnC
 
     
     //execute en passant (with white)
-    if (pawnCanEnPassant.isActive && activePiece.piece === 1 && tileDifferenceX === 1) {
+    if (pawnCanEnPassant.isActive && activePiece.piece === 1 && tileDifferenceX === 1 && y === 2) {
         const updatePosition = [...position];
         updatePosition[activePiece.positionY][activePiece.positionX] = 0;
         updatePosition[y + 1][x] = 0;
         updatePosition[y][x] = 1;
     //en passant (with black)
-    } else if (pawnCanEnPassant.isActive && activePiece.piece === 11 && tileDifferenceX === 1){
+    } else if (pawnCanEnPassant.isActive && activePiece.piece === 11 && tileDifferenceX === 1 && y === 5){
         const updatePosition = [...position];
         updatePosition[activePiece.positionY][activePiece.positionX] = 0;
         updatePosition[y - 1][x] = 0;

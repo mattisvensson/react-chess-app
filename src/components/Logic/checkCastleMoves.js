@@ -1,17 +1,31 @@
-function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosition) {
+function checkCastleMoves (x, y, position, castle, setCastle, activePiece, setPosition) {
+
+    // let positionCopy = [];
+    // for (let i = 0; i < position.length; i++) {
+    //     positionCopy[i] = position[i].slice();
+    // }
+
+    // console.log(position)
+    // console.log(positionCopy[7])
+    // console.log(positionCopy)
+    // console.log(position)
+    // console.log(x, y, position, castle, setCastle, activePiece, setPosition)
     
     //check for castle moves
     if (position[7][7] === 0) {
+        console.log("1")
         const updateCastle = {
             ...castle,
             white: {
-                ...castle.white,
+                ...castle.white, 
                 castleShort: false,
             }
         }
+        console.log(updateCastle)
         setCastle(updateCastle)
     }
     if (position[7][0] === 0) {
+        console.log("2")
         const updateCastle = {
             ...castle,
             white: {
@@ -22,6 +36,7 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
         setCastle(updateCastle)
     }
     if (position[0][0] === 0) {
+        console.log("3")
         const updateCastle = {
             ...castle,
             black: {
@@ -32,6 +47,7 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
         setCastle(updateCastle)
     }
     if (position[0][7] === 0) {
+        console.log("4")
         const updateCastle = {
             ...castle,
             black: {
@@ -40,31 +56,32 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
             }
         }
         setCastle(updateCastle)
-    }
-    if (activePiece.piece === 6 && (x !== 2 && x !== 6)) {
-        const updateCastle = {
-            ...castle,
-            white: {
-                ...castle.white,
-                castleShort: false,
-                castleLong: false,
-            }
-        }
-        setCastle(updateCastle)
-    }
-    if (activePiece.piece === 16 && (x !== 2 && x !== 6)) {
-        const updateCastle = {
-            ...castle,
-            black: {
-                ...castle.black,
-                castleShort: false,
-                castleLong: false,
-            }
-        }
-        setCastle(updateCastle)
-    }
+    } 
 
-    if (activePiece.piece === 6 && castle.white.castleShort && x === 6) {
+    // if (activePiece.piece === 6 && (x !== 2 && x !== 6)) {
+    //     const updateCastle = {
+    //         ...castle,
+    //         white: {
+    //             ...castle.white,
+    //             castleShort: false,
+    //             castleLong: false,
+    //         }
+    //     }
+    //     setCastle(updateCastle)
+    // }
+    // if (activePiece.piece === 16 && (x !== 2 && x !== 6)) {
+    //     const updateCastle = {
+    //         ...castle,
+    //         black: {
+    //             ...castle.black,
+    //             castleShort: false,
+    //             castleLong: false,
+    //         }
+    //     }
+    //     setCastle(updateCastle)
+    // }
+
+    if (activePiece.piece === 6 && castle.white.castleShort && x === 6 && y === 7) {
         const updatePosition = [...position];
         updatePosition[7][4] = 0;
         updatePosition[7][5] = 4;
@@ -82,7 +99,7 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
             isCastling: "0-0",
         }
         setCastle(updateCastle)
-    } else if (activePiece.piece === 6 && castle.white.castleLong && x === 2) {
+    } else if (activePiece.piece === 6 && castle.white.castleLong && x === 2 && y === 7) {
         const updatePosition = [...position];
         updatePosition[7][4] = 0;
         updatePosition[7][3] = 4;
@@ -101,7 +118,7 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
             isCastling: "0-0-0",
         }
         setCastle(updateCastle)
-    } else if (activePiece.piece === 16 && castle.black.castleShort && x === 6) {
+    } else if (activePiece.piece === 16 && castle.black.castleShort && x === 6 && y === 0) {
         const updatePosition = [...position];
         updatePosition[0][4] = 0;
         updatePosition[0][5] = 14;
@@ -119,7 +136,7 @@ function checkCastleMoves (x, position, castle, setCastle, activePiece, setPosit
             isCastling: "0-0",
         }
         setCastle(updateCastle)
-    } else if (activePiece.piece === 16 && castle.black.castleLong && x === 2) {
+    } else if (activePiece.piece === 16 && castle.black.castleLong && x === 2 && y === 0) {
         const updatePosition = [...position];
         updatePosition[0][4] = 0;
         updatePosition[0][3] = 14;
