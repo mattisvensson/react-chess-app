@@ -1,3 +1,57 @@
+div#GameInfo {
+    width: 400px;
+    height: 100%;
+    background: #161616;
+    border-radius: 1em;
+    box-shadow: 0 0 20px 5px rgb(0 0 0 / 20%);
+    padding: 15px;
+}
+
+div#GameInfo button {
+    background: #2c2c2c;
+    color: white;
+    border-radius: 9px;
+}
+
+div#GameInfo button:hover {
+    background: #3f3f3f;
+}
+
+div#GameInfo div.setTime {
+    margin-bottom: 25px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid white;
+}
+
+div#GameInfo div.setTime h4 {
+    font-family: sans-serif;
+    color: white;
+    font-weight: normal;
+}
+
+div#GameInfo div.setTime div {
+    margin: 25px 0;
+}
+
+div#GameInfo div.setTime div.buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 10px;
+}
+
+div#GameInfo div.setTime div.input {
+    display: grid;
+    grid-template-columns: 30% 30% 20%;
+    grid-gap: 10px;
+}
+
+div#GameInfo div.setTime div.input input {
+    padding: 5px;
+    font-size: 1.2rem;
+    border-radius: 9px;
+}
+
+
 div#GameInfo div.pgn {
     display: grid;
     grid-template-columns: 1fr 1fr;

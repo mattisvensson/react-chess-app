@@ -40,23 +40,28 @@ function GameInfo (props) {
 
     function gameSettings () {
         return (
-            <div className='gameSettings'>
+            <>
                 <div className='setTime'>
-                    <button onClick={e => props.setStartTime(30, 10)}>30 | 10</button>
-                    <button onClick={e => props.setStartTime(15, 10)}>15 | 10</button>
-                    <button onClick={e => props.setStartTime(10, 5)}>10 | 5</button>
-                    <button onClick={e => props.setStartTime(10, 0)}>10 | 0</button>
-                    <button onClick={e => props.setStartTime(5, 3)}>5 | 3</button>
-                    <button onClick={e => props.setStartTime(5, 0)}>5 | 0</button>
-                    <button onClick={e => props.setStartTime(3, 1)}>3 | 1</button>
-                    <button onClick={e => props.setStartTime(1, 0)}>1 | 0</button>
-                    <input type="text" placeholder='minutes' onChange={e => setMinutes(e.target.value)}></input>
-                    <input type="text" placeholder='increment' onChange={e => setIncrement(e.target.value)}></input>
-                    <button onClick={e => props.setStartTime(minutes, increment)}>Set</button>
+                    <h4>Time</h4>
+                    <div className="buttons">
+                        <button onClick={e => props.setStartTime(30, 10)}>30 | 10</button>
+                        <button onClick={e => props.setStartTime(15, 10)}>15 | 10</button>
+                        <button onClick={e => props.setStartTime(10, 5)}>10 | 5</button>
+                        <button onClick={e => props.setStartTime(10, 0)}>10 | 0</button>
+                        <button onClick={e => props.setStartTime(5, 3)}>5 | 3</button>
+                        <button onClick={e => props.setStartTime(5, 0)}>5 | 0</button>
+                        <button onClick={e => props.setStartTime(3, 1)}>3 | 1</button>
+                        <button onClick={e => props.setStartTime(1, 0)}>1 | 0</button>
+                    </div>
+                    <div className='input'>
+                        <input type="text" placeholder='minutes' onChange={e => setMinutes(e.target.value)}></input>
+                        <input type="text" placeholder='increment' onChange={e => setIncrement(e.target.value)}></input>
+                        <button onClick={e => props.setStartTime(minutes, increment)}>Set</button>
+                    </div>
                     <button onClick={e => props.setPlayWithTimer(false)}>Without Clock</button>
                 </div>
-                <button onClick={(event) => { props.setGameStatus(true); props.startTimer();}}>Play</button>
-            </div>
+                <button onClick={(e) => { props.setGameStatus(true); props.startTimer();}}>Play</button>
+            </>
         )
     }
 

@@ -45,7 +45,8 @@
 .piece,
 .possibleTile,
 .possibleCapture,
-.highlightedTile {
+.highlightedTile,
+.checkTile {
     background-size: cover;
     position: absolute;
     top: 0;
