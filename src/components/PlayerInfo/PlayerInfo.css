@@ -4,9 +4,41 @@ div.playerInfo {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin: 10px 0;
 }
 
-div.playerInfo p {
+div.playerInfo div.player {
+    height: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 50% 50%;
+    grid-gap: 0 10px
+}
+
+div.playerInfo div.player > img {
+    height: 100%;
+    background: lightgray;
+    border-radius: 5px;
+    grid-row: 1/3;
+}
+
+div.playerInfo div.materialAdvantage {
+    display: flex;
+    align-items: center;
+}
+
+div.playerInfo div.materialAdvantage img {
+    height: 100%;
+}
+
+div.playerInfo div.materialAdvantage span {
+    font-family: sans-serif;
+    color: white;
+    margin-top: 5px;
+}
+
+div.playerInfo div.player p,
+div.playerInfo p.timer span {
     font-size: 1.5rem;
     font-family: sans-serif;
     color: white;

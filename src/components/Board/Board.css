@@ -1,5 +1,10 @@
 #Board {
     position: relative;
     background: #222222;
-    background-repeat: no-repeat;
+    background-repeat: no-repeat;    
+    box-shadow: 0 0 20px 5px rgb(0 0 0 / 20%);
+}
+
+#Board svg {
+    border-radius: 5px;
 }

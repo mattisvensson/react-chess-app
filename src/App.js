@@ -52,6 +52,7 @@ const audioMove = new Audio(audioMoveFile)
 // X  -> last move
 // x  -> active piece
 //
+//   highlight hovered tile
 //   add time for players
 //   add material advantage for players
 // X add sound effects
@@ -180,9 +181,14 @@ function App() {
     const [currentPosition, setCurrentPosition] = useState([]);
     const [gameStatus, setGameStatus] = useState(false)
 
+    const [pieceAdvantage, setPieceAdvantage] = useState({
+        white: [],
+        black: []
+    })
+
     const [playerNames, setPlayerNames] = useState({
-    white: "Player 1",
-    black: "Player 2"
+        white: "Player 1",
+        black: "Player 2"
     })
 
     //-------------------------------------------------------------------------------------
@@ -380,9 +386,6 @@ function App() {
         //if desired tile is a possible moves
         if (match) {
 
-            //play sound
-            audioMove.play()
-
             if (position[y][x] !== 0 || (playerTurn && activePiece.piece === 1) || (!playerTurn && activePiece.piece === 11)) {
                 setFifthyMoveRule(0)
             } else {
@@ -404,25 +407,47 @@ function App() {
                 setAllowPieceSelection(false)
             } else {
 
-            let positionCopy = [];
-            for (let i = 0; i < position.length; i++) {
-                positionCopy[i] = position[i].slice();
-            }
+                //play sound
+                audioMove.play()
+
+                let positionCopy = [];
+                for (let i = 0; i < position.length; i++) {
+                    positionCopy[i] = position[i].slice();
+                }
 
                 //en passant
                 const enpassant = checkEnPassant(x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant);
 
-                //castle
+                //execute castle
                 const caslte = executeCastleMoves(x, y, positionCopy, castle, setCastle, activePiece, setPosition);
-                
+                    
 
-            if (!enpassant && !caslte) {
-                //normal move
-                const newPosition = [...position];
-                newPosition[activePiece.positionY][activePiece.positionX] = 0;
-                newPosition[y][x] = activePiece.piece;
-                setPosition(newPosition);
-            }
+                if (!enpassant && !caslte) {
+                    //normal move
+                    const newPosition = [...position];
+
+                    if (newPosition[y][x] !== 0) {
+                        console.log("capture")
+                        let capturedPiece = newPosition[y][x]
+                        if (playerTurn) {
+                            const updatePieceAdvantage = {
+                                ...pieceAdvantage,
+                                white: [...pieceAdvantage.white, capturedPiece]
+                            }
+                            setPieceAdvantage(updatePieceAdvantage)
+                        } else {
+                            const updatePieceAdvantage = {
+                                ...pieceAdvantage,
+                                black: [...pieceAdvantage.black, capturedPiece]
+                            }
+                            setPieceAdvantage(updatePieceAdvantage)
+                        }
+                    }
+
+                    newPosition[activePiece.positionY][activePiece.positionX] = 0;
+                    newPosition[y][x] = activePiece.piece;
+                    setPosition(newPosition);
+                }
 
 
                 //switch player turn
@@ -440,6 +465,7 @@ function App() {
 
                 setPlayerIsInCheck(false)
 
+                //check which castle moves are still possible
                 checkCastleMoves(position, castle, setCastle)
             }
         }
@@ -450,12 +476,17 @@ function App() {
         setPieceIsDragged(false)
     }
 
+
     //execute pawn promotionm(executed from Promotion.js)
     function executePromotion (piece) {
 
         if (pawnIsPromoting.color === "black") piece += 10;
 
         if (piece < 99) {
+
+            //play sound
+            audioMove.play()
+
             const newPosition = [...position];
             newPosition[pawnIsPromoting.posY][pawnIsPromoting.posX] = piece;
             newPosition[pawnIsPromoting.prevY][pawnIsPromoting.prevX] = 0;
@@ -518,7 +549,7 @@ function App() {
                 let y = string.charAt(1)
                 let x = string.charAt(3)
 
-                //check if pice can move or is pinned
+                //check if piece can move or is pinned
                 //create copy of current position
                 let positionCopy = [];
                 for (let i = 0; i < position.length; i++) {
@@ -1431,118 +1462,120 @@ function App() {
 
     //default actions for each move
     useEffect(() => {
-    let positionCopy = [];
-    for (let i = 0; i < position.length; i++) {
-        positionCopy[i] = position[i].slice();
-    }
-    setPositionList([...positionList, positionCopy]);
-    setCurrentPosition([positionCopy]);
+        let positionCopy = [];
+        for (let i = 0; i < position.length; i++) {
+            positionCopy[i] = position[i].slice();
+        }
+        setPositionList([...positionList, positionCopy]);
+        setCurrentPosition([positionCopy]);
 
-    setPossibleTiles([])
-    setPossibleTilesAfterCheck([])
-    setPossibleKingTilesAfterCheck([])
-    setPlayerIsInCheck(false)
+        setPossibleTiles([])
+        setPossibleTilesAfterCheck([])
+        setPossibleKingTilesAfterCheck([])
+        setPlayerIsInCheck(false)
 
-    checkForInsufficientMaterial();
-    checkForThreefoldRepetition();
-    checkForFifthyMoveRule();
-    checkForStalemate();
+        checkForInsufficientMaterial();
+        checkForThreefoldRepetition();
+        checkForFifthyMoveRule();
+        checkForStalemate();
 
-    if (positionList.length === 1) {
-        setGameStatus(true)
-    }
+        if (positionList.length === 1) {
+            setGameStatus(true)
+        }
 
-    const isCheck = checkForCheck(position);
+        const isCheck = checkForCheck(position);
 
-    let check;
-    let mate;
+        let check;
+        let mate;
 
-    if (isCheck) {
-        let player = playerTurn ? "white" : "black"
-        check = true;
-        setPlayerIsInCheck(player)
+        if (isCheck) {
+            let player = playerTurn ? "white" : "black"
+            check = true;
+            setPlayerIsInCheck(player)
 
-        //check for checkmate
-        const tiles = getPossibleTilesAfterCheck(player)
-        if (tiles.tiles.length === 0 && tiles.tilesKing.length === 0) {
-            let winner;
-            playerIsInCheck === "white" ? winner = "black" : winner = "white";
-            const updateGameOver = {
-                gameOver: true,
-                reason: "checkmate",
-                winner: winner
+            //check for checkmate
+            const tiles = getPossibleTilesAfterCheck(player)
+            if (tiles.tiles.length === 0 && tiles.tilesKing.length === 0) {
+                let winner;
+                playerIsInCheck === "white" ? winner = "black" : winner = "white";
+                const updateGameOver = {
+                    gameOver: true,
+                    reason: "checkmate",
+                    winner: winner
+                }
+                setGameOver(updateGameOver)
+                mate = true;
             }
-            setGameOver(updateGameOver)
-            mate = true;
         }
-    }
 
-    //PGN Notation 
-    let x = lastPiece.newPositionX;
-    let y = lastPiece.newPositionY;
+        //PGN Notation 
+        let x = lastPiece.newPositionX;
+        let y = lastPiece.newPositionY;
 
-    let oldPosition = positionList[positionList.length - 1]
+        let oldPosition = positionList[positionList.length - 1]
 
-    if (x === null || y === null) return;
+        if (x === null || y === null) return;
 
-    const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
-    const rows = ["a", "b", "c", "d", "e", "f", "g", "h"];
-    let piece = konvertPieceIdToLetter(activePiece.piece);
-    let move;
-    let promotionPiece = konvertPieceIdToLetter(pawnIsPromoting.newPiece)
-    let capture;
-    let gameStatus; 
+        const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
+        const rows = ["a", "b", "c", "d", "e", "f", "g", "h"];
+        let piece = konvertPieceIdToLetter(activePiece.piece);
+        let move;
+        let promotionPiece = konvertPieceIdToLetter(pawnIsPromoting.newPiece)
+        let capture;
+        let gameStatus; 
 
-    //konvert pieceId to abbreviation
-    function konvertPieceIdToLetter (piece) {
-        switch (piece) {
-            case 2:
-            case 12: return "N";
-            case 3:
-            case 13: return "B";
-            case 4:
-            case 14: return "R";
-            case 5:
-            case 15: return "Q";
-            case 6:
-            case 16: return "K";
-            default: return null;
+        //konvert pieceId to abbreviation
+        function konvertPieceIdToLetter (piece) {
+            switch (piece) {
+                case 2:
+                case 12: return "N";
+                case 3:
+                case 13: return "B";
+                case 4:
+                case 14: return "R";
+                case 5:
+                case 15: return "Q";
+                case 6:
+                case 16: return "K";
+                default: return null;
+            }
         }
-    }
 
-    //captures
-    if (oldPosition[y][x] !== 0 && !piece) {
-        capture = rows[activePiece.positionX] + "x"
-    } else if (oldPosition[y][x] !== 0) {
-        capture = "x"
-    } else {
-        capture = ""
-    }
+        //captures
+        if (oldPosition[y][x] !== 0 && !piece) {
+            capture = rows[activePiece.positionX] + "x"
+        } else if (oldPosition[y][x] !== 0) {
+            capture = "x"
+        } else {
+            capture = ""
+        }
 
-    //check or checkmate
-    if (check && mate) {
-        gameStatus = "#"
-    } else if (check) {
-        gameStatus = "+"
-    } else {
-        gameStatus = ""
-    }
+        //check or checkmate
+        if (check && mate) {
+            gameStatus = "#"
+        } else if (check) {
+            gameStatus = "+"
+        } else {
+            gameStatus = ""
+        }
 
-    //castle
-    if (castle.isCastling) {
-        move = castle.isCastling
-    } else {
-        move = `${piece !== null ? piece : ""}${capture}${rows[x]}${ranks[y]}${pawnIsPromoting.isPromoting ? `=${promotionPiece}` : ""}${gameStatus}`
-    }
+        //castle
+        if (castle.isCastling) {
+            move = castle.isCastling
+        } else {
+            move = `${piece !== null ? piece : ""}${capture}${rows[x]}${ranks[y]}${pawnIsPromoting.isPromoting ? `=${promotionPiece}` : ""}${gameStatus}`
+        }
 
-    const updateMoveList = [
-        ...moveList,
-        [move]
-    ]
-    setMoveList(updateMoveList)
+        const updateMoveList = [
+            ...moveList,
+            [move]
+        ]
+        setMoveList(updateMoveList)
 
-    //Timer
+        //piece advantage 
 
+
+        //Timer
         pauseTimer()
         startTimer()
 
@@ -1603,7 +1636,6 @@ function App() {
             } else {
                 playerTurn ? setRemainingTimeWhite(cacheTime) : setRemainingTimeBlack(cacheTime)
                 total = cacheTime
-                console.log(total)
             }
             const seconds = Math.floor((total / 1000) % 60);
             const minutes = Math.floor((total / 1000 / 60) % 60);
@@ -1639,7 +1671,7 @@ function App() {
             if (!playerTurn && !isFirstStartWhite) {
                 setRemainingTimeWhite(prev => prev + increment)
                 let total = remainingTimeWhite + increment
-                console.log(total)
+
                 const seconds = Math.floor((total / 1000) % 60);
                 const minutes = Math.floor((total / 1000 / 60) % 60);   
                 
@@ -1795,7 +1827,7 @@ function App() {
     return (
     <div className={`App ${size}`}>
         <div className='boardContainer'>
-            <PlayerInfo playerNames={playerNames} team="black" timer={timerBlack} playWithTimer={playWithTimer} increment={increment}/>
+            <PlayerInfo key="player_white" playerNames={playerNames} team="black" timer={timerBlack} playWithTimer={playWithTimer} increment={increment} pieceAdvantage={pieceAdvantage}/>
             <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{width: `${width}px`, height: `${width}px`}}>
                 <svg version="1.1" x="0px" y="0px" viewBox="0 0 800 800">
                     <g id="tiles">
@@ -2112,7 +2144,7 @@ function App() {
                 {pawnIsPromoting.showPromotionMenu && pawnIsPromoting.posX !== null ? <Promotion pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/> : null}
                 {gameOver.gameOver ? <GameOver winner={gameOver.winner} reason={gameOver.reason}/> : null}
             </div>
-            <PlayerInfo playerNames={playerNames} team="white" timer={timerWhite} playWithTimer={playWithTimer} increment={increment}/>
+            <PlayerInfo key="player_black" playerNames={playerNames} team="white" timer={timerWhite} playWithTimer={playWithTimer} increment={increment} pieceAdvantage={pieceAdvantage}/>
         </div>
         <GameInfo playerTurn={playerTurn} positionList={positionList} setPosition={setPosition} moveList={moveList} setActivePiece={setActivePiece} startTimer={startTimer} pauseTimer={pauseTimer} gameStatus={gameStatus} setGameStatus={setGameStatus} setStartTime={setStartTime} setPlayWithTimer={setPlayWithTimer}/>  
         {/* <Info/> */}

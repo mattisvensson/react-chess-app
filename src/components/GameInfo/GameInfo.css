@@ -9,7 +9,6 @@ div#GameInfo {
 
 div#GameInfo button {
     background: #2c2c2c;
-    color: white;
     border-radius: 9px;
 }
 
@@ -17,42 +16,54 @@ div#GameInfo button:hover {
     background: #3f3f3f;
 }
 
-div#GameInfo div.setTime {
+div#GameInfo > div {
     margin-bottom: 25px;
     padding-bottom: 25px;
+}
+
+div#GameInfo > div:not(:last-child) {
     border-bottom: 1px solid white;
 }
 
-div#GameInfo div.setTime h4 {
-    font-family: sans-serif;
-    color: white;
+div#GameInfo > div h4 {
     font-weight: normal;
 }
 
-div#GameInfo div.setTime div {
+div#GameInfo > div div {
     margin: 25px 0;
 }
 
-div#GameInfo div.setTime div.buttons {
+div#GameInfo div.setTime div.buttons,
+div#GameInfo div.setTime div.input {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 10px;
 }
 
-div#GameInfo div.setTime div.input {
-    display: grid;
-    grid-template-columns: 30% 30% 20%;
-    grid-gap: 10px;
-}
-
 div#GameInfo div.setTime div.input input {
+    display: block;
+    width: 100%;
     padding: 5px;
     font-size: 1.2rem;
     border-radius: 9px;
 }
 
+div#GameInfo div.setSettings > div {
+    display: flex;
+    align-items: center;
+    gap: 0 10px;
+}
+
+div#GameInfo div.setSettings div input {
+    width: 20px;
+    height: 20px;
+}
 
 div#GameInfo div.pgn {
     display: grid;
     grid-template-columns: 1fr 1fr;
+}
+
+div#GameInfo div div.moveList div {
+    margin: 5px 0;
 }

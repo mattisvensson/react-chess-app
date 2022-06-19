@@ -1,21 +1,3 @@
-:root {
-    --color-light-highlight: rgba(241, 241, 23, 0.5);
-    --color-dark-highlight: rgba(186,202,43, 0.5);
-    --color-check: rgba(255, 0, 0, 0.5);
-}
-
-#Board .tile.light.highlight {
-    background: var(--color-light-highlight);
-}
-
-#Board .tile.dark.highlight {
-    background: var(--color-dark-highlight);
-}
-
-#Board .tile.check {
-    background: var(--color-check);
-}
-
 #Board .tile > div {
     position: relative;
     height: 100%;
@@ -56,9 +38,9 @@
     cursor: grab;
 }
 
-.highlightedTile {background: var(--color-light-highlight);}
+.highlightedTile {background: var(--color-tile-highlight);}
 
-.checkTile {background: var(--color-check);}
+.checkTile {background: var(--color-tile-check);}
 
 .possibleCapture {
     border: 5px solid rgba(0, 0, 0, 0.2);
