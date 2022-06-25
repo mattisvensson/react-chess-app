@@ -2,6 +2,7 @@
   --color-tile-highlight: rgba(241, 241, 23, 0.5);
   --color-tile-check: rgba(255, 0, 0, 0.5);
   --color-font: #FFFFFF;
+  --color-font-dark: #222222;
 }
 
 * {
@@ -10,6 +11,7 @@
   box-sizing: border-box;
   color: var(--color-font);
   font-family: sans-serif;
+  user-select: none;
 }
 
 body {
@@ -23,7 +25,7 @@ body {
 }
 
 input {
-  color: black;
+  color: var(--color-font-dark)
 }
 
 .App {

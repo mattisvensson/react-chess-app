@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-
 import Timer from './Timer';
-
 import './PlayerInfo.css'
 
 function PlayerInfo (props) {
 
-    const [number, setNumber] = useState({
+    const [materialCount, setMaterialCount] = useState({
         white: 0,
         black: 0
     })
@@ -68,17 +66,17 @@ function PlayerInfo (props) {
         }
 
         if (totalWhite > totalBlack) {
-            const updateNumber = {
+            const updateCount = {
                 black: "",
                 white: totalWhite - totalBlack
             }
-            setNumber(updateNumber)
+            setMaterialCount(updateCount)
         } else {
-            const updateNumber = {
+            const updateCount = {
                 white: "",
                 black: totalBlack - totalWhite
             }
-            setNumber(updateNumber)
+            setMaterialCount(updateCount)
         }
 
     }, [props.pieceAdvantage])
@@ -111,10 +109,13 @@ function PlayerInfo (props) {
                                 <img key={index} src={displayPiece}/>
                         )
                     })}
-                    <span>{props.team === "white" && number.white > 0 ? "+" + number.white : ""}{props.team === "black" && number.black > 0 ? "+" + number.black : ""}</span>
+                    <span>
+                        {props.team === "white" && materialCount.white > 0 && "+" + materialCount.white}
+                        {props.team === "black" && materialCount.black > 0 && "+" + materialCount.black}
+                    </span>
                 </div>
             </div>
-            {props.playWithTimer && <Timer team={props.team} timer={props.timer} increment={props.increment}/>}
+            {props.playWithTimer && <Timer team={props.team} timerWhite={props.timerWhite} timerBlack={props.timerBlack} increment={props.increment}/>}
         </div>
     )
 }
