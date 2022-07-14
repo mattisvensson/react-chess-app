@@ -3,7 +3,22 @@
   --color-tile-check: rgba(255, 0, 0, 0.5);
   --color-font: #FFFFFF;
   --color-font-dark: #222222;
+  --color-background: #2A2A2A;
+  --color-aside-background: #202020;
+  --color-button-background: #2C2C2C;
+  --color-button-hover: #3F3F3F;
+  --color-scrollbar: #555555;
+  --color-scrollbar-hover: #777777;
+  /* --color-scrollbar: rgba(255, 145, 0, 0.5);
+  --color-scrollbar-hover: rgba(255, 145, 0, 0.8); */
+  --color-tooltip: #666666;
+  --gap-grid: 10px;
 }
+
+::-webkit-scrollbar {width: 4px;}
+::-webkit-scrollbar-track {background: none}
+::-webkit-scrollbar-thumb {background: var(--color-scrollbar); border-radius: 20px;}
+::-webkit-scrollbar-thumb:hover {background: var(--color-scrollbar-hover)}
 
 * {
   margin: 0;
@@ -12,13 +27,14 @@
   color: var(--color-font);
   font-family: sans-serif;
   user-select: none;
+  scrollbar-width: thin;
 }
 
 body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: #202020;
+  background: var(--color-background);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -41,12 +57,12 @@ button {
   border: none;
   font-size: 1.3rem;
   border-radius: 2px;
-  background: #ffffff;
+  background: var(--color-button-background);
   cursor: pointer;
 }
 
 button:hover {
-  background: #dddddd;
+  background: var(--color-button-hover);
 }
 
 section {
@@ -60,4 +76,47 @@ section {
 
 .App.mobile button {
   margin: 30px;
+}
+
+
+/* Tooltip container */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip svg path {fill: var(--color-font)}
+
+/* Tooltip text */
+.tooltip .tooltipcontent {
+  visibility: hidden;
+  width: 200px;
+  background-color: var(--color-tooltip);
+  color: var(--color-font);
+  text-align: center;
+  padding: 5px;
+  border-radius: 6px;
+ 
+  /* Position the tooltip text - see examples below! */
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltipcontent {
+  visibility: visible;
+}
+
+.tooltip .tooltipcontent::after {
+  content: "";
+  position: absolute;
+  top: 100%;  /* At the top of the tooltip */
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--color-tooltip) transparent transparent transparent;
 }

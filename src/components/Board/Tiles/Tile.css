@@ -28,7 +28,8 @@
 .possibleTile,
 .possibleCapture,
 .highlightedTile,
-.checkTile {
+.checkTile,
+.hoveredTile {
     background-size: cover;
     position: absolute;
     top: 0;
@@ -47,6 +48,10 @@
     border-radius: 50%;
 }
 .possibleTile {background-image: url(/public/assets/images/possibleTile.png);}
+
+.hoveredTile {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+}
 
 .br {background-image: url(/public/assets/images/pieces/r_b.png);}
 .bn {background-image: url(/public/assets/images/pieces/n_b.png);}

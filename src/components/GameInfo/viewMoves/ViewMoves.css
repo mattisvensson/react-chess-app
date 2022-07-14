@@ -1,11 +1,19 @@
+div#ViewMoves {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr;
+    grid-gap: var(--gap-grid)
+}
+
+div#ViewMoves button {
+    padding: 0;
+    height: 48px;
+}
+
 div#ViewMoves button.inactive {
     background: #888888;
 }
 
-div.moveList {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    color: white;
-    font-family: sans-serif;
-    font-size: 1.3rem;
+div#ViewMoves button svg path {
+    fill: var(--color-font);
 }
