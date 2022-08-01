@@ -1,0 +1,13 @@
+export const pW = 1
+export const pB = 11
+export const knW = 2
+export const knB = 12
+export const bW = 3
+export const bB = 13
+export const rW = 4
+export const rB = 14
+export const qW = 5
+export const qB = 15
+export const kW = 6
+export const kB = 16
+export const empty = 0
