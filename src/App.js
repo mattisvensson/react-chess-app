@@ -5,19 +5,16 @@ import PlayerInfo from './components/PlayerInfo/PlayerInfo';
 import GameInfo from './components/GameInfo/GameInfo';
 
 import Tile from './components/Board/Tiles/Tile';
-import PossibleMove from './components/Board/Tiles/PossibleMove';
-import PossibleCapture from './components/Board/Tiles/PossibleCapture';
-import HighlightedTile from './components/Board/Tiles/HighlightedTile';
-import CheckedTile from './components/Board/Tiles/CheckedTile';
-import HoveredTile from './components/Board/Tiles/HoveredTile';
 import Promotion from './components/Board/Promotion/Promotion';
 import checkCastleMoves from './components/Board/Logic/checkCastleMoves';
 import executeCastleMoves from './components/Board/Logic/executeCastleMoves';
 import checkEnPassant from './components/Board/Logic/checkEnPassant';
-import {pW, pB, knW, knB, bW, bB, rW, rB, qW, qB, kW, kB, empty} from './components/Board/Logic/pieceDeclaration';
+import {pW, pB, knW, knB, bW, bB, rW, rB, qW, qB, kW, kB, empty} from './components/Board/pieceDeclaration';
+import { initialPosition, initialActivePiece, initialLastMove, initialPawnIsPromoting, initialPawnCanEnPassant, initialCastle, initialGameOver, initialPlayerNames, initialHoveredTile } from './components/Board/initialStateValues';
 import GameOver from './components/Board/GameOver/GameOver';
 
-
+import { ReactComponent as BoardWhite } from './materials/chessboard_white.svg';
+import { ReactComponent as BoardBlack } from './materials/chessboard_black.svg';
 
 import './App.css';
 import './components/Board/Board.css';
@@ -73,11 +70,18 @@ const audioMove = new Audio(audioMoveFile)
 // X board can rotate after each move
 //   "play as" setting
 //   mobile styles
+//   right click highlightes tile
 //
 //   Überarbeiten
+//   move simulieren als eigene funktion schreiben
+//   surrender buttons während des spiels
+//   nach quit des spiels gleiche einstellungen wie beim start
+//   delay beim ziehen der figur durch clicken
+//   "zurücksetzten" der figur beim ziehen der figur (draggen)
 //   check beim castlen prüfen (ab 1243)
+//   markieren von feldern micht rechter maustaste
 //
-//   later:
+//   Version 3.0
 //   connect to chess api / backend
 //    -> play with bots
 //    -> get openings
@@ -96,89 +100,9 @@ function App() {
 
     let size = window.innerWidth < 750 ? "mobile" : "desktop"
 
-    //Initial values
-    const initialPosition = [
-        [rB,knB,bB,qB,kB,bB,knB,rB],
-        [pB,pB,pB,pB,pB,pB,pB,pB],
-        [empty,empty,empty,empty,empty,empty,empty,empty],
-        [empty,empty,empty,empty,empty,empty,empty,empty],
-        [empty,empty,empty,empty,empty,empty,empty,empty],
-        [empty,empty,empty,empty,empty,empty,empty,empty],
-        [pW,pW,pW,pW,pW,pW,pW,pW],
-        [rW,knW,bW,qW,kW,bW,knW,rW],
-    ]
-
-    const initialActivePiece = {
-        isActive: false,
-        ref: null,
-        piece: null,
-        positionX: null,
-        positionY: null,
-        counter: 0
-    }
-
-    const initialLastMove = ({
-        oldPositionX: null,
-        oldPositionY: null,
-        newPositionX: null,
-        newPositionY: null
-    })
-
-    const initialPawnIsPromoting = ({
-        isPromoting: false,
-        color: null,
-        posX: null,
-        posY: null,
-        prevX: null,
-        prevY: null,
-        capturedPiece: null,
-        showPromotionMenu: false,
-        newPiece: null,
-    });
-
-    const initialPawnCanEnPassant = ({
-        isActive: false,
-        posX: null,
-        posY: null
-    })
-
-    const initialCastle = ({
-        white: {
-            castleLong: true,
-            castleShort: true,
-        },
-        black: {
-            castleLong: true,
-            castleShort: true
-        },
-        isCastling: false,
-    })
-    
-    const initialGameOver = {
-        gameOver: false,
-        reason: undefined,
-        winner: undefined
-    };
-
-    const initialPieceAdvantage = {
-        white: [],
-        black: []
-    }
-
-    const initialPlayerNames = {
-        white: "White",
-        black: "Black"
-    }
-
-    const initialHoveredTile = {
-        isHovering: false,
-        x: null,
-        y: null
-    }
-
     //States
 
-    //Referencing the board
+    //Refs
     const BoardRef = useRef(null);    
     const isMounted = useRef(false)
     
@@ -195,6 +119,10 @@ function App() {
     const [currentMove, setCurrentMove] = useState(initialLastMove)
     const [lastMove, setLastMove] = useState(initialLastMove)
 
+    //true = white at bottom
+    //false = black at botom
+    const [boardDirection, setBoardDirection] = useState(true)
+
     //promotion and en passant
     const [pawnIsPromoting, setPawnIsPromoting] = useState(initialPawnIsPromoting)
     const [pawnCanEnPassant, setPawnCanEnPassant] = useState(initialPawnCanEnPassant)
@@ -207,6 +135,9 @@ function App() {
     const [playerTurn, setPlayerTurn] = useState(true)
     const [playerNames, setPlayerNames] = useState(initialPlayerNames)
     const [playerIsInCheck, setPlayerIsInCheck] = useState(false);
+    const [startAs, setStartAs] = useState("white");    
+    const [playerTop, setPlayerTop] = useState("black");
+    const [playerBottom, setPlayerBottom] = useState("white");
 
     //saves possible Tiles
     const [possibleTiles, setPossibleTiles] = useState([]);
@@ -221,11 +152,10 @@ function App() {
     const [gameStatus, setGameStatus] = useState(false)
 
     const [fifthyMoveRule, setFifthyMoveRule] = useState(0);
-    const [pieceAdvantage, setPieceAdvantage] = useState(initialPieceAdvantage)
-    const [hoveredTile, setHoveredTile] = useState(initialHoveredTile)
+    const [hoveredTile, setHoveredTile] = useState(initialHoveredTile);
+    const [markedTiles, setMarkedTiles] = useState([]);
 
     //Game settings
-    const [switchBoard, setSwitchBoard] = useState(false)
     const [showPossibleTiles, setShowPossibleTiles] = useState(true)
     const [allowPieceSelection, setAllowPieceSelection] = useState(true)
     const [playSound, setPlaySound] = useState(true)    
@@ -234,22 +164,48 @@ function App() {
 
     //-------------------------------------------------------------------------------------
     //piece movement logic
-    console.log("render")
+    window.oncontextmenu = function (e) {
+        let currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
+        let currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
+        if (currentX >= 0 && currentX <= 7 && currentY >= 0 && currentY <= 7) {
+            setMarkedTiles(oldArray => [...oldArray, [currentX, currentY]])
+        }
+        return false;   // cancel default menu
+    }
+
     //grabbing the piece
     function grabPiece (e) {
 
+        if (e.button !== 0) return
+
         //get tile on which the piece was standing
-        let currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
-        let currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
+        let {currentX, currentY} = getBoardCoords(e.clientX, e.clientY)
 
         //blacks turn and board rotation is on
-        if (!playerTurn && switchBoard) {
+        if (!boardDirection) {
             let invertedCords = invertBoardAxis(currentX, currentY)
             currentX = invertedCords.invertedX
             currentY = invertedCords.invertedY
         }
 
-        exitMove: if (e.target.classList.contains("piece") && allowPieceSelection) {
+        let match = false;
+        if (possibleTiles) {
+            for (let i = 0; i < possibleTiles.length; i++) {
+                if (JSON.stringify(possibleTiles[i]) === JSON.stringify([currentY, currentX])) {
+                    let string = JSON.stringify(possibleTiles[i])
+                    let y = string.charAt(1)
+                    let x = string.charAt(3)
+                    if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8 && position[y][x] > 0)) {
+                        console.log("drin")
+                        executeMove(currentX, currentY)
+                        match = true;
+                        break
+                    }
+                }
+            }
+        }
+
+        if (e.target.classList.contains("piece") && allowPieceSelection && !match) {
 
             //set active piece
             if (e.target !== activePiece.ref) {
@@ -274,22 +230,7 @@ function App() {
                 const tiles = getPossibleTilesAfterCheck(playerIsInCheck)
                 setPossibleTilesAfterCheck(tiles.tiles)
                 setPossibleKingTilesAfterCheck(tiles.tilesKing)
-            }
-
-            //move piece by clicking clicking (not dragging)
-            if (possibleTiles) {
-                for (let i = 0; i < possibleTiles.length; i++) {
-                    if (JSON.stringify(possibleTiles[i]) === JSON.stringify([currentY, currentX])) {
-                        let string = JSON.stringify(possibleTiles[i])
-                        let y = string.charAt(1)
-                        let x = string.charAt(3)
-                        if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8 && position[y][x] > 0)) {
-                            executeMove(currentX, currentY)
-                            break exitMove;
-                        }
-                    }
-                }
-            }
+            }            
 
             //get coordinates of mouse
             const mouseX = e.clientX;
@@ -300,8 +241,9 @@ function App() {
             const BoardMinY = BoardRef.current.offsetTop;
 
             //set piece position to mouse position
-            e.target.style.transform = `translate(${mouseX - BoardMinX - (pieceWidth / 2) + "px"}, ${mouseY - BoardMinY -(pieceWidth / 2) + "px"})`;
+            e.target.style.transform = `translate(${mouseX - BoardMinX - (pieceWidth / 2) + "px"}, ${mouseY - BoardMinY - (pieceWidth / 2) + "px"})`;
             e.target.style.zIndex = "10";
+            e.target.style.cursor = `grabbing`
 
             if ((playerTurn && position[currentY][currentX] === pW) || (!playerTurn && position[currentY][currentX] === pB)) {
                 let updatePromotion = {
@@ -314,13 +256,9 @@ function App() {
 
             setHoveredTile(initialHoveredTile)
             setLastMove(currentMove)
-            setPieceIsDragged(true)
-
-        } else if (activePiece.isActive) {
-            executeMove(currentX, currentY)
+            setPieceIsDragged(true)        
         }
     }
-
 
     //move piece
     function movePiece (e) {
@@ -342,13 +280,12 @@ function App() {
 
             if (activePiece.isActive) {  
                 
-                const x = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
-                const y = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
+                let {currentX, currentY} = getBoardCoords(e.clientX, e.clientY)
                 
                 const updateHover = {
                     isHovering: true,
-                    x: x,
-                    y: y
+                    x: currentX,
+                    y: currentY
                 }
                 setHoveredTile(updateHover)
 
@@ -357,11 +294,12 @@ function App() {
 
                     activePiece.ref.style.transform = null;
                     activePiece.ref.style.zIndex = null;
+                    activePiece.ref.style.cursor = null;
 
                     setActivePiece(initialActivePiece)
-                    setPossibleTiles([])
                 } else {
                     activePiece.ref.style.transform = `translate(${posX}px, ${posY}px)`;
+                    activePiece.ref.style.cursor = `grabbing`
                 }
             }
         }
@@ -371,13 +309,20 @@ function App() {
     //drop piece
     function dropPiece (e) {
 
+        if (activePiece.ref) {
+            activePiece.ref.style.transform = null;
+            activePiece.ref.style.zIndex = null;
+            activePiece.ref.style.cursor = null;
+            setPieceIsDragged(false)
+        }
+
         setHoveredTile(initialHoveredTile)
 
-        let currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
-        let currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
+        //get tile on which the piece was standing
+        let {currentX, currentY} = getBoardCoords(e.clientX, e.clientY)
 
         //blacks turn and board rotation is on
-        if (!playerTurn && switchBoard) {
+        if (!boardDirection) {
             let invertedCords = invertBoardAxis(currentX, currentY)
             currentX = invertedCords.invertedX
             currentY = invertedCords.invertedY
@@ -386,11 +331,8 @@ function App() {
         //deselect piece if its already active and grabbed
         if (currentX === activePiece.positionX && currentY === activePiece.positionY && activePiece.counter === 1) {
             setActivePiece(initialActivePiece)
-            setPossibleTiles([])
-        }
-        
-        //execute move
-        if (activePiece.isActive){
+        } else if (activePiece.isActive) {
+            e.target.style.transform = null
             executeMove(currentX, currentY);
         }
     }
@@ -416,30 +358,26 @@ function App() {
         //check if desired tile is in possible moves
         let match = false;
 
-        if (playerIsInCheck) {
-            if ((playerTurn && activePiece.piece === kW) || (!playerTurn && activePiece.piece === kB)) {
-                for (let i = 0; i < possibleKingTilesAfterCheck.length; i++) {
-                    for (let j = 0; j < possibleTiles.length; j++) {
-                        if ((JSON.stringify(possibleTiles[j]) === JSON.stringify(possibleKingTilesAfterCheck[i])) && (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x]))) {
-                            match = true;
-                            break;
+        if (possibleTiles) {
+            for (let j = 0; j < possibleTiles.length; j++) {
+                if (playerIsInCheck) {
+                    if ((playerTurn && activePiece.piece === kW) || (!playerTurn && activePiece.piece === kB)) {
+                        for (let i = 0; i < possibleKingTilesAfterCheck.length; i++) {
+                            if ((JSON.stringify(possibleTiles[j]) === JSON.stringify(possibleKingTilesAfterCheck[i])) && (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x]))) {
+                                match = true;
+                                break;
+                            }
+                        }
+                    } else if ((playerTurn && activePiece.piece < 8) || (!playerTurn && activePiece.piece > 8)){
+                        for (let i = 0; i < possibleTilesAfterCheck.length; i++) {
+                            if ((JSON.stringify(possibleTiles[j]) === JSON.stringify(possibleTilesAfterCheck[i])) && (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x]))) {
+                                match = true;
+                                break;
+                            }
                         }
                     }
-                }
-            } else if ((playerTurn && activePiece.piece < 8) || (!playerTurn && activePiece.piece > 8)){
-                for (let i = 0; i < possibleTilesAfterCheck.length; i++) {
-                    for (let j = 0; j < possibleTiles.length; j++) {
-                        if ((JSON.stringify(possibleTiles[j]) === JSON.stringify(possibleTilesAfterCheck[i])) && (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x]))) {
-                            match = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        } else if (possibleTiles) {
-            for (let i = 0; i < possibleTiles.length; i++) {
-                if ((playerTurn && (position[y][x] > 8 || position[y][x] === empty)) || (!playerTurn && position[y][x] < 8)) {
-                    if (JSON.stringify(possibleTiles[i]) === JSON.stringify([y, x])) {
+                } else if ((playerTurn && (position[y][x] > 8 || position[y][x] === empty)) || (!playerTurn && position[y][x] < 8)) {
+                    if (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x])) {
                         match = true;
                         break;
                     }
@@ -486,29 +424,10 @@ function App() {
 
                 //execute castle
                 const caslte = executeCastleMoves(x, y, positionCopy, castle, setCastle, activePiece, setPosition);
-                    
 
                 if (!enpassant && !caslte) {
                     //normal move
                     const newPosition = [...position];
-
-                    if (newPosition[y][x] !== empty) {
-                        let capturedPiece = newPosition[y][x]
-                        if (playerTurn) {
-                            const updatePieceAdvantage = {
-                                ...pieceAdvantage,
-                                white: [...pieceAdvantage.white, capturedPiece]
-                            }
-                            setPieceAdvantage(updatePieceAdvantage)
-                        } else {
-                            const updatePieceAdvantage = {
-                                ...pieceAdvantage,
-                                black: [...pieceAdvantage.black, capturedPiece]
-                            }
-                            setPieceAdvantage(updatePieceAdvantage)
-                        }
-                    }
-
                     newPosition[activePiece.positionY][activePiece.positionX] = empty;
                     newPosition[y][x] = activePiece.piece;
                     setPosition(newPosition);
@@ -526,13 +445,12 @@ function App() {
                 setLastMove(updateLastMove)
                 setCurrentMove(updateLastMove)
 
-                const updateActivePiee = {
+                const updatePiece = {
                     ...activePiece,
                     isActive: false,
                     ref: null
                 }
-                setActivePiece(updateActivePiee)
-
+                setActivePiece(updatePiece)
                 setPlayerIsInCheck(false)
 
                 //check which castle moves are still possible
@@ -540,28 +458,13 @@ function App() {
 
                 //switch player turn
                 setPlayerTurn(prev => !prev)
-                setPossibleTiles()
             }
         }
 
-        //drop dragged piece
-        activePiece.ref.style.transform = null;
-        activePiece.ref.style.zIndex = null;
-        setPieceIsDragged(false)
-    }
-
-
-    //invert coordinates
-    function invertBoardAxis (x, y) {
-        if (!playerTurn && switchBoard) {
-
-            let axis = [0, 1, 2, 3, 4, 5, 6, 7]
-
-            let invertedX = (axis.length - 1) - x;
-            let invertedY = (axis.length - 1) - y;
-
-            return {invertedX, invertedY}
-            
+        if (activePiece.ref) {
+            activePiece.ref.style.transform = null;
+            activePiece.ref.style.zIndex = null;
+            setPieceIsDragged(false)
         }
     }
 
@@ -611,6 +514,30 @@ function App() {
 
     // ------------------------------------------------------------------------------------------------
     //logic
+
+
+    //invert coordinates
+    function invertBoardAxis (x, y) {
+        if (!boardDirection) {
+
+            let axis = [0, 1, 2, 3, 4, 5, 6, 7]
+
+            let invertedX = (axis.length - 1) - x;
+            let invertedY = (axis.length - 1) - y;
+
+            return {invertedX, invertedY}
+            
+        }
+    }
+
+
+    //get board coordinates of current mouse position
+    function getBoardCoords (x, y) {
+        let currentX = Math.floor((x - BoardRef.current.offsetLeft) / pieceWidth);
+        let currentY = Math.floor((y - BoardRef.current.offsetTop) / pieceWidth);
+        return {currentX, currentY}
+    }
+
 
     //get possible tiles for active (clicked) piece
     function getPossibleTiles(position, piece, posX, posY, playerTurn) {
@@ -662,9 +589,8 @@ function App() {
                 }
             }
             return validMoves
-        } else {
-            return []
         }
+        return []
     }
 
 
@@ -1329,14 +1255,6 @@ function App() {
         return tiles;
     }
 
-    // function loadPGN () {
-    //     console.log("loading pgn")
-    // }
-
-    // function createPGN () {
-    //     console.log("creating pgn")
-    // }
-
 
     // ------------------------------------------------------------------------------------------------
 
@@ -1457,18 +1375,16 @@ function App() {
     }
 
     // ------------------------------------------------------------------------------------------------
-
-
     function resetBoard () {
 
         setPosition(initialPosition)
         setActivePiece(initialActivePiece)
         setLastMove(initialLastMove)
+        setCurrentMove(initialLastMove)
         setPawnIsPromoting(initialPawnIsPromoting)
         setPawnCanEnPassant(initialPawnCanEnPassant)
         setCastle(initialCastle)
         setGameOver(initialGameOver)        
-        setPieceAdvantage(initialPieceAdvantage)
         setPlayerNames(initialPlayerNames)
         setHoveredTile(initialHoveredTile)
         setCurrentPosition(initialPosition)
@@ -1485,11 +1401,6 @@ function App() {
         setMoveList([])
         setGameStatus(false)
         setFoundSavedGame(false)
-        //Settings
-        setSwitchBoard(false)
-        setSaveGame(false)
-        setShowPossibleTiles(true)
-        setPlaySound(true)
 
         //Timer
         pauseTimer()
@@ -1512,178 +1423,196 @@ function App() {
     //default actions for each move
     useEffect(() => {
         if (isMounted.current) {
-        let positionCopy = [];
-        for (let i = 0; i < position.length; i++) {
-            positionCopy[i] = position[i].slice();
-        }
-
-        const updatePositionList = {
-            id: positionList.length,
-            position: positionCopy,
-            tiles: {
-                oldX: lastMove.oldPositionX,
-                oldY: lastMove.oldPositionY,
-                newX: lastMove.newPositionX,
-                newY: lastMove.newPositionY
-            },
-            timer: {
-                white: timerWhite,
-                black: timerBlack
+            let positionCopy = [];
+            for (let i = 0; i < position.length; i++) {
+                positionCopy[i] = position[i].slice();
             }
-        }
-        setPositionList([...positionList, updatePositionList]);
-        setCurrentPosition(positionCopy);
 
-        setPossibleTiles([])
-        setPossibleTilesAfterCheck([])
-        setPossibleKingTilesAfterCheck([])
-        setPlayerIsInCheck(false)
-
-        checkForInsufficientMaterial();
-        checkForThreefoldRepetition();
-        checkForFifthyMoveRule();
-        checkForStalemate();
-
-        const isCheck = checkForCheck(position);
-
-        let check;
-        let mate;
-
-        if (isCheck) {
-            let player = playerTurn ? "white" : "black"
-            check = true;
-            setPlayerIsInCheck(player)
-
-            //check for checkmate
-            const tiles = getPossibleTilesAfterCheck(player)
-            if (tiles.tiles.length === 0 && tiles.tilesKing.length === 0) {
-                
-                let winner = playerIsInCheck === "white" ? "Black" : "White";
-                
-                const updateGameOver = {
-                    gameOver: true,
-                    reason: `${winner} won by checkmate!`,
-                    winner: `${winner} was victorious!`
+            const updatePositionList = {
+                id: positionList.length,
+                position: positionCopy,
+                tiles: {
+                    oldX: lastMove.oldPositionX,
+                    oldY: lastMove.oldPositionY,
+                    newX: lastMove.newPositionX,
+                    newY: lastMove.newPositionY
+                },
+                timer: {
+                    white: timerWhite,
+                    black: timerBlack
                 }
-                setGameOver(updateGameOver)
-                mate = true;
             }
-        }
+            setPositionList([...positionList, updatePositionList]);
+            setCurrentPosition(positionCopy);
 
-        
-        //PGN Notation 
-        let x = lastMove.newPositionX;
-        let y = lastMove.newPositionY;
+            setPossibleTiles([])
+            setPossibleTilesAfterCheck([])
+            setPossibleKingTilesAfterCheck([])
+            setPlayerIsInCheck(false)
 
-        let oldPosition = positionList[positionList.length - 1]
+            checkForInsufficientMaterial();
+            checkForThreefoldRepetition();
+            checkForFifthyMoveRule();
+            checkForStalemate();
 
-        if (oldPosition) {
-            oldPosition = oldPosition.position
-        }
+            const isCheck = checkForCheck(position);
 
-        if (x === null || y === null) return;
+            let check;
+            let mate;
 
-        const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
-        const rows = ["a", "b", "c", "d", "e", "f", "g", "h"];
-        let piece = konvertPieceIdToLetter(activePiece.piece);
-        let move;
-        let promotionPiece = konvertPieceIdToLetter(pawnIsPromoting.newPiece)
-        let capture;
-        let gameStatus; 
+            if (isCheck) {
+                let player = playerTurn ? "white" : "black"
+                check = true;
+                setPlayerIsInCheck(player)
 
-        //konvert pieceId to abbreviation
-        function konvertPieceIdToLetter (piece) {
-            switch (piece) {
-                case 2:
-                case 12: return "N";
-                case 3:
-                case 13: return "B";
-                case 4:
-                case 14: return "R";
-                case 5:
-                case 15: return "Q";
-                case 6:
-                case 16: return "K";
-                default: return null;
-            }
-        }
-
-        //captures
-        if (oldPosition && oldPosition[y][x] !== 0 && !piece) {
-            capture = rows[activePiece.positionX] + "x"
-        } else if (oldPosition && oldPosition[y][x] !== 0) {
-            capture = "x"
-        } else {
-            capture = ""
-        }
-
-        //check or checkmate
-        if (check && mate) {
-            gameStatus = "#"
-        } else if (check) {
-            gameStatus = "+"
-        } else {
-            gameStatus = ""
-        }
-
-        //castle
-        // console.log(castle)
-        if (castle.isCastling) {
-            move = castle.isCastling
-        } else {
-            move = `${piece !== null ? piece : ""}${capture}${rows[x]}${ranks[y]}${pawnIsPromoting.isPromoting ? `=${promotionPiece}` : ""}${gameStatus}`
-        }
-
-        const updateMoveList = [
-            ...moveList,
-            [move]
-        ]
-        setMoveList(updateMoveList)
-    
-
-        //Timer
-        pauseTimer()
-        if (!mate) startTimer()
-
-
-        //save to local storage
-        if (saveGame) {
-            localStorage.setItem("game", JSON.stringify(
-                {
-                    position: position,
-                    playerTurn: playerTurn,
-                    nameWhite: playerNames.white,
-                    nameBlack: playerNames.black,
-                    moveList: updateMoveList,
-                    timer: {
-                        playWithTimer: playWithTimer,
-                        increment: increment,
-                        timeWhite: timerWhite,
-                        timeBlack: timerBlack,
-                        remainingTimeWhite: remainingTimeWhite,
-                        remainingTimeBlack: remainingTimeBlack,
-                        isFirstStartBlack: isFirstStartBlack,
-                        isFirstStartWhite: isFirstStartWhite
-                    },
-                    settings: {
-                        rotateBoard: switchBoard,
-                        saveGame: saveGame,
-                        showTiles: showPossibleTiles,
-                        playSound: playSound,
+                //check for checkmate
+                const tiles = getPossibleTilesAfterCheck(player)
+                if (tiles.tiles.length === 0 && tiles.tilesKing.length === 0) {
+                    
+                    let winner = playerIsInCheck === "white" ? "Black" : "White";
+                    
+                    const updateGameOver = {
+                        gameOver: true,
+                        reason: `${winner} won by checkmate!`,
+                        winner: `${winner} was victorious!`
                     }
+                    setGameOver(updateGameOver)
+                    mate = true;
                 }
-            ))
-        } else {
-            localStorage.removeItem("game")
-        }
+            }
+
+            
+            //PGN Notation 
+            let x = lastMove.newPositionX;
+            let y = lastMove.newPositionY;
+
+            let oldPosition = positionList[positionList.length - 1]
+
+            if (oldPosition) {
+                oldPosition = oldPosition.position
+            }
+
+            if (x === null || y === null) return;
+
+            const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
+            const rows = ["a", "b", "c", "d", "e", "f", "g", "h"];
+            let piece = konvertPieceIdToLetter(activePiece.piece);
+            let move;
+            let promotionPiece = konvertPieceIdToLetter(pawnIsPromoting.newPiece)
+            let capture;
+            let gameStatus; 
+
+            //konvert pieceId to abbreviation
+            function konvertPieceIdToLetter (piece) {
+                switch (piece) {
+                    case 2:
+                    case 12: return "N";
+                    case 3:
+                    case 13: return "B";
+                    case 4:
+                    case 14: return "R";
+                    case 5:
+                    case 15: return "Q";
+                    case 6:
+                    case 16: return "K";
+                    default: return null;
+                }
+            }
+
+            //captures
+            if (oldPosition && oldPosition[y][x] !== 0 && !piece) {
+                capture = rows[activePiece.positionX] + "x"
+            } else if (oldPosition && oldPosition[y][x] !== 0) {
+                capture = "x"
+            } else {
+                capture = ""
+            }
+
+            //check or checkmate
+            if (check && mate) {
+                gameStatus = "#"
+            } else if (check) {
+                gameStatus = "+"
+            } else {
+                gameStatus = ""
+            }
+
+            //castle
+            // console.log(castle)
+            if (castle.isCastling) {
+                move = castle.isCastling
+            } else {
+                move = `${piece !== null ? piece : ""}${capture}${rows[x]}${ranks[y]}${pawnIsPromoting.isPromoting ? `=${promotionPiece}` : ""}${gameStatus}`
+            }
+
+            const updateMoveList = [
+                ...moveList,
+                [move]
+            ]
+            setMoveList(updateMoveList)
+        
+
+            //Timer
+            pauseTimer()
+            if (!mate) startTimer()
+
+
+            //save to local storage
+            if (saveGame) {
+                localStorage.setItem("game", JSON.stringify(
+                    {
+                        position: position,
+                        playerTurn: playerTurn,
+                        nameWhite: playerNames.white,
+                        nameBlack: playerNames.black,
+                        moveList: updateMoveList,
+                        timer: {
+                            playWithTimer: playWithTimer,
+                            increment: increment,
+                            timeWhite: timerWhite,
+                            timeBlack: timerBlack,
+                            remainingTimeWhite: remainingTimeWhite,
+                            remainingTimeBlack: remainingTimeBlack,
+                            isFirstStartBlack: isFirstStartBlack,
+                            isFirstStartWhite: isFirstStartWhite
+                        },
+                        settings: {
+                            startAs: startAs,
+                            saveGame: saveGame,
+                            showTiles: showPossibleTiles,
+                            playSound: playSound,
+                        }
+                    }
+                ))
+            } else {
+                localStorage.removeItem("game")
+            }
         }
 
     }, [playerTurn])
 
 
     useEffect(() => {
+        if (startAs === "black") {
+            setBoardDirection(false)
+        } else {
+            setBoardDirection(true)   
+        }
+    }, [startAs])
 
-        // setLoading(true)
+    useEffect(() => {
+        if (startAs === "rotate") {
+            if (playerTurn) {
+                setBoardDirection(true)
+            } else if (!playerTurn) {
+                setBoardDirection(false)
+            }
+        }
+
+    }, [playerTurn])
+
+
+    useEffect(() => {
 
         const localGame = JSON.parse(localStorage.getItem("game"))
         const settings = JSON.parse(localStorage.getItem("settings"))
@@ -1710,7 +1639,7 @@ function App() {
             setIsFirstStartBlack(localGame.timer.isFirstStartBlack)
             setIsFirstStartWhite(localGame.timer.isFirstStartWhite)
 
-            setSwitchBoard(localGame.settings.switchBoard)
+            setStartAs(localGame.settings.startAs)
             setSaveGame(localGame.settings.saveGame)
             setShowPossibleTiles(localGame.settings.showTiles)
             setPlaySound(localGame.settings.playSound)
@@ -1718,26 +1647,25 @@ function App() {
 
         //set saved settings
         if (settings) {
-            setSwitchBoard(settings.switchBoard)
+            setStartAs(settings.startAs)
             setSaveGame(settings.saveGame)
             setShowPossibleTiles(settings.showPossibleTiles)
             setPlaySound(settings.playSound)
         }
         
-        // setLoading(false)
     }, [])
 
     //store settings to local storage
     useEffect(() => {
         localStorage.setItem("settings", JSON.stringify(
             {
-                switchBoard: switchBoard,
+                startAs: startAs,
                 saveGame: saveGame,
                 showPossibleTiles: showPossibleTiles,
                 playSound: playSound
             }
         ))
-    }, [switchBoard, saveGame, showPossibleTiles, playSound])
+    }, [startAs, saveGame, showPossibleTiles, playSound])
 
     //check possible moves
     useEffect(() => {
@@ -1750,6 +1678,8 @@ function App() {
             if (activePiece.isActive && gameOver.gameOver === false) {
                 const tiles = getPossibleTiles(position, activePiece.piece, activePiece.positionX, activePiece.positionY, playerTurn);
                 setPossibleTiles(tiles)
+            } else {
+                setPossibleTiles()
             }
         } else {
             isMounted.current = true;
@@ -1872,52 +1802,70 @@ function App() {
         setTimerBlack(`${time}:00`)
     }
 
-
     // ------------------------------------------------------------------------------------------------
     //rendering board
 
-    let tile = [];
-    let capture = [];
-    let highlight = [];
-    let check = [];
-    let move = [];
-
-    for (let j = 0; j < 8; j++) { //y
-        for (let i = 0; i < 8; i++) { //x
-            let piece = undefined;
-            let isPossibleMove = false;
-            let isPossibleCapture = false;
-            let isHighlighted = false;
-            let isCheck = false;
+    const [tiles, setTiles] = useState({
+        tile: [],
+        capture: [],
+        highlight: [],
+        check: [],
+        move: [],
+        marked: []
+    })
 
 
-            //highlight possible Tiles
-            if (possibleTiles) {
-                for (let x = 0; x < possibleTiles.length; x++) {
-                    if (playerIsInCheck.length > 0) {
-                        if (activePiece.piece === 6 || activePiece.piece === 16) {
-                            for (let c = 0; c < possibleKingTilesAfterCheck.length; c++) {
-                                if ((JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) && (JSON.stringify(possibleKingTilesAfterCheck[c]) === JSON.stringify([j, i]))) {
-                                    if ((playerTurn && position[j][i] > 8) || (!playerTurn && position[j][i] < 8 && position[j][i] > 0)) {
-                                        isPossibleCapture = true;
-                                    } else if (position[j][i] === 0) {
-                                        isPossibleMove = true;
+    useEffect(() => {
+
+        let tileArr = [];
+        let captureArr = [];
+        let highlightArr = [];
+        let checkArr = [];
+        let moveArr = [];
+        let markedArr = [];
+        
+        for (let j = 0; j < 8; j++) { //y
+            for (let i = 0; i < 8; i++) { //x
+                let piece = undefined;
+                let isPossibleMove = false;
+                let isPossibleCapture = false;
+
+                let posX = i;
+                let posY = j;
+                
+                //invert coordinates
+                if (!boardDirection) {
+                    let invertedCords = invertBoardAxis(i, j)
+                    posX = invertedCords.invertedX
+                    posY = invertedCords.invertedY
+                }
+
+                //highlight possible tiles
+                if (possibleTiles) {
+                    for (let x = 0; x < possibleTiles.length; x++) {
+                        if (playerIsInCheck) {
+                            if (activePiece.piece === kW || activePiece.piece === kB) {
+                                for (let c = 0; c < possibleKingTilesAfterCheck.length; c++) {
+                                    if ((JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) && (JSON.stringify(possibleKingTilesAfterCheck[c]) === JSON.stringify([j, i]))) {
+                                        if ((playerTurn && position[j][i] > 8) || (!playerTurn && position[j][i] < 8 && position[j][i] > 0)) {
+                                            isPossibleCapture = true;
+                                        } else if (position[j][i] === 0) {
+                                            isPossibleMove = true;
+                                        }
+                                    }
+                                }
+                            } else {
+                                for (let c = 0; c < possibleTilesAfterCheck.length; c++) {
+                                    if ((JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) && (JSON.stringify(possibleTilesAfterCheck[c]) === JSON.stringify([j, i]))) {
+                                        if ((playerTurn && position[j][i] > 8) || (!playerTurn && position[j][i] < 8 && position[j][i] > 0)) {
+                                            isPossibleCapture = true;
+                                        } else if (position[j][i] === 0) {
+                                            isPossibleMove = true;
+                                        }
                                     }
                                 }
                             }
-                        } else {
-                            for (let c = 0; c < possibleTilesAfterCheck.length; c++) {
-                                if ((JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) && (JSON.stringify(possibleTilesAfterCheck[c]) === JSON.stringify([j, i]))) {
-                                    if ((playerTurn && position[j][i] > 8) || (!playerTurn && position[j][i] < 8 && position[j][i] > 0)) {
-                                        isPossibleCapture = true;
-                                    } else if (position[j][i] === 0) {
-                                        isPossibleMove = true;
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        if (JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) {
+                        } else if (JSON.stringify(possibleTiles[x]) === JSON.stringify([j, i])) {
                             if ((playerTurn && position[j][i] > 8) || (!playerTurn && position[j][i] < 8 && position[j][i] > 0)) {
                                 isPossibleCapture = true;
                             } else if (position[j][i] === 0) {
@@ -1926,83 +1874,111 @@ function App() {
                         }
                     }
                 }
+          
+
+                //highlight active piece and last move
+                if ((activePiece.positionX === i && activePiece.positionY === j) || (lastMove.oldPositionX === i && lastMove.oldPositionY === j) || (lastMove.newPositionX === i && lastMove.newPositionY === j)) {
+                    let newHighlight = {
+                        posX: posX,
+                        posY: posY
+                    }
+                    highlightArr.push(newHighlight)
+                }
+
+                //highlight if king is in check
+                if ((playerIsInCheck === "white" && position[j][i] === kW) || (playerIsInCheck === "black" && position[j][i] === kB)) {
+                    let newCheck = {
+                        posX: posX,
+                        posY: posY
+                    }
+                    checkArr.push(newCheck)
+                }
+
+                for (let x = 0; x < markedTiles.length; x++) {
+                    if (JSON.stringify([i, j]) === JSON.stringify(markedTiles[x])) {
+                        let newMark = {
+                            posX: posX,
+                            posY: posY
+                        }
+                        markedArr.push(newMark)
+                    }
+                }
+
+
+                switch (position[j][i]) {
+                    case pW: piece = "wp"; break;
+                    case pB: piece = "bp"; break;
+                    case knW: piece = "wn"; break;
+                    case knB: piece = "bn"; break;
+                    case bW: piece = "wb"; break;
+                    case bB: piece = "bb"; break;
+                    case rW: piece = "wr"; break;
+                    case rB: piece = "br"; break;
+                    case qW: piece = "wq"; break;
+                    case qB: piece = "bq"; break;
+                    case kW: piece = "wk"; break;
+                    case kB: piece = "bk"; break;
+                    default: piece = "empty"; break;
+                }
+
+
+                if (showPossibleTiles && isPossibleMove) {
+                    let newMove = {
+                        posX: posX,
+                        posY: posY
+                    }
+                    moveArr.push(newMove)
+                }
+
+                if (showPossibleTiles && isPossibleCapture) {
+                    let newCapture = {
+                        posX: posX,
+                        posY: posY
+                    }
+                    captureArr.push(newCapture)
+                }
+
+                if (piece !== "empty") {
+                    let newTile = {
+                        posX: posX,
+                        posY: posY,
+                        piece: piece
+                    }
+                    tileArr.push(newTile)
+                }
             }
-            
-
-            //highlight active piece and last move
-            if ((activePiece.positionX === i && activePiece.positionY === j) || (lastMove.oldPositionX === i && lastMove.oldPositionY === j) || (lastMove.newPositionX === i && lastMove.newPositionY === j)) {
-                isHighlighted = true;
-            }
-
-            //highlight if king is in check
-            if ((playerIsInCheck === "white" && position[j][i] === 6) || (playerIsInCheck === "black" && position[j][i] === 16)) {
-                isCheck = true;
-            }
-
-            switch (position[j][i]) {
-                case 1: piece = "wp"; break;
-                case 11: piece = "bp"; break;
-                case 2: piece = "wn"; break;
-                case 12: piece = "bn"; break;
-                case 3: piece = "wb"; break;
-                case 13: piece = "bb"; break;
-                case 4: piece = "wr"; break;
-                case 14: piece = "br"; break;
-                case 5: piece = "wq"; break;
-                case 15: piece = "bq"; break;
-                case 6: piece = "wk"; break;
-                case 16: piece = "bk"; break;
-                default: piece = "empty"; break;
-            }
-
-
-            let posX = i;
-            let posY = j;
-
-            //invert coordinates
-            if (!playerTurn && switchBoard) {
-                let invertedCords = invertBoardAxis(i, j)
-                posX = invertedCords.invertedX
-                posY = invertedCords.invertedY
-            }
-
-
-            let newMove = {
-                posX: posX,
-                posY: posY,
-                isPossibleMove: isPossibleMove
-            }
-            showPossibleTiles && move.push(newMove)
-
-            let newCapture = {
-                posX: posX,
-                posY: posY,
-                isPossibleCapture: isPossibleCapture
-            }
-            showPossibleTiles && capture.push(newCapture)
-
-            let newHighlight = {
-                posX: posX,
-                posY: posY,
-                isHighlighted: isHighlighted
-            }
-            highlight.push(newHighlight)
-
-            let newCheck = {
-                posX: posX,
-                posY: posY,
-                isCheck: isCheck
-            }
-            check.push(newCheck)
-
-            let newTile = {
-                posX: posX,
-                posY: posY,
-                piece: piece
-            }
-            tile.push(newTile)
         }
-    }
+
+        const updateTiles = {
+            tile: tileArr,
+            capture: captureArr,
+            highlight: highlightArr,
+            check: checkArr,
+            move: moveArr,
+            marked: markedArr
+        }
+        setTiles(updateTiles)
+
+    }, [position, possibleTiles, markedTiles, boardDirection])
+
+    
+    //change player info    
+    useEffect(() => {
+        if ((playerTurn && startAs === "rotate") || startAs === "white") {
+            setPlayerTop("black");
+            setPlayerBottom("white");
+        } else if ((!playerTurn && startAs === "rotate") || startAs === "black") {
+            setPlayerTop("white");
+            setPlayerBottom("black");
+        }
+    }, [startAs, playerTurn])
+
+
+    useEffect(() => {
+        setTimeout(() => {
+            setLoading(false)
+        }, 1000)
+    }, [])
 
     if (loading) {
         return <p>Loading...</p>
@@ -2011,590 +1987,48 @@ function App() {
     return (
         <div className={`App ${size}`}>
             <div className='boardContainer'>
-                <PlayerInfo key="playerInfo1" playerNames={playerNames} team="black" timerWhite={timerWhite} timerBlack={timerBlack} playWithTimer={playWithTimer} increment={increment} pieceAdvantage={pieceAdvantage} position={position} playerTurn={playerTurn}/>
+                <PlayerInfo key="playerInfo1" playerNames={playerNames} team={playerTop} timerWhite={timerWhite} timerBlack={timerBlack} playWithTimer={playWithTimer} increment={increment} position={position} playerTurn={playerTurn}/>
                 <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{width: `${width}px`, height: `${width}px`}}>
-                    {switchBoard && !playerTurn ? 
-                        <svg version="1.1" x="0px" y="0px" viewBox="0 0 800 800">
-                            <g id="tiles">
-                                <g id="a8">
-                                    <rect fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="b8">
-                                    <rect x="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="c8">
-                                    <rect x="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="d8">
-                                    <rect x="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="e8">
-                                    <rect x="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="f8">
-                                    <rect x="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="g8">
-                                    <rect x="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="h8">
-                                    <rect x="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="a7">
-                                    <rect y="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="b7">
-                                    <rect x="100" y="100" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="c7">
-                                    <rect x="200" y="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="d7">
-                                    <rect x="300" y="100" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="e7">
-                                    <rect x="400" y="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="f7">
-                                    <rect x="500" y="100" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="g7">
-                                    <rect x="600" y="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="h7">
-                                    <rect x="700" y="100" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="a6">
-                                    <rect y="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="b6">
-                                    <rect x="100" y="200" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="c6">
-                                    <rect x="200" y="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="d6">
-                                    <rect x="300" y="200" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="e6">
-                                    <rect x="400" y="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="f6">
-                                    <rect x="500" y="200" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="g6">
-                                    <rect x="600" y="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="h6">
-                                    <rect x="700" y="200" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="a5">
-                                    <rect y="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="b5">
-                                    <rect x="100" y="300" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="c5">
-                                    <rect x="200" y="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="d5">
-                                    <rect x="300" y="300" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="e5">
-                                    <rect x="400" y="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="f5">
-                                    <rect x="500" y="300" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="g5">
-                                    <rect x="600" y="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="h5">
-                                    <rect x="700" y="300" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="a4">
-                                    <rect y="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="b4">
-                                    <rect x="100" y="400" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="c4">
-                                    <rect x="200" y="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="d4">
-                                    <rect x="300" y="400" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="e4">
-                                    <rect x="400" y="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="f4">
-                                    <rect x="500" y="400" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="g4">
-                                    <rect x="600" y="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="h4">
-                                    <rect x="700" y="400" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="a3">
-                                    <rect y="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="b3">
-                                    <rect x="100" y="500" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="c3">
-                                    <rect x="200" y="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="d3">
-                                    <rect x="300" y="500" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="e3">
-                                    <rect x="400" y="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="f3">
-                                    <rect x="500" y="500" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="g3">
-                                    <rect x="600" y="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="h3">
-                                    <rect x="700" y="500" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="a2">
-                                    <rect y="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="b2">
-                                    <rect x="100" y="600" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="c2">
-                                    <rect x="200" y="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="d2">
-                                    <rect x="300" y="600" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="e2">
-                                    <rect x="400" y="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="f2">
-                                    <rect x="500" y="600" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="g2">
-                                    <rect x="600" y="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="h2">
-                                    <rect x="700" y="600" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="a1">
-                                    <rect y="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="b1">
-                                    <rect x="100" y="700" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="c1">
-                                    <rect x="200" y="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="d1">
-                                    <rect x="300" y="700" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="e1">
-                                    <rect x="400" y="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="f1">
-                                    <rect x="500" y="700" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="g1">
-                                    <rect x="600" y="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="h1">
-                                    <rect x="700" y="700" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                            </g>
-                            <g id="legend">
-                                <g>
-                                    <path fill="#EEEEE2" d="M79.9,770.3h2.5v8.5h0.1c0.4-0.7,1-1.3,1.8-1.7c0.7-0.4,1.6-0.7,2.5-0.7c1.8,0,4.7,1.1,4.7,5.8v8.1H89v-7.8
-                                        c0-2.2-0.8-4-3.1-4c-1.6,0-2.9,1.1-3.3,2.5c-0.1,0.3-0.2,0.7-0.2,1.2v8.2h-2.5V770.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M8.9,720.5c0-2.3,1.4-3.9,3.6-4.9l0-0.1c-2-1-2.9-2.5-2.9-4.1c0-2.9,2.4-4.8,5.6-4.8c3.5,0,5.3,2.2,5.3,4.5
-                                        c0,1.5-0.8,3.2-3,4.3v0.1c2.3,0.9,3.7,2.5,3.7,4.7c0,3.2-2.7,5.3-6.2,5.3C11.2,725.5,8.9,723.2,8.9,720.5z M18.7,720.4
-                                        c0-2.2-1.5-3.3-4-4c-2.1,0.6-3.3,2-3.3,3.8c-0.1,1.8,1.3,3.5,3.6,3.5C17.3,723.7,18.7,722.3,18.7,720.4z M11.9,711.3
-                                        c0,1.8,1.4,2.8,3.5,3.4c1.6-0.5,2.8-1.7,2.8-3.3c0-1.5-0.9-3-3.1-3C13,708.4,11.9,709.8,11.9,711.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M19.5,509.7c-0.5,0-1.1,0-1.8,0.1c-3.9,0.6-5.9,3.5-6.3,6.5h0.1c0.9-1.1,2.4-2.1,4.4-2.1
-                                        c3.2,0,5.5,2.3,5.5,5.9c0,3.3-2.3,6.4-6,6.4c-3.9,0-6.4-3-6.4-7.8c0-3.6,1.3-6.4,3.1-8.2c1.5-1.5,3.5-2.4,5.8-2.7
-                                        c0.7-0.1,1.3-0.1,1.8-0.1V509.7z M18.8,520.2c0-2.6-1.5-4.2-3.8-4.2c-1.5,0-2.9,0.9-3.5,2.2c-0.2,0.3-0.3,0.6-0.3,1.1
-                                        c0.1,3,1.4,5.2,4,5.2C17.4,524.6,18.8,522.8,18.8,520.2z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M16.7,325.2v-5H8.3v-1.6l8.1-11.6H19v11.3h2.5v1.9H19v5H16.7z M16.7,318.3v-6.1c0-1,0-1.9,0.1-2.9h-0.1
-                                        c-0.6,1.1-1,1.8-1.5,2.7l-4.5,6.2v0.1H16.7z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M9.1,128.2v-1.5l1.9-1.9c4.6-4.4,6.7-6.8,6.8-9.5c0-1.8-0.9-3.6-3.6-3.6c-1.7,0-3,0.8-3.9,1.5l-0.8-1.7
-                                        c1.3-1.1,3.1-1.8,5.2-1.8c3.9,0,5.6,2.7,5.6,5.3c0,3.4-2.4,6.1-6.3,9.8l-1.5,1.3v0.1h8.2v2H9.1z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M14.5,9.3L14.5,9.3L11.2,11l-0.5-1.9l4-2.1h2.1v18.2h-2.4V9.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M9.7,222.3c0.7,0.4,2.3,1.1,4,1.1c3.2,0,4.1-2,4.1-3.5c0-2.5-2.3-3.6-4.7-3.6h-1.4v-1.8h1.4
-                                        c1.8,0,4.1-0.9,4.1-3.1c0-1.5-0.9-2.7-3.2-2.7c-1.5,0-2.9,0.6-3.6,1.2l-0.6-1.8c1-0.7,2.8-1.4,4.8-1.4c3.6,0,5.2,2.1,5.2,4.3
-                                        c0,1.9-1.1,3.5-3.4,4.3v0.1c2.2,0.4,4.1,2.1,4.1,4.7c0,2.9-2.3,5.5-6.6,5.5c-2,0-3.8-0.6-4.7-1.2L9.7,222.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M20,409H13l-0.7,4.7c0.4-0.1,0.8-0.1,1.5-0.1c1.4,0,2.8,0.3,3.9,1c1.4,0.8,2.6,2.4,2.6,4.7
-                                        c0,3.6-2.8,6.2-6.8,6.2c-2,0-3.7-0.6-4.5-1.1l0.6-1.9c0.8,0.4,2.2,1,3.9,1c2.3,0,4.3-1.5,4.3-3.9c0-2.4-1.6-4-5.2-4
-                                        c-1,0-1.8,0.1-2.5,0.2l1.2-8.7H20V409z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M20.9,609v1.6L13,627.2h-2.5l7.9-16.1V611H9.4v-2H20.9z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M188.6,776.6c-0.1,1-0.1,2.1-0.1,3.7v7.9c0,3.1-0.6,5-1.9,6.2c-1.3,1.2-3.2,1.6-4.9,1.6
-                                        c-1.6,0-3.4-0.4-4.5-1.1l0.6-1.9c0.9,0.6,2.3,1.1,4,1.1c2.5,0,4.4-1.3,4.4-4.7v-1.5H186c-0.8,1.3-2.2,2.3-4.3,2.3
-                                        c-3.4,0-5.8-2.9-5.8-6.6c0-4.6,3-7.2,6.1-7.2c2.4,0,3.6,1.2,4.2,2.4h0.1l0.1-2H188.6z M186,782c0-0.4,0-0.8-0.1-1.1
-                                        c-0.4-1.4-1.7-2.6-3.4-2.6c-2.4,0-4,2-4,5.1c0,2.7,1.3,4.9,4,4.9c1.5,0,2.9-1,3.4-2.5c0.1-0.4,0.2-0.9,0.2-1.3V782z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M379.3,783.8c0.1,3.3,2.2,4.7,4.6,4.7c1.8,0,2.8-0.3,3.8-0.7l0.4,1.8c-0.9,0.4-2.4,0.8-4.5,0.8
-                                        c-4.2,0-6.7-2.7-6.7-6.8c0-4.1,2.4-7.3,6.4-7.3c4.4,0,5.6,3.9,5.6,6.4c0,0.5-0.1,0.9-0.1,1.1H379.3z M386.5,782.1
-                                        c0-1.6-0.6-4-3.4-4c-2.5,0-3.6,2.3-3.8,4H386.5z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M591.6,789.7c-0.6,0.3-2.1,0.8-3.9,0.8c-4.1,0-6.7-2.8-6.7-6.9c0-4.2,2.9-7.2,7.3-7.2c1.5,0,2.7,0.4,3.4,0.7
-                                        l-0.6,1.9c-0.6-0.3-1.5-0.6-2.9-0.6c-3.1,0-4.8,2.3-4.8,5.1c0,3.1,2,5.1,4.7,5.1c1.4,0,2.3-0.4,3-0.7L591.6,789.7z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M787.4,790.2l-0.2-1.7h-0.1c-0.8,1.1-2.2,2-4.1,2c-2.7,0-4.1-1.9-4.1-3.9c0-3.3,2.9-5.1,8.1-5v-0.3
-                                        c0-1.1-0.3-3.1-3.1-3.1c-1.3,0-2.6,0.4-3.5,1l-0.6-1.6c1.1-0.7,2.7-1.2,4.5-1.2c4.1,0,5.2,2.8,5.2,5.5v5.1c0,1.2,0.1,2.3,0.2,3.2
-                                        H787.4z M787,783.3c-2.7-0.1-5.7,0.4-5.7,3.1c0,1.6,1.1,2.4,2.3,2.4c1.8,0,2.9-1.1,3.3-2.3c0.1-0.3,0.1-0.5,0.1-0.8V783.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M281.1,790.2v-11.7h-1.9v-1.9h1.9V776c0-1.9,0.4-3.6,1.6-4.7c0.9-0.9,2.2-1.3,3.3-1.3c0.9,0,1.6,0.2,2.1,0.4
-                                        l-0.3,1.9c-0.4-0.2-0.9-0.3-1.6-0.3c-2.1,0-2.6,1.8-2.6,3.9v0.7h3.3v1.9h-3.3v11.7H281.1z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M490.6,770.3v16.4c0,1.2,0,2.6,0.1,3.5h-2.2l-0.1-2.4h-0.1c-0.8,1.5-2.4,2.7-4.6,2.7c-3.3,0-5.8-2.8-5.8-6.9
-                                        c0-4.5,2.8-7.3,6.1-7.3c2.1,0,3.5,1,4.1,2.1h0.1v-8.1H490.6z M488.1,782.1c0-0.3,0-0.7-0.1-1c-0.4-1.6-1.7-2.9-3.6-2.9
-                                        c-2.5,0-4.1,2.2-4.1,5.2c0,2.7,1.3,5,4,5c1.7,0,3.2-1.1,3.6-2.9c0.1-0.3,0.1-0.7,0.1-1.1V782.1z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M678.8,790.2c0.1-0.9,0.1-2.3,0.1-3.5v-16.4h2.4v8.5h0.1c0.9-1.5,2.4-2.5,4.6-2.5c3.4,0,5.7,2.8,5.7,6.9
-                                        c0,4.8-3.1,7.3-6.1,7.3c-2,0-3.5-0.8-4.5-2.5H681l-0.1,2.2H678.8z M681.3,784.7c0,0.3,0.1,0.6,0.1,0.9c0.5,1.7,1.9,2.9,3.7,2.9
-                                        c2.6,0,4.1-2.1,4.1-5.2c0-2.7-1.4-5-4-5c-1.7,0-3.2,1.1-3.8,3c-0.1,0.3-0.1,0.6-0.1,1V784.7z"/>
-                                </g>
-                            </g>
-                        </svg>
+                    {startAs === "black" ?
+                        <BoardBlack/> 
                     :
-                        <svg version="1.1" x="0px" y="0px" viewBox="0 0 800 800">
-                            <g id="tiles">
-                                <g id="a8">
-                                    <rect fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="b8">
-                                    <rect x="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="c8">
-                                    <rect x="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="d8">
-                                    <rect x="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="e8">
-                                    <rect x="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="f8">
-                                    <rect x="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="g8">
-                                    <rect x="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="h8">
-                                    <rect x="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="a7">
-                                    <rect y="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="b7">
-                                    <rect x="100" y="100" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="c7">
-                                    <rect x="200" y="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="d7">
-                                    <rect x="300" y="100" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="e7">
-                                    <rect x="400" y="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="f7">
-                                    <rect x="500" y="100" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="g7">
-                                    <rect x="600" y="100" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="h7">
-                                    <rect x="700" y="100" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="a6">
-                                    <rect y="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="b6">
-                                    <rect x="100" y="200" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="c6">
-                                    <rect x="200" y="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="d6">
-                                    <rect x="300" y="200" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="e6">
-                                    <rect x="400" y="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="f6">
-                                    <rect x="500" y="200" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="g6">
-                                    <rect x="600" y="200" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="h6">
-                                    <rect x="700" y="200" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="a5">
-                                    <rect y="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="b5">
-                                    <rect x="100" y="300" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="c5">
-                                    <rect x="200" y="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="d5">
-                                    <rect x="300" y="300" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="e5">
-                                    <rect x="400" y="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="f5">
-                                    <rect x="500" y="300" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="g5">
-                                    <rect x="600" y="300" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="h5">
-                                    <rect x="700" y="300" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="a4">
-                                    <rect y="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="b4">
-                                    <rect x="100" y="400" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="c4">
-                                    <rect x="200" y="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="d4">
-                                    <rect x="300" y="400" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="e4">
-                                    <rect x="400" y="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="f4">
-                                    <rect x="500" y="400" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="g4">
-                                    <rect x="600" y="400" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="h4">
-                                    <rect x="700" y="400" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="a3">
-                                    <rect y="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="b3">
-                                    <rect x="100" y="500" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="c3">
-                                    <rect x="200" y="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="d3">
-                                    <rect x="300" y="500" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="e3">
-                                    <rect x="400" y="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="f3">
-                                    <rect x="500" y="500" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="g3">
-                                    <rect x="600" y="500" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="h3">
-                                    <rect x="700" y="500" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="a2">
-                                    <rect y="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="b2">
-                                    <rect x="100" y="600" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="c2">
-                                    <rect x="200" y="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="d2">
-                                    <rect x="300" y="600" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="e2">
-                                    <rect x="400" y="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="f2">
-                                    <rect x="500" y="600" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="g2">
-                                    <rect x="600" y="600" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="h2">
-                                    <rect x="700" y="600" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="a1">
-                                    <rect y="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="b1">
-                                    <rect x="100" y="700" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="c1">
-                                    <rect x="200" y="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="d1">
-                                    <rect x="300" y="700" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="e1">
-                                    <rect x="400" y="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="f1">
-                                    <rect x="500" y="700" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                                <g id="g1">
-                                    <rect x="600" y="700" fill="#769656" width="100" height="100"/>
-                                </g>
-                                <g id="h1">
-                                    <rect x="700" y="700" fill="#EEEEE2" width="100" height="100"/>
-                                </g>
-                            </g>
-                            <g id="legend">
-                                <g>
-                                    <path fill="#EEEEE2" d="M87.4,790.2l-0.2-1.7h-0.1c-0.8,1.1-2.2,2-4.1,2c-2.7,0-4.1-1.9-4.1-3.9c0-3.3,2.9-5.1,8.1-5v-0.3
-                                        c0-1.1-0.3-3.1-3.1-3.1c-1.3,0-2.6,0.4-3.5,1l-0.6-1.6c1.1-0.7,2.7-1.2,4.5-1.2c4.1,0,5.2,2.8,5.2,5.5v5.1c0,1.2,0.1,2.3,0.2,3.2
-                                        H87.4z M87,783.3c-2.7-0.1-5.7,0.4-5.7,3.1c0,1.6,1.1,2.4,2.3,2.4c1.8,0,2.9-1.1,3.3-2.3c0.1-0.3,0.1-0.5,0.1-0.8V783.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M14.5,709.3L14.5,709.3l-3.2,1.7l-0.5-1.9l4-2.1h2.1v18.2h-2.4V709.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M9.7,523.3c0.7,0.4,2.3,1.1,4,1.1c3.2,0,4.1-2,4.1-3.5c0-2.5-2.3-3.6-4.7-3.6h-1.4v-1.8h1.4
-                                        c1.8,0,4.1-0.9,4.1-3.1c0-1.5-0.9-2.7-3.2-2.7c-1.5,0-2.9,0.6-3.6,1.2l-0.6-1.8c1-0.7,2.8-1.4,4.8-1.4c3.6,0,5.2,2.1,5.2,4.3
-                                        c0,1.9-1.1,3.5-3.4,4.3v0.1c2.2,0.4,4.1,2.1,4.1,4.7c0,2.9-2.3,5.5-6.6,5.5c-2,0-3.8-0.6-4.7-1.2L9.7,523.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M20,309H13l-0.7,4.7c0.4-0.1,0.8-0.1,1.5-0.1c1.4,0,2.8,0.3,3.9,1c1.4,0.8,2.6,2.4,2.6,4.7
-                                        c0,3.6-2.8,6.2-6.8,6.2c-2,0-3.7-0.6-4.5-1.1l0.6-1.9c0.8,0.4,2.2,1,3.9,1c2.3,0,4.3-1.5,4.3-3.9c0-2.4-1.6-4-5.2-4
-                                        c-1,0-1.8,0.1-2.5,0.2l1.2-8.7H20V309z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M20.9,110v1.6L13,128.2h-2.5l7.9-16.1V112H9.4v-2H20.9z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M8.9,20.5c0-2.3,1.4-3.9,3.6-4.9l0-0.1c-2-1-2.9-2.5-2.9-4.1c0-2.9,2.4-4.8,5.6-4.8c3.5,0,5.3,2.2,5.3,4.5
-                                        c0,1.5-0.8,3.2-3,4.3v0.1c2.3,0.9,3.7,2.5,3.7,4.7c0,3.2-2.7,5.3-6.2,5.3C11.2,25.5,8.9,23.2,8.9,20.5z M18.7,20.4
-                                        c0-2.2-1.5-3.3-4-4c-2.1,0.6-3.3,2-3.3,3.8c-0.1,1.8,1.3,3.5,3.6,3.5C17.3,23.7,18.7,22.3,18.7,20.4z M11.9,11.3
-                                        c0,1.8,1.4,2.8,3.5,3.4c1.6-0.5,2.8-1.7,2.8-3.3c0-1.5-0.9-3-3.1-3C13,8.4,11.9,9.8,11.9,11.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M19.5,208.7c-0.5,0-1.1,0-1.8,0.1c-3.9,0.6-5.9,3.5-6.3,6.5h0.1c0.9-1.1,2.4-2.1,4.4-2.1
-                                        c3.2,0,5.5,2.3,5.5,5.9c0,3.3-2.3,6.4-6,6.4c-3.9,0-6.4-3-6.4-7.8c0-3.6,1.3-6.4,3.1-8.2c1.5-1.5,3.5-2.4,5.8-2.7
-                                        c0.7-0.1,1.3-0.1,1.8-0.1V208.7z M18.8,219.2c0-2.6-1.5-4.2-3.8-4.2c-1.5,0-2.9,0.9-3.5,2.2c-0.2,0.3-0.3,0.6-0.3,1.1
-                                        c0.1,3,1.4,5.2,4,5.2C17.4,223.6,18.8,221.8,18.8,219.2z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M16.7,425.2v-5H8.3v-1.6l8.1-11.6H19v11.3h2.5v1.9H19v5H16.7z M16.7,418.3v-6.1c0-1,0-1.9,0.1-2.9h-0.1
-                                        c-0.6,1.1-1,1.8-1.5,2.7l-4.5,6.2v0.1H16.7z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M9.1,627.2v-1.5l1.9-1.9c4.6-4.4,6.7-6.8,6.8-9.5c0-1.8-0.9-3.6-3.6-3.6c-1.7,0-3,0.8-3.9,1.5l-0.8-1.7
-                                        c1.3-1.1,3.1-1.8,5.2-1.8c3.9,0,5.6,2.7,5.6,5.3c0,3.4-2.4,6.1-6.3,9.8l-1.5,1.3v0.1h8.2v2H9.1z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M176.8,790.2c0.1-0.9,0.1-2.3,0.1-3.5v-16.4h2.4v8.5h0.1c0.9-1.5,2.4-2.5,4.6-2.5c3.4,0,5.7,2.8,5.7,6.9
-                                        c0,4.8-3.1,7.3-6.1,7.3c-2,0-3.5-0.8-4.5-2.5H179l-0.1,2.2H176.8z M179.3,784.7c0,0.3,0.1,0.6,0.1,0.9c0.5,1.7,1.9,2.9,3.7,2.9
-                                        c2.6,0,4.1-2.1,4.1-5.2c0-2.7-1.4-5-4-5c-1.7,0-3.2,1.1-3.8,3c-0.1,0.3-0.1,0.6-0.1,1V784.7z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M389.6,770.3v16.4c0,1.2,0,2.6,0.1,3.5h-2.2l-0.1-2.4h-0.1c-0.8,1.5-2.4,2.7-4.6,2.7c-3.3,0-5.8-2.8-5.8-6.9
-                                        c0-4.5,2.8-7.3,6.1-7.3c2.1,0,3.5,1,4.1,2.1h0.1v-8.1H389.6z M387.1,782.1c0-0.3,0-0.7-0.1-1c-0.4-1.6-1.7-2.9-3.6-2.9
-                                        c-2.5,0-4.1,2.2-4.1,5.2c0,2.7,1.3,5,4,5c1.7,0,3.2-1.1,3.6-2.9c0.1-0.3,0.1-0.7,0.1-1.1V782.1z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M586.1,790.2v-11.7h-1.9v-1.9h1.9V776c0-1.9,0.4-3.6,1.6-4.7c0.9-0.9,2.2-1.3,3.3-1.3c0.9,0,1.6,0.2,2.1,0.4
-                                        l-0.3,1.9c-0.4-0.2-0.9-0.3-1.6-0.3c-2.1,0-2.6,1.8-2.6,3.9v0.7h3.3v1.9h-3.3v11.7H586.1z"/>
-                                </g>
-                                <g>
-                                    <path fill="#769656" d="M779.9,770.3h2.5v8.5h0.1c0.4-0.7,1-1.3,1.8-1.7c0.7-0.4,1.6-0.7,2.5-0.7c1.8,0,4.7,1.1,4.7,5.8v8.1H789v-7.8
-                                        c0-2.2-0.8-4-3.1-4c-1.6,0-2.9,1.1-3.3,2.5c-0.1,0.3-0.2,0.7-0.2,1.2v8.2h-2.5V770.3z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M290.6,789.7c-0.6,0.3-2.1,0.8-3.9,0.8c-4.1,0-6.7-2.8-6.7-6.9c0-4.2,2.9-7.2,7.3-7.2c1.5,0,2.7,0.4,3.4,0.7
-                                        l-0.6,1.9c-0.6-0.3-1.5-0.6-2.9-0.6c-3.1,0-4.8,2.3-4.8,5.1c0,3.1,2,5.1,4.7,5.1c1.4,0,2.3-0.4,3-0.7L290.6,789.7z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M480.3,783.8c0.1,3.3,2.2,4.7,4.6,4.7c1.8,0,2.8-0.3,3.8-0.7l0.4,1.8c-0.9,0.4-2.4,0.8-4.5,0.8
-                                        c-4.2,0-6.7-2.7-6.7-6.8c0-4.1,2.4-7.3,6.4-7.3c4.4,0,5.6,3.9,5.6,6.4c0,0.5-0.1,0.9-0.1,1.1H480.3z M487.5,782.1
-                                        c0-1.6-0.6-4-3.4-4c-2.5,0-3.6,2.3-3.8,4H487.5z"/>
-                                </g>
-                                <g>
-                                    <path fill="#EEEEE2" d="M690.6,776.6c-0.1,1-0.1,2.1-0.1,3.7v7.9c0,3.1-0.6,5-1.9,6.2c-1.3,1.2-3.2,1.6-4.9,1.6
-                                        c-1.6,0-3.4-0.4-4.5-1.1l0.6-1.9c0.9,0.6,2.3,1.1,4,1.1c2.5,0,4.4-1.3,4.4-4.7v-1.5H688c-0.8,1.3-2.2,2.3-4.3,2.3
-                                        c-3.4,0-5.8-2.9-5.8-6.6c0-4.6,3-7.2,6.1-7.2c2.4,0,3.6,1.2,4.2,2.4h0.1l0.1-2H690.6z M688,782c0-0.4,0-0.8-0.1-1.1
-                                        c-0.4-1.4-1.7-2.6-3.4-2.6c-2.4,0-4,2-4,5.1c0,2.7,1.3,4.9,4,4.9c1.5,0,2.9-1,3.4-2.5c0.1-0.4,0.2-0.9,0.2-1.3V782z"/>
-                                </g>
-                            </g>
-                        </svg>
+                        <BoardWhite/>
                     }
 
-                    {hoveredTile.isHovering && <HoveredTile key={`hovered-${hoveredTile.y}-${hoveredTile.x}`} posX={hoveredTile.x} posY={hoveredTile.y}/>}
+                    {hoveredTile.isHovering && <Tile key={`hovered-${hoveredTile.y}-${hoveredTile.x}`} posX={hoveredTile.x} posY={hoveredTile.y} type="hover"/>}
 
-                    {move.map((move) => {
-                        if (move.isPossibleMove) 
-                        return <PossibleMove key={`move-${move.posY}-${move.posX}`} posX={move.posX} posY={move.posY} isPossibleMove={move.isPossibleMove}/>
+                    {tiles.move.map((move) => {
+                        return <Tile key={`move-${move.posY}-${move.posX}`} posX={move.posX} posY={move.posY} type="move"/>
                     })}
 
-                    {capture.map((capture) => {
-                        if (capture.isPossibleCapture)
-                        return <PossibleCapture key={`capture-${capture.posY}-${capture.posX}`} posX={capture.posX} posY={capture.posY} isPossibleCapture={capture.isPossibleCapture}/>
+                    {tiles.capture.map((capture) => {
+                        return <Tile key={`capture-${capture.posY}-${capture.posX}`} posX={capture.posX} posY={capture.posY} type="capture"/>
                     })}
 
-                    {highlight.map((highlight) => {
-                        if (highlight.isHighlighted)
-                        return <HighlightedTile key={`highlight-${highlight.posY}-${highlight.posX}`} posX={highlight.posX} posY={highlight.posY} isHighlighted={highlight.isHighlighted}/>
+                    {tiles.marked.map((marked) => {
+                        return <Tile key={`highlight-${marked.posY}-${marked.posX}`} posX={marked.posX} posY={marked.posY} type="marked"/>
                     })}
 
-                    {check.map((check) => {
-                        if (check.isCheck)
-                        return <CheckedTile key={`check-${check.posY}-${check.posX}`} posX={check.posX} posY={check.posY} isCheck={check.isCheck}/>
+                    {tiles.highlight.map((highlight) => {
+                        return <Tile key={`highlight-${highlight.posY}-${highlight.posX}`} posX={highlight.posX} posY={highlight.posY} type="highlight"/>
+                    })}
+
+                    {tiles.check.map((check) => {
+                        return <Tile key={`check-${check.posY}-${check.posX}`} posX={check.posX} posY={check.posY} type="check"/>
                     })}
                     
-                    {tile.map((tile) => {
-                        if (tile.piece !== "empty")
-                        return <Tile key={`tile-${tile.posY}-${tile.posX}`} posX={tile.posX} posY={tile.posY} piece={tile.piece}/>
+                    {tiles.tile.map((tile) => {
+                        return <Tile key={`tile-${tile.posY}-${tile.posX}`} posX={tile.posX} posY={tile.posY} piece={tile.piece} type="piece"/>
                         
                     })}
                     {pawnIsPromoting.showPromotionMenu && pawnIsPromoting.posX !== null && <Promotion pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/>}
                     {gameOver.gameOver && <GameOver winner={gameOver.winner} reason={gameOver.reason}/>}
                 </div>
-                <PlayerInfo key="playerInfo2" playerNames={playerNames} team="white" switchBoard={switchBoard} timerWhite={timerWhite} timerBlack={timerBlack} playWithTimer={playWithTimer} increment={increment} pieceAdvantage={pieceAdvantage} position={position} playerTurn={playerTurn}/>
+                <PlayerInfo key="playerInfo2" playerNames={playerNames} team={playerBottom} timerWhite={timerWhite} timerBlack={timerBlack} playWithTimer={playWithTimer} increment={increment} position={position} playerTurn={playerTurn}/>
             </div>
             <GameInfo 
                 playerTurn={playerTurn} 
+                setPlayerTurn={setPlayerTurn}
                 positionList={positionList} 
                 setPosition={setPosition} 
                 moveList={moveList} 
@@ -2607,9 +2041,7 @@ function App() {
                 gameOver={gameOver} 
                 setGameOver={setGameOver}
                 setStartTime={setStartTime} 
-                setPlayWithTimer={setPlayWithTimer}
-                switchBoard={switchBoard} 
-                setSwitchBoard={setSwitchBoard} 
+                setPlayWithTimer={setPlayWithTimer} 
                 playSound={playSound} 
                 setPlaySound={setPlaySound} 
                 showPossibleTiles={showPossibleTiles} 
@@ -2625,6 +2057,8 @@ function App() {
                 setPossibleTiles={setPossibleTiles}
                 setPossibleTilesAfterCheck={setPossibleTilesAfterCheck} 
                 setPossibleKingTilesAfterCheck={setPossibleKingTilesAfterCheck}
+                startAs={startAs}
+                setStartAs={setStartAs}
                 audioMove={audioMove}/> 
             <Info/>
         </div>

@@ -10,8 +10,19 @@ function GameInfo (props) {
     const [increment, setIncrement] = useState(0);
     const [playerWhite, setPlayerWhite] = useState("");
     const [playerBlack, setPlayerBlack] = useState("");
+    const [defaultSelect, setDefaultSelect] = useState("");
 
     const [index, setIndex] = useState(0)
+
+    function setStartColor (color) {
+        if (color === "rotate") {
+            props.setStartAs("rotate")
+        } else if (color === "white") {
+            props.setStartAs("white")
+        } else {
+            props.setStartAs("black")
+        }
+    }
 
     function setNames () {
         const updateNames = {
@@ -47,6 +58,17 @@ function GameInfo (props) {
         props.setGameOver(updateGameOver)
         props.pauseTimer()
     }
+
+    //set selected option when option changes
+    useEffect(() => {
+        setDefaultSelect(props.startAs)
+    }, [props.startAs])
+
+    //set selected option from saved settings
+    useEffect(() => {
+        const settings = JSON.parse(localStorage.getItem("settings"))
+        setDefaultSelect(settings.startAs)
+    }, [])
 
 
     //cycle moves
@@ -208,7 +230,12 @@ function GameInfo (props) {
                 <div className='setSettings'>
                     <h4>Game Settings</h4>
                     <div>
-                        <input id="rotateBoard" type="checkbox" name="rotateBoard" checked={props.switchBoard} onChange={() => props.setSwitchBoard(prev => !prev)}/><label htmlFor="rotateBoard">Rotate board after move</label>
+                        <p>Play as:</p>
+                        <select value={defaultSelect} onChange={(e) => setStartColor(e.target.value)}>
+                            <option value="white">White</option>
+                            <option value="black">Black</option>
+                            <option value="rotate">Rotate board after move</option>
+                        </select>
                     </div>
                     <div>
                         <input id="saveSettings" type="checkbox" name="saveSettings" checked={props.saveGame} onChange={() => props.setSaveGame(prev => !prev)}/><label htmlFor="saveSettings">Save game and settings</label>     

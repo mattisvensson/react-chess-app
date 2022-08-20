@@ -1,6 +1,7 @@
 :root {
   --color-tile-highlight: rgba(241, 241, 23, 0.5);
   --color-tile-check: rgba(255, 0, 0, 0.5);
+  --color-tile-marked: rgba(0, 155, 255, 0.5);
   --color-font: #FFFFFF;
   --color-font-dark: #222222;
   --color-background: #2A2A2A;
@@ -13,6 +14,7 @@
   --color-scrollbar-hover: rgba(255, 145, 0, 0.8); */
   --color-tooltip: #666666;
   --gap-grid: 10px;
+  --input-radius: 9px;
 }
 
 ::-webkit-scrollbar {width: 4px;}
@@ -76,6 +78,10 @@ section {
 
 .App.mobile button {
   margin: 30px;
+}
+
+option, select {
+  color: var(--color-font-dark)
 }
 
 

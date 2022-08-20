@@ -3,7 +3,7 @@ import './Tile.css';
 
 function Tile (props) {
     return (
-        <div className={`piece ${props.piece} tile-${props.posX}${props.posY}`}></div>
+        <div className={`${props.type} ${props.piece ? props.piece : ""} tile-${props.posX}${props.posY}`}></div>
     )
 }
 

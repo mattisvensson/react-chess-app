@@ -1,4 +1,4 @@
-import {rW, rB, kW, kB, empty} from './pieceDeclaration';
+import {rW, rB, kW, kB, empty} from '../pieceDeclaration';
 
 function executeCastleMoves (x, y, position, castle, setCastle, activePiece, setPosition) {
 
