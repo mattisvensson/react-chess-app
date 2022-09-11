@@ -30,6 +30,7 @@
   font-family: sans-serif;
   user-select: none;
   scrollbar-width: thin;
+  /* outline: 1px solid red; */
 }
 
 body {
@@ -51,7 +52,8 @@ input {
   grid-template-columns: auto 1fr;
   grid-gap: 0 50px;
   place-items: center;
-  padding: 30px;
+  height: 100vh;
+  padding: 6% 30px;
 }
 
 button {
@@ -70,14 +72,6 @@ button:hover {
 section {
   display: grid;
   place-items: center;
-}
-
-.App.mobile {
-  grid-template-rows: auto auto 20%;
-}
-
-.App.mobile button {
-  margin: 30px;
 }
 
 option, select {
@@ -125,4 +119,34 @@ option, select {
   border-width: 5px;
   border-style: solid;
   border-color: var(--color-tooltip) transparent transparent transparent;
+}
+
+
+div.mobilemenu {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  cursor: pointer;
+  transition: transform .3s;
+}
+
+div.mobilemenu svg path {
+  fill:var(--color-font)
+}
+
+@media screen and (max-width: 1023px) {
+  div.App {
+    width: 100vw;
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  div.mobilemenu {
+    display: block;
+  }
+
+  div.mobilemenu.active {
+    transform: rotate(60deg);
+  }
 }

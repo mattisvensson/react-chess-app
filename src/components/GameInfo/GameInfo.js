@@ -1,18 +1,15 @@
-import React, {useState, useEffect} from 'react';
-
+import React, {useState, useEffect, useRef} from 'react';
 import './GameInfo.css'
 
-import moveRow from './moveRow/moveRow';
-
-function GameInfo (props) {
+function GameInfo (props) { 
 
     const [minutes, setMinutes]  = useState(0);
     const [increment, setIncrement] = useState(0);
     const [playerWhite, setPlayerWhite] = useState("");
     const [playerBlack, setPlayerBlack] = useState("");
     const [defaultSelect, setDefaultSelect] = useState("");
-
-    const [index, setIndex] = useState(0)
+    const [moveCounter, setMoveCounter] = useState([])
+    const moveContainer = useRef()
 
     function setStartColor (color) {
         if (color === "rotate") {
@@ -49,15 +46,97 @@ function GameInfo (props) {
         props.setAllowPieceSelection(true)
     }
 
-    function drawGame () {
-        const updateGameOver = {
-            gameOver: true,
-            reason: "Draw due to mutual agreement",
-            winner: false
+    function endGame (winner) {
+        let updateGameOver
+        if (winner === "draw") {
+            updateGameOver = {
+                gameOver: true,
+                reason: "Draw due to mutual agreement",
+                winner: false,
+                showMessage: true
+            }
+        } else if (winner === "white") {
+            updateGameOver = {
+                gameOver: true,
+                reason: "Black resigned",
+                winner: "White wins!",
+                showMessage: true
+            }
+        } else {
+            updateGameOver = {
+                gameOver: true,
+                reason: "White resigned",
+                winner: "Black wins!",
+                showMessage: true
+            }
         }
         props.setGameOver(updateGameOver)
         props.pauseTimer()
     }
+
+
+    function goToMove (indicator) {
+
+        if (props.gameOver.gameOver) {
+            const updateGameOver = {
+                ...props.gameOver,
+                showMessage: false
+            }
+            props.setGameOver(updateGameOver)
+        }
+
+        let currentPositionData;
+
+        switch (indicator) {
+            case "minus": 
+                if (props.moveIndex < 1) break;
+                currentPositionData = props.positionList[props.moveIndex - 1];
+                props.setMoveIndex(prev => prev - 1)
+                break;
+            case "plus": 
+                if (props.moveIndex + 1 >= props.positionList.length) break;
+                currentPositionData = props.positionList[props.moveIndex + 1];
+                props.setMoveIndex(prev => prev + 1)
+                break;
+            case "first": 
+                if (props.moveIndex < 1) break;
+                currentPositionData = props.positionList[0];
+                props.setMoveIndex(0)
+                break;
+            case "last": 
+                if (props.moveIndex >= props.positionList.length - 1) break;
+                currentPositionData = props.positionList[props.positionList.length - 1];
+                props.setMoveIndex(props.positionList.length - 1)
+                break;
+            default:
+                currentPositionData = props.positionList[indicator + 1];
+                props.setMoveIndex(indicator + 1)
+                break;
+        }
+
+
+        if (currentPositionData) {
+
+            props.setPossibleTiles([])
+            props.setPossibleTilesAfterCheck([])
+            props.setPossibleKingTilesAfterCheck([])
+
+            props.setPosition(currentPositionData.position)
+
+            const updateLastMove = {
+                oldPositionX: currentPositionData.tiles.oldX,
+                oldPositionY: currentPositionData.tiles.oldY,
+                newPositionX: currentPositionData.tiles.newX,
+                newPositionY: currentPositionData.tiles.newY
+            }
+            props.setLastMove(updateLastMove)
+
+            props.setActivePiece(props.initialActivePiece)
+
+            props.playSound && props.audioMove.play()
+        }
+    }
+
 
     //set selected option when option changes
     useEffect(() => {
@@ -73,72 +152,22 @@ function GameInfo (props) {
 
     //cycle moves
     useEffect(() => {
-        setIndex(props.positionList.length)
+        props.setMoveIndex(props.positionList.length)
     }, [props.playerTurn])
 
-
-    function goToMove (indicator) {
-
-        if (props.gameOver.gameOver) {
-            const updateGameOver = {
-                ...props.gameOver,
-                gameOver: false
+    //display counter for moves
+    useEffect(() => {        
+        let nums = []
+        if (props.moveList.length % 2 === 1 && window.innerWidth > 1024) {
+            let amount = props.moveList.length / 2
+            for (let i = 0; i < amount; i++) {
+                nums.push(i + 1)
             }
-            props.setGameOver(updateGameOver)
+            setMoveCounter(nums)
+            moveContainer.current?.scrollIntoView({ behavior: "smooth" });
         }
-
-        let positionData;
-
-        switch (indicator) {
-            case "minus": 
-                if (index < 1) break;
-                positionData = props.positionList[index - 1];
-                setIndex(prev => prev - 1)
-                break;
-            case "plus": 
-                if (index + 1 >= props.positionList.length) break;
-                positionData = props.positionList[index + 1];
-                setIndex(prev => prev + 1)
-                break;
-            case "first": 
-                if (index < 1) break;
-                positionData = props.positionList[0];
-                setIndex(0)
-                break;
-            case "last": 
-                if (index >= props.positionList.length - 1) break;
-                positionData = props.positionList[props.positionList.length - 1];
-                setIndex(props.positionList.length - 1)
-                break;
-            default:
-                positionData = props.positionList[indicator + 1];
-                setIndex(indicator + 1)
-                break;
-        }
-
-
-        if (positionData) {
-
-            props.setPossibleTiles([])
-            props.setPossibleTilesAfterCheck([])
-            props.setPossibleKingTilesAfterCheck([])
-
-            props.setPosition(positionData.position)
-
-            const updateLastMove = {
-                oldPositionX: positionData.tiles.oldX,
-                oldPositionY: positionData.tiles.oldY,
-                newPositionX: positionData.tiles.newX,
-                newPositionY: positionData.tiles.newY
-            }
-            props.setLastMove(updateLastMove)
-
-            props.setActivePiece(props.initialActivePiece)
-
-            props.playSound && props.audioMove.play()
-        }
-    }
-    
+    }, [props.moveList]) 
+   
 
     function gameStarted () {
         return (
@@ -146,22 +175,34 @@ function GameInfo (props) {
                 <div className='moves'>
                     <h4>Moves</h4>
                     <div className='moveList'>
-                        {props.moveList.map((move, index) => {
-                            return (
-                                <div onClick={() => goToMove(index)} key={index}>
-                                    <span>{move}</span>
-                                </div>
-                            )
-                        })}
+                        <div className='counter'>
+                            {moveCounter.map((count, index) => {
+                                return (
+                                    <div key={index}>
+                                        <span>{count}.</span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <div className='move'>
+                            {props.moveList.map((move, index) => {
+                                return (
+                                    <div onClick={() => goToMove(index)} key={index} className={props.moveList.length - 1 === index ? "lastMove" : ""}>
+                                        <span>{move}</span>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                        <div ref={moveContainer}></div>
                     </div>
                     <div id="ViewMoves">
                         <button onClick={() => goToMove("first")}>
                             <svg height="48" width="48"><path d="M11.55 36.35V11.5h3.65v24.85Zm22.9 0L22.2 24.1l12.25-12.25 2.6 2.6-9.65 9.65 9.65 9.65Z"/></svg>
                         </button>
-                        <button className={`${(props.positionList.length > 1) && (index >= 1) ? "" : "inactive"}`} onClick={e => goToMove("minus")}>
+                        <button className={`${(props.positionList.length > 1) && (props.moveIndex >= 1) ? "" : "inactive"}`} onClick={e => goToMove("minus")}>
                             <svg height="48" width="48"><path d="M28.1 36.45 15.55 23.9 28.1 11.35l2.6 2.6-9.95 9.95 9.95 9.95Z"/></svg>
                         </button>
-                        <button className={`${(props.positionList.length > 1) && (index + 1 < props.positionList.length) ? "" : "inactive"}`} onClick={e => goToMove("plus")}>
+                        <button className={`${(props.positionList.length > 1) && (props.moveIndex + 1 < props.positionList.length) ? "" : "inactive"}`} onClick={e => goToMove("plus")}>
                             <svg height="48" width="48"><path d="m18.75 36.45-2.6-2.6 9.95-9.95-9.95-9.95 2.6-2.6L31.3 23.9Z"/></svg>
                         </button>
                         <button onClick={() => goToMove("last")}>
@@ -171,23 +212,23 @@ function GameInfo (props) {
                 </div>
                 {props.gameOver.gameOver ?
                     <>
-                        <div>
+                        <div id="WinnerInfo">
                             <p>{props.gameOver.winner && props.gameOver.winner}</p>
                             <p>{props.gameOver.reason}</p>
                         </div>
-                        <div>
-                            <button>Copy PGN</button>
-                            <button>Start new Game</button>
+                        <div id="ActionAfterGame">
+                            {/* <button>Copy PGN</button> */}
+                            <button onClick={() => props.resetBoard()}>Start new Game</button>
                         </div>   
                     </>
                 :
                     <div className='endGame'>
-                        <button className='surrender'>
+                        <button className='surrender' onClick={() => endGame("black")}>
                             <svg height="48" width="48"><path fill="white" d="M10 42V8h17.15l.95 4.3H40v18.5H27.2l-.95-4.25H13V42Z"/></svg>
                         </button>
-                        <button className='draw' onClick={() => drawGame()}>Draw</button>
+                        <button className='draw' onClick={() => endGame("draw")}>Draw</button>
                         <button className='draw' onClick={() => props.resetBoard()}>Quit</button>
-                        <button className='surrender'>
+                        <button className='surrender' onClick={() => endGame("white")}>
                             <svg height="48" width="48"><path fill="#000000" d="M10 42V8h17.15l.95 4.3H40v18.5H27.2l-.95-4.25H13V42Z"/></svg>
                         </button>
                     </div>
@@ -203,8 +244,8 @@ function GameInfo (props) {
                 <div className='setPlayerNames'>
                     <h4>Player names</h4>
                     <div>
-                        <input type="text" maxLength="20" minLength="1" placeholder='White' onChange={(e) => setPlayerWhite(e.target.value)}></input>
-                        <input type="text" maxLength="20" minLength="1" placeholder='Black' onChange={(e) => setPlayerBlack(e.target.value)}></input>
+                        <input type="text" maxLength="20" minLength="1" placeholder='White' onChange={e => setPlayerWhite(e.target.value)}></input>
+                        <input type="text" maxLength="20" minLength="1" placeholder='Black' onChange={e => setPlayerBlack(e.target.value)}></input>
                         <button onClick={() => setNames()}>Set</button>
                     </div>
                 </div>
@@ -248,7 +289,7 @@ function GameInfo (props) {
                         <input id="hideTiles" type="checkbox" name="saveSettings" checked={props.showPossibleTiles} onChange={() => props.setShowPossibleTiles(prev => !prev)}/><label htmlFor="hideTiles">Show possible tiles</label>
                     </div>
                     <div>
-                        <input id="muteSound" type="checkbox" name="saveSettings" checked={props.playSound} onChange={() => props.setPlaySound(prev => !prev)}/><label htmlFor="muteSound">Play sound</label>
+                        <input id="muteSound" type="checkbox" name="saveSettings" checked={props.playSound} onChange={() => props.setPlaySound(prev => !prev)}/><label htmlFor="muteSound">Play with sound</label>
                     </div>
                 </div>
             </>
@@ -257,7 +298,7 @@ function GameInfo (props) {
 
     if (props.foundSavedGame) {
         return (
-            <aside id="GameInfo">
+            <aside id="GameInfo" className={props.mobileMenuIsActive ? "active" : ""} style={{height: `${window.innerWidth >= 1024 ? props.width + 120 : "unset"}px`}}>
                 <div className='continueGame'>
                     <button onClick={() => continueGame()}>continue game</button>
                     <span>or</span> 
@@ -268,7 +309,7 @@ function GameInfo (props) {
     }
 
     return (
-        <aside id="GameInfo">
+        <aside id="GameInfo" className={props.mobileMenuIsActive ? "active" : ""} style={{height: `${window.innerWidth >= 1024 ? props.width + 120 : "unset"}px`}}>
             {props.gameStatus ? gameStarted() : gameSettings()}
         </aside>
     )

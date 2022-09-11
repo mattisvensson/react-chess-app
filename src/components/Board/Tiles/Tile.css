@@ -22,13 +22,13 @@
 
 #Board .tile > div.move {cursor: pointer;}
 
-.piece,
-.move,
-.capture,
-.marked,
-.check,
-.highlight,
-.hover {
+#Board .piece,
+#Board .move,
+#Board .capture,
+#Board .marked,
+#Board .check,
+#Board .highlight,
+#Board .hover {
     background-size: cover;
     position: absolute;
     top: 0;
@@ -37,18 +37,18 @@
     height: 12.5%;
 }
 
-.piece,
-.move,
-.capture {
+#Board .piece,
+#Board .move,
+#Board .capture {
     cursor: grab;
 }
 
-.highlight {background: var(--color-tile-highlight);}
-.check {background: var(--color-tile-check);}
-.move {background-image: url(/public/assets/images/possibleTile.png);}
-.hover {border: 4px solid rgba(0, 0, 0, 0.1);}
-.marked {background-color: var(--color-tile-marked);}
-.capture {
+#Board .highlight {background: var(--color-tile-highlight);}
+#Board .check {background: var(--color-tile-check);}
+#Board .move {background-image: url(/public/assets/images/possibleTile.png);}
+#Board .hover {border: 4px solid rgba(0, 0, 0, 0.1);}
+#Board .marked {background-color: var(--color-tile-marked);}
+#Board .capture {
     border: 5px solid rgba(0, 0, 0, 0.35);
     border-radius: 50%;
 }

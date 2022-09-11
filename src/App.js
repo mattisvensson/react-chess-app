@@ -6,11 +6,9 @@ import GameInfo from './components/GameInfo/GameInfo';
 
 import Tile from './components/Board/Tiles/Tile';
 import Promotion from './components/Board/Promotion/Promotion';
-import checkCastleMoves from './components/Board/Logic/checkCastleMoves';
 import executeCastleMoves from './components/Board/Logic/executeCastleMoves';
 import checkEnPassant from './components/Board/Logic/checkEnPassant';
 import {pW, pB, knW, knB, bW, bB, rW, rB, qW, qB, kW, kB, empty} from './components/Board/pieceDeclaration';
-import { initialPosition, initialActivePiece, initialLastMove, initialPawnIsPromoting, initialPawnCanEnPassant, initialCastle, initialGameOver, initialPlayerNames, initialHoveredTile } from './components/Board/initialStateValues';
 import GameOver from './components/Board/GameOver/GameOver';
 
 import { ReactComponent as BoardWhite } from './materials/chessboard_white.svg';
@@ -66,22 +64,14 @@ const audioMove = new Audio(audioMoveFile)
 //   show game notation while game is running for each move
 // X save current game to local storage
 // X load game correctly (with timer) from local storage
-//   download game pgn
 // X board can rotate after each move
-//   "play as" setting
+// X "play as" setting
 //   mobile styles
-//   right click highlightes tile
+// X right click highlightes tile
 //
-//   Überarbeiten
-//   move simulieren als eigene funktion schreiben
-//   surrender buttons während des spiels
-//   nach quit des spiels gleiche einstellungen wie beim start
-//   delay beim ziehen der figur durch clicken
-//   "zurücksetzten" der figur beim ziehen der figur (draggen)
-//   check beim castlen prüfen (ab 1243)
-//   markieren von feldern micht rechter maustaste
 //
 //   Version 3.0
+//   download game pgn
 //   connect to chess api / backend
 //    -> play with bots
 //    -> get openings
@@ -92,33 +82,108 @@ const audioMove = new Audio(audioMoveFile)
 //   save played games to database
 //   play with friends online
 
-//responsive board size
-let width = window.innerHeight > window.innerWidth ? window.innerWidth / 1.05 : window.innerHeight / 1.4;
-let pieceWidth = width / 8;
+
+    //responsive board size
+    let width = window.innerHeight > window.innerWidth ? window.innerWidth / 1.05 : window.innerHeight / 1.4;
+    let pieceWidth = width / 8;
 
 function App() {
+    
+    //initial state values
+    const initialPosition = [
+        [rB,knB,bB,qB,kB,bB,knB,rB],
+        [pB,pB,pB,pB,pB,pB,pB,pB],
+        [empty,empty,empty,empty,empty,empty,empty,empty],
+        [empty,empty,empty,empty,empty,empty,empty,empty],
+        [empty,empty,empty,empty,empty,empty,empty,empty],
+        [empty,empty,empty,empty,empty,empty,empty,empty],
+        [pW,pW,pW,pW,pW,pW,pW,pW],
+        [rW,knW,bW,qW,kW,bW,knW,rW],
+    ]
 
-    let size = window.innerWidth < 750 ? "mobile" : "desktop"
+    const initialActivePiece = {
+        isActive: false,
+        ref: null,
+        piece: null,
+        positionX: null,
+        positionY: null,
+        counter: 0
+    }
+    
+    const initialLastMove = ({
+        oldPositionX: null,
+        oldPositionY: null,
+        newPositionX: null,
+        newPositionY: null
+    })
+    
+    const initialPawnIsPromoting = ({
+        isPromoting: false,
+        color: null,
+        posX: null,
+        posY: null,
+        prevX: null,
+        prevY: null,
+        capturedPiece: null,
+        showPromotionMenu: false,
+        newPiece: null,
+    });
+    
+    const initialPawnCanEnPassant = ({
+        isActive: false,
+        posX: null,
+        posY: null
+    })
+    
+    const initialCastle = ({
+        white: {
+            castleLong: true,
+            castleShort: true,
+        },
+        black: {
+            castleLong: true,
+            castleShort: true
+        },
+        isCastling: false,
+    })
+    
+    const initialGameOver = {
+        gameOver: false,
+        reason: undefined,
+        winner: undefined,
+        showMessage: false
+    };
+    
+    const initialPlayerNames = {
+        white: "White",
+        black: "Black"
+    }
+    
+    const initialHoveredTile = {
+        isHovering: false,
+        x: null,
+        y: null
+    }
 
     //States
-
-    //Refs
-    const BoardRef = useRef(null);    
-    const isMounted = useRef(false)
     
-    const [loading, setLoading] = useState(false)
+    //Refs
+    const BoardRef = useRef(null); 
+    const isMounted = useRef(false)
 
     //Keep track of active piece
     const [activePiece, setActivePiece] = useState(initialActivePiece)
-
+    
     //keep track of moves and positions
     const [position, setPosition] = useState(initialPosition)
+    const [lastGamePosition, setLastGamePosition] = useState(initialPosition)
     const [positionList, setPositionList] = useState([])
     const [moveList, setMoveList] = useState([])
     const [currentPosition, setCurrentPosition] = useState(initialPosition)
     const [currentMove, setCurrentMove] = useState(initialLastMove)
-    const [lastMove, setLastMove] = useState(initialLastMove)
-
+    const [lastMove, setLastMove] = useState(initialLastMove)    
+    const [moveIndex, setMoveIndex] = useState(0)
+    
     //true = white at bottom
     //false = black at botom
     const [boardDirection, setBoardDirection] = useState(true)
@@ -129,7 +194,8 @@ function App() {
 
     //keep track of castling rights for both sides
     const [castle, setCastle] = useState(initialCastle)
-
+    const [castleNotation, setCastleNotation] = useState("")
+    
     //true = white's turn
     //false = black's turn
     const [playerTurn, setPlayerTurn] = useState(true)
@@ -143,7 +209,7 @@ function App() {
     const [possibleTiles, setPossibleTiles] = useState([]);
     const [possibleTilesAfterCheck, setPossibleTilesAfterCheck] = useState([])
     const [possibleKingTilesAfterCheck, setPossibleKingTilesAfterCheck] = useState([])
-
+    
     //keep track of if piece is dragged or not
     const [pieceIsDragged, setPieceIsDragged] = useState(false);
 
@@ -162,20 +228,27 @@ function App() {
     const [saveGame, setSaveGame] = useState(false)
     const [foundSavedGame, setFoundSavedGame] = useState(false)
 
+    const [mobileMenuIsActive, setMobileMenuIsActive] = useState(false);
+
+     //Timer states
+     const timerRef = useRef(null);
+     const [timerWhite, setTimerWhite] = useState('10:00');
+     const [timerBlack, setTimerBlack] = useState('10:00');
+     const [startSeconds, setStartSeconds] = useState(600);
+     const [increment, setIncrement] = useState(5000);
+     const [playWithTimer, setPlayWithTimer] = useState(true);
+ 
+     const [remainingTimeWhite, setRemainingTimeWhite] = useState(0)
+     const [remainingTimeBlack, setRemainingTimeBlack] = useState(0)
+     const [isFirstStartWhite, setIsFirstStartWhite] = useState(true)
+     const [isFirstStartBlack, setIsFirstStartBlack] = useState(true)
     //-------------------------------------------------------------------------------------
     //piece movement logic
-    window.oncontextmenu = function (e) {
-        let currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
-        let currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
-        if (currentX >= 0 && currentX <= 7 && currentY >= 0 && currentY <= 7) {
-            setMarkedTiles(oldArray => [...oldArray, [currentX, currentY]])
-        }
-        return false;   // cancel default menu
-    }
 
+ 
     //grabbing the piece
     function grabPiece (e) {
-
+        
         if (e.button !== 0) return
 
         //get tile on which the piece was standing
@@ -188,22 +261,7 @@ function App() {
             currentY = invertedCords.invertedY
         }
 
-        let match = false;
-        if (possibleTiles) {
-            for (let i = 0; i < possibleTiles.length; i++) {
-                if (JSON.stringify(possibleTiles[i]) === JSON.stringify([currentY, currentX])) {
-                    let string = JSON.stringify(possibleTiles[i])
-                    let y = string.charAt(1)
-                    let x = string.charAt(3)
-                    if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8 && position[y][x] > 0)) {
-                        console.log("drin")
-                        executeMove(currentX, currentY)
-                        match = true;
-                        break
-                    }
-                }
-            }
-        }
+        const match = checkIfTileIsPossibleMove(currentX, currentY)
 
         if (e.target.classList.contains("piece") && allowPieceSelection && !match) {
 
@@ -309,6 +367,24 @@ function App() {
     //drop piece
     function dropPiece (e) {
 
+            //get tile on which the piece was standing
+            let {currentX, currentY} = getBoardCoords(e.clientX, e.clientY)
+
+            //blacks turn and board rotation is on
+            if (!boardDirection) {
+                let invertedCords = invertBoardAxis(currentX, currentY)
+                currentX = invertedCords.invertedX
+                currentY = invertedCords.invertedY
+            }
+    
+            //deselect piece if its already active and grabbed
+            if (currentX === activePiece.positionX && currentY === activePiece.positionY && activePiece.counter === 1) {
+                setActivePiece(initialActivePiece)
+            } else if (activePiece.isActive) {
+                e.target.style.transform = null
+                checkIfTileIsPossibleMove(currentX, currentY)
+            }
+
         if (activePiece.ref) {
             activePiece.ref.style.transform = null;
             activePiece.ref.style.zIndex = null;
@@ -317,26 +393,22 @@ function App() {
         }
 
         setHoveredTile(initialHoveredTile)
-
-        //get tile on which the piece was standing
-        let {currentX, currentY} = getBoardCoords(e.clientX, e.clientY)
-
-        //blacks turn and board rotation is on
-        if (!boardDirection) {
-            let invertedCords = invertBoardAxis(currentX, currentY)
-            currentX = invertedCords.invertedX
-            currentY = invertedCords.invertedY
-        }
-
-        //deselect piece if its already active and grabbed
-        if (currentX === activePiece.positionX && currentY === activePiece.positionY && activePiece.counter === 1) {
-            setActivePiece(initialActivePiece)
-        } else if (activePiece.isActive) {
-            e.target.style.transform = null
-            executeMove(currentX, currentY);
-        }
     }
-
+    
+    //check if desired tile is in possible moves
+    function checkIfTileIsPossibleMove (x, y) {
+        if (possibleTiles) {
+            for (let i = 0; i < possibleTiles.length; i++) {
+                if (JSON.stringify(possibleTiles[i]) === JSON.stringify([y, x])) {
+                    if ((playerTurn && position[y][x] > 8) || (!playerTurn && position[y][x] < 8 && position[y][x] > 0) || position[y][x] === empty) {
+                        executeMove(x, y)
+                        return true
+                    }
+                }
+            }
+        }
+        return false
+    }
 
     //execute move
     function executeMove (x, y) {
@@ -355,111 +427,77 @@ function App() {
             }
         }
 
-        //check if desired tile is in possible moves
-        let match = false;
-
-        if (possibleTiles) {
-            for (let j = 0; j < possibleTiles.length; j++) {
-                if (playerIsInCheck) {
-                    if ((playerTurn && activePiece.piece === kW) || (!playerTurn && activePiece.piece === kB)) {
-                        for (let i = 0; i < possibleKingTilesAfterCheck.length; i++) {
-                            if ((JSON.stringify(possibleTiles[j]) === JSON.stringify(possibleKingTilesAfterCheck[i])) && (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x]))) {
-                                match = true;
-                                break;
-                            }
-                        }
-                    } else if ((playerTurn && activePiece.piece < 8) || (!playerTurn && activePiece.piece > 8)){
-                        for (let i = 0; i < possibleTilesAfterCheck.length; i++) {
-                            if ((JSON.stringify(possibleTiles[j]) === JSON.stringify(possibleTilesAfterCheck[i])) && (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x]))) {
-                                match = true;
-                                break;
-                            }
-                        }
-                    }
-                } else if ((playerTurn && (position[y][x] > 8 || position[y][x] === empty)) || (!playerTurn && position[y][x] < 8)) {
-                    if (JSON.stringify(possibleTiles[j]) === JSON.stringify([y, x])) {
-                        match = true;
-                        break;
-                    }
-                }
-            }
+        //check for fiftyh move rule
+        if (position[y][x] !== empty || (playerTurn && activePiece.piece === pW) || (!playerTurn && activePiece.piece === pB)) {
+            setFifthyMoveRule(0)
+        } else {
+            setFifthyMoveRule(prev => prev + 1)
         }
 
-        //if desired tile is a possible moves
-        if (match) {
+        setGameStatus(true)
 
-            if (position[y][x] !== empty || (playerTurn && activePiece.piece === pW) || (!playerTurn && activePiece.piece === pB)) {
-                setFifthyMoveRule(0)
-            } else {
-                setFifthyMoveRule(prev => prev + 1)
+        //if pawn is promoting, set coordinates for promotion and display promotion menu
+        if (savePromotion.isPromoting) {
+            const updatePromotion = {
+                ...pawnIsPromoting,
+                isPromoting: true,
+                color: savePromotion.color,
+                posX: x,
+                posY: y,
+                capturedPiece: position[y][x],
+                showPromotionMenu: true,
+            }
+            setPawnIsPromoting(updatePromotion)
+            setAllowPieceSelection(false)
+        } else {
+
+            //play sound
+            playSound && audioMove.play()
+
+            let positionCopy = [];
+            for (let i = 0; i < position.length; i++) {
+                positionCopy[i] = position[i].slice();
             }
 
-            setGameStatus(true)
+            //en passant
+            const enpassant = checkEnPassant(x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant);
 
-            //if pawn is promoting, set coordinates for promotion and display promotion menu
-            if (savePromotion.isPromoting) {
-                const updatePromotion = {
-                    ...pawnIsPromoting,
-                    isPromoting: true,
-                    color: savePromotion.color,
-                    posX: x,
-                    posY: y,
-                    capturedPiece: position[y][x],
-                    showPromotionMenu: true,
-                }
-                setPawnIsPromoting(updatePromotion)
-                setAllowPieceSelection(false)
-            } else {
+            //execute castle
+            const castleOptions = executeCastleMoves(x, y, positionCopy, castle, setCastle, activePiece, setPosition, setLastGamePosition, setCastleNotation);
 
-                //play sound
-                playSound && audioMove.play()
-
-                let positionCopy = [];
-                for (let i = 0; i < position.length; i++) {
-                    positionCopy[i] = position[i].slice();
-                }
-
-                //en passant
-                const enpassant = checkEnPassant(x, y, activePiece, position, pawnCanEnPassant, setPawnCanEnPassant);
-
-                //execute castle
-                const caslte = executeCastleMoves(x, y, positionCopy, castle, setCastle, activePiece, setPosition);
-
-                if (!enpassant && !caslte) {
-                    //normal move
-                    const newPosition = [...position];
-                    newPosition[activePiece.positionY][activePiece.positionX] = empty;
-                    newPosition[y][x] = activePiece.piece;
-                    setPosition(newPosition);
-                }
-
-
-                //highlight last move
-                const updateLastMove = {
-                    ...lastMove,
-                    oldPositionX: activePiece.positionX,
-                    oldPositionY: activePiece.positionY,
-                    newPositionX: x,
-                    newPositionY: y
-                }
-                setLastMove(updateLastMove)
-                setCurrentMove(updateLastMove)
-
-                const updatePiece = {
-                    ...activePiece,
-                    isActive: false,
-                    ref: null
-                }
-                setActivePiece(updatePiece)
-                setPlayerIsInCheck(false)
-
-                //check which castle moves are still possible
-                checkCastleMoves(position, castle, setCastle)
-
-                //switch player turn
-                setPlayerTurn(prev => !prev)
+            if (!enpassant && castleOptions === false) {
+                //normal move
+                const newPosition = [...position];
+                newPosition[activePiece.positionY][activePiece.positionX] = empty;
+                newPosition[y][x] = activePiece.piece;
+                setPosition(newPosition);
+                setLastGamePosition(newPosition)
             }
+
+
+            //highlight last move
+            const updateLastMove = {
+                ...lastMove,
+                oldPositionX: activePiece.positionX,
+                oldPositionY: activePiece.positionY,
+                newPositionX: x,
+                newPositionY: y
+            }
+            setLastMove(updateLastMove)
+            setCurrentMove(updateLastMove)
+
+            const updatePiece = {
+                ...activePiece,
+                isActive: false,
+                ref: null
+            }
+            setActivePiece(updatePiece)
+            setPlayerIsInCheck(false)
+
+            //switch player turn
+            setPlayerTurn(prev => !prev)
         }
+        
 
         if (activePiece.ref) {
             activePiece.ref.style.transform = null;
@@ -483,6 +521,7 @@ function App() {
             newPosition[pawnIsPromoting.posY][pawnIsPromoting.posX] = piece;
             newPosition[pawnIsPromoting.prevY][pawnIsPromoting.prevX] = empty;
             setPosition(newPosition);
+            setLastGamePosition(newPosition)
 
             //highlight last move
             const updateLastMove = {
@@ -515,18 +554,43 @@ function App() {
     // ------------------------------------------------------------------------------------------------
     //logic
 
+    window.oncontextmenu = function (e) {
+        let currentX = Math.floor((e.clientX - BoardRef.current.offsetLeft) / pieceWidth);
+        let currentY = Math.floor((e.clientY - BoardRef.current.offsetTop) / pieceWidth);
+        if (currentX >= 0 && currentX <= 7 && currentY >= 0 && currentY <= 7) {
+            if (markedTiles.length > 0) {
+                let found = false;
+                for (let i = 0; i < markedTiles.length; i++) {
+                    if (JSON.stringify(markedTiles[i]) === JSON.stringify([currentY, currentX])) {
+                        const arr = [...markedTiles]
+                        arr.splice(i, 1)
+                        setMarkedTiles(arr)
+                        found = true
+                        break;
+                    }
+                }
+                if (!found) {
+                    setMarkedTiles(oldArray => [...oldArray, [currentY, currentX]])
+                }
+            } else {
+                setMarkedTiles(oldArray => [...oldArray, [currentY, currentX]])
+            }
+
+        }
+        //cancel default menu
+        return false;
+    }
+
 
     //invert coordinates
     function invertBoardAxis (x, y) {
         if (!boardDirection) {
-
             let axis = [0, 1, 2, 3, 4, 5, 6, 7]
 
             let invertedX = (axis.length - 1) - x;
             let invertedY = (axis.length - 1) - y;
 
             return {invertedX, invertedY}
-            
         }
     }
 
@@ -651,12 +715,10 @@ function App() {
 
             // remove duplicates from array
             let itemsFound = {};
-            // let clearedTiles = [];
             for (let i = 0; i < allTiles.length; i++) {
 
                 let string = JSON.stringify(allTiles[i])
                 if (itemsFound[string]) { continue; }
-                // clearedTiles.push(allTiles[i]);
                 simulatedPlayerTurn ? tilesWhite.tiles.push(allTiles[i]) : tilesBlack.tiles.push(allTiles[i]);
                 itemsFound[string] = true;
             }
@@ -1166,6 +1228,7 @@ function App() {
         }    
         
         //check for castling
+        //add castle tile to possible tiles if castle is possible
         if (piece === 6 && posX === 4 && posY === 7 && playerIsInCheck === false) {
             if (castle.white.castleShort && position[7][5] === 0 && position[7][6] === 0 && position[7][7] === 4) {
                 //create copy of current position
@@ -1316,7 +1379,8 @@ function App() {
             const updateGameOver = {
                 gameOver: true,
                 reason: "Draw due to insufficient material",
-                winner: false
+                winner: false,
+                showMessage: true
             }
             setGameOver(updateGameOver)
         }
@@ -1335,7 +1399,8 @@ function App() {
             const updateGameOver = {
                 gameOver: true,
                 reason: "Draw due to threefold repetition",
-                winner: false
+                winner: false,
+                showMessage: true
             }
             setGameOver(updateGameOver) 
         }
@@ -1347,7 +1412,8 @@ function App() {
             const updateGameOver = {
                 gameOver: true,
                 reason: "Draw due to 50 move rule",
-                winner: false
+                winner: false,
+                showMessage: true
             }
             setGameOver(updateGameOver)
         }
@@ -1368,7 +1434,8 @@ function App() {
             const updateGameOver = {
                 gameOver: true,
                 reason: "Draw due to stalemate",
-                winner: false
+                winner: false,
+                showMessage: true
             }
             setGameOver(updateGameOver)
         }
@@ -1378,6 +1445,7 @@ function App() {
     function resetBoard () {
 
         setPosition(initialPosition)
+        setLastGamePosition(initialPosition)
         setActivePiece(initialActivePiece)
         setLastMove(initialLastMove)
         setCurrentMove(initialLastMove)
@@ -1422,29 +1490,32 @@ function App() {
 
     //default actions for each move
     useEffect(() => {
+
+        let positionCopy = [];
+        for (let i = 0; i < position.length; i++) {
+            positionCopy[i] = position[i].slice();
+        }
+
+        const updatePositionList = {
+            id: positionList.length,
+            position: positionCopy,
+            tiles: {
+                oldX: lastMove.oldPositionX,
+                oldY: lastMove.oldPositionY,
+                newX: lastMove.newPositionX,
+                newY: lastMove.newPositionY
+            },
+            timer: {
+                white: timerWhite,
+                black: timerBlack
+            }
+        }
+        setPositionList([...positionList, updatePositionList]);
+        
         if (isMounted.current) {
-            let positionCopy = [];
-            for (let i = 0; i < position.length; i++) {
-                positionCopy[i] = position[i].slice();
-            }
-
-            const updatePositionList = {
-                id: positionList.length,
-                position: positionCopy,
-                tiles: {
-                    oldX: lastMove.oldPositionX,
-                    oldY: lastMove.oldPositionY,
-                    newX: lastMove.newPositionX,
-                    newY: lastMove.newPositionY
-                },
-                timer: {
-                    white: timerWhite,
-                    black: timerBlack
-                }
-            }
-            setPositionList([...positionList, updatePositionList]);
+            
             setCurrentPosition(positionCopy);
-
+            setMarkedTiles([])
             setPossibleTiles([])
             setPossibleTilesAfterCheck([])
             setPossibleKingTilesAfterCheck([])
@@ -1474,12 +1545,55 @@ function App() {
                     const updateGameOver = {
                         gameOver: true,
                         reason: `${winner} won by checkmate!`,
-                        winner: `${winner} was victorious!`
+                        winner: `${winner} wins!`,
+                        showMessage: true
                     }
                     setGameOver(updateGameOver)
                     mate = true;
                 }
             }
+
+
+            if (startAs === "rotate") {
+                if (playerTurn) {
+                    setBoardDirection(true)
+                } else if (!playerTurn) {
+                    setBoardDirection(false)
+                }
+            }
+
+
+            //check castle moves
+            let whiteShort = castle.white.castleShort;
+            let whiteLong = castle.white.castleLong;
+            let blackShort = castle.black.castleShort;
+            let blackLong = castle.black.castleLong;
+    
+            if (position[7][7] === empty) whiteShort = false
+            if (position[7][0] === empty) whiteLong = false;
+            if (position[0][0] === empty) blackLong = false
+            if (position[0][7] === empty) blackShort = false; 
+            if (position[7][4] !== kW) {
+                whiteShort = false;
+                whiteLong = false;
+            }
+            if (position[0][4] !== kB) {
+                blackShort = false;
+                blackLong = false;
+            }
+    
+            const updateCastle = ({
+                ...castle,
+                white: {
+                    castleLong: whiteLong,
+                    castleShort: whiteShort,
+                },
+                black: {
+                    castleLong: blackLong,
+                    castleShort: blackShort
+                }
+            })
+            setCastle(updateCastle)
 
             
             //PGN Notation 
@@ -1538,9 +1652,8 @@ function App() {
             }
 
             //castle
-            // console.log(castle)
-            if (castle.isCastling) {
-                move = castle.isCastling
+            if (castleNotation) {
+                move = castleNotation
             } else {
                 move = `${piece !== null ? piece : ""}${capture}${rows[x]}${ranks[y]}${pawnIsPromoting.isPromoting ? `=${promotionPiece}` : ""}${gameStatus}`
             }
@@ -1588,7 +1701,6 @@ function App() {
                 localStorage.removeItem("game")
             }
         }
-
     }, [playerTurn])
 
 
@@ -1599,17 +1711,6 @@ function App() {
             setBoardDirection(true)   
         }
     }, [startAs])
-
-    useEffect(() => {
-        if (startAs === "rotate") {
-            if (playerTurn) {
-                setBoardDirection(true)
-            } else if (!playerTurn) {
-                setBoardDirection(false)
-            }
-        }
-
-    }, [playerTurn])
 
 
     useEffect(() => {
@@ -1622,6 +1723,7 @@ function App() {
             setGameStatus(false)
             setAllowPieceSelection(false)
             setPosition(localGame.position)
+            setLastGamePosition(localGame.position)
             setPlayerTurn(localGame.playerTurn)
             const updatePlayerNames = {
                 white: localGame.nameWhite,
@@ -1651,8 +1753,7 @@ function App() {
             setSaveGame(settings.saveGame)
             setShowPossibleTiles(settings.showPossibleTiles)
             setPlaySound(settings.playSound)
-        }
-        
+        }        
     }, [])
 
     //store settings to local storage
@@ -1671,12 +1772,14 @@ function App() {
     useEffect(() => {
         if (isMounted.current) {
             //set position to current postion when clicked through moves
+            //set move index to length of positionLists
             if (activePiece.isActive && gameOver.gameOver === false && JSON.stringify(position) !== JSON.stringify(currentPosition)) {
-                setPosition(currentPosition)
+                setPosition(lastGamePosition)
+                setMoveIndex(positionList.length)
             }
 
             if (activePiece.isActive && gameOver.gameOver === false) {
-                const tiles = getPossibleTiles(position, activePiece.piece, activePiece.positionX, activePiece.positionY, playerTurn);
+                const tiles = getPossibleTiles(lastGamePosition, activePiece.piece, activePiece.positionX, activePiece.positionY, playerTurn);
                 setPossibleTiles(tiles)
             } else {
                 setPossibleTiles()
@@ -1688,22 +1791,21 @@ function App() {
     }, [activePiece.piece, activePiece.positionX, activePiece.positionY])
 
 
+    //change player info    
+    useEffect(() => {
+        if ((playerTurn && startAs === "rotate") || startAs === "white") {
+            setPlayerTop("black");
+            setPlayerBottom("white");
+        } else if ((!playerTurn && startAs === "rotate") || startAs === "black") {
+            setPlayerTop("white");
+            setPlayerBottom("black");
+        }
+    }, [startAs, playerTurn])
+
+
     //--------------------------------------------------------------------------------------------------
 
     //https://www.geeksforgeeks.org/how-to-create-a-countdown-timer-using-reactjs/
-
-    // The state for our timer
-    const timerRef = useRef(null);
-    const [timerWhite, setTimerWhite] = useState('10:00');
-    const [timerBlack, setTimerBlack] = useState('10:00');
-    const [startSeconds, setStartSeconds] = useState(600);
-    const [increment, setIncrement] = useState(5000);
-    const [playWithTimer, setPlayWithTimer] = useState(false);
-
-    const [remainingTimeWhite, setRemainingTimeWhite] = useState(0)
-    const [remainingTimeBlack, setRemainingTimeBlack] = useState(0)
-    const [isFirstStartWhite, setIsFirstStartWhite] = useState(true)
-    const [isFirstStartBlack, setIsFirstStartBlack] = useState(true)
 
     function startTimer () {
 
@@ -1756,7 +1858,8 @@ function App() {
                 const updateGameOver = {
                     gameOver: true,
                     reason: `${loser} ran out of time!`,
-                    winner: `${winner} was victorious!`
+                    winner: `${winner} wins!`,
+                    showMessage: true
                 }
                 setGameOver(updateGameOver)
                 pauseTimer()
@@ -1895,7 +1998,7 @@ function App() {
                 }
 
                 for (let x = 0; x < markedTiles.length; x++) {
-                    if (JSON.stringify([i, j]) === JSON.stringify(markedTiles[x])) {
+                    if (JSON.stringify([j, i]) === JSON.stringify(markedTiles[x])) {
                         let newMark = {
                             posX: posX,
                             posY: posY
@@ -1958,34 +2061,10 @@ function App() {
             marked: markedArr
         }
         setTiles(updateTiles)
-
-    }, [position, possibleTiles, markedTiles, boardDirection])
-
+    }, [possibleTiles, markedTiles, boardDirection, showPossibleTiles])
     
-    //change player info    
-    useEffect(() => {
-        if ((playerTurn && startAs === "rotate") || startAs === "white") {
-            setPlayerTop("black");
-            setPlayerBottom("white");
-        } else if ((!playerTurn && startAs === "rotate") || startAs === "black") {
-            setPlayerTop("white");
-            setPlayerBottom("black");
-        }
-    }, [startAs, playerTurn])
-
-
-    useEffect(() => {
-        setTimeout(() => {
-            setLoading(false)
-        }, 1000)
-    }, [])
-
-    if (loading) {
-        return <p>Loading...</p>
-    }
-
     return (
-        <div className={`App ${size}`}>
+        <div className={'App'}>
             <div className='boardContainer'>
                 <PlayerInfo key="playerInfo1" playerNames={playerNames} team={playerTop} timerWhite={timerWhite} timerBlack={timerBlack} playWithTimer={playWithTimer} increment={increment} position={position} playerTurn={playerTurn}/>
                 <div id="Board" ref={BoardRef} onMouseDown={e => grabPiece(e)} onMouseMove={e => movePiece(e)} onMouseUp={e => dropPiece(e)} style={{width: `${width}px`, height: `${width}px`}}>
@@ -2022,7 +2101,7 @@ function App() {
                         
                     })}
                     {pawnIsPromoting.showPromotionMenu && pawnIsPromoting.posX !== null && <Promotion pawnIsPromoting={pawnIsPromoting} executePromotion={executePromotion} pieceWidth={pieceWidth}/>}
-                    {gameOver.gameOver && <GameOver winner={gameOver.winner} reason={gameOver.reason}/>}
+                    {gameOver.gameOver && gameOver.showMessage && <GameOver winner={gameOver.winner} reason={gameOver.reason}/>}
                 </div>
                 <PlayerInfo key="playerInfo2" playerNames={playerNames} team={playerBottom} timerWhite={timerWhite} timerBlack={timerBlack} playWithTimer={playWithTimer} increment={increment} position={position} playerTurn={playerTurn}/>
             </div>
@@ -2031,6 +2110,7 @@ function App() {
                 setPlayerTurn={setPlayerTurn}
                 positionList={positionList} 
                 setPosition={setPosition} 
+                setLastGamePosition={setLastGamePosition}
                 moveList={moveList} 
                 setActivePiece={setActivePiece} 
                 initialActivePiece={initialActivePiece}
@@ -2059,8 +2139,18 @@ function App() {
                 setPossibleKingTilesAfterCheck={setPossibleKingTilesAfterCheck}
                 startAs={startAs}
                 setStartAs={setStartAs}
-                audioMove={audioMove}/> 
+                moveIndex={moveIndex}
+                setMoveIndex={setMoveIndex}
+                audioMove={audioMove}
+                mobileMenuIsActive={mobileMenuIsActive}
+                width={width}
+            /> 
             <Info/>
+            <div className={`mobilemenu ${mobileMenuIsActive ? "active" : ""}`} onClick={() => setMobileMenuIsActive(prev => !prev)}>
+                <svg xmlns="http://www.w3.org/2000/svg" height="40" width="40">
+                    <path d="m17.125 35-.667-4.792q-.875-.25-1.916-.833-1.042-.583-1.75-1.25l-4.417 1.958-2.917-5.125 3.917-2.875q-.083-.5-.146-1.041-.062-.542-.062-1 0-.459.062-.98.063-.52.146-1.145L5.458 15l2.917-5 4.375 1.917q.833-.709 1.812-1.271.98-.563 1.855-.813L17.125 5h5.75l.667 4.833q1 .375 1.875.855.875.479 1.708 1.229L31.667 10l2.875 5-4.042 3q.167.542.188 1.042.02.5.02.958 0 .417-.041.917-.042.5-.167 1.125l4 2.916-2.917 5.125-4.458-2q-.833.709-1.729 1.271-.896.563-1.854.813L22.875 35Zm2.792-10.958q1.708 0 2.875-1.167 1.166-1.167 1.166-2.875t-1.166-2.875q-1.167-1.167-2.875-1.167-1.667 0-2.855 1.167-1.187 1.167-1.187 2.875t1.187 2.875q1.188 1.167 2.855 1.167Zm0-1.417q-1.084 0-1.855-.771-.77-.771-.77-1.854 0-1.083.77-1.854.771-.771 1.855-.771 1.125 0 1.875.771t.75 1.854q0 1.083-.75 1.854-.75.771-1.875.771ZM20 20Zm-1.708 13.583h3.375L22.292 29q1.25-.333 2.312-.938 1.063-.604 2.146-1.645l4.208 1.833 1.667-2.875-3.708-2.792q.166-.75.25-1.354.083-.604.083-1.229 0-.667-.083-1.25-.084-.583-.25-1.292l3.791-2.833-1.666-2.875-4.334 1.833q-.791-.875-2.041-1.645-1.25-.771-2.417-.938l-.542-4.583h-3.416l-.542 4.541q-1.292.292-2.375.896-1.083.604-2.167 1.688l-4.25-1.792-1.666 2.875 3.75 2.75q-.209.583-.292 1.25-.083.667-.083 1.417 0 .666.083 1.291.083.625.25 1.25l-3.708 2.792 1.666 2.875 4.25-1.792q.959 1.042 2.063 1.646 1.104.604 2.479.938Z"/>
+                </svg>
+            </div>
         </div>
     );
 }
