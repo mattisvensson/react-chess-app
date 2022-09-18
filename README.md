@@ -1,8 +1,8 @@
 # react-chess-app
 
 
-version 1.0 | 
-13.05.2022
+version 2.0 | 
+18.09.2022
 
 A chess app created with ReactJS.
 
