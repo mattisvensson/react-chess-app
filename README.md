@@ -2,7 +2,7 @@
 
 
 version 2.0 | 
-17.09.2022
+18.09.2022
 
 A chess app created with ReactJS.
 
